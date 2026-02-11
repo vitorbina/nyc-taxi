@@ -4,18 +4,18 @@ This is a Data Engineering pipeline designed to extract historical NYC Taxi Trip
 
 ## Architecture
 
-1.  **Source**: NYC TLC Data (Public Parquet/CSV files).
-2.  **Orchestration**: Apache Airflow 2.10 (Local Executor).
-3.  **Storage (Bronze Layer)**: MinIO (S3 Compatible Object Storage).
+1.  **Source**: NYC TLC Data (Public Parquet).
+2.  **Orchestration**: Apache Airflow 3.1.7 (Local Executor).
+3.  **Storage**: MinIO (S3 Compatible Object Storage).
 
 ## Tech Stack
 
-* **Python 3.x**
-* **Apache Airflow**
+* **Python 3.13.11**
+* **Apache Airflow 3.1.7**
 * **MinIO / S3**
-* **Pandas & PyArrow**
+* **Pandas**
 
-##Setup & Installation
+## Setup & Installation
 
 To set up the local environment (install dependencies and configure Airflow Home), simply run the setup script:
 
@@ -31,15 +31,13 @@ chmod +x setup_env.sh
 
 Once the environment is configured, start Airflow:
 
-```bash
-# Terminal 1: Scheduler
-export AIRFLOW_HOME=$(pwd)/airflow
-airflow scheduler
+\`\`\`bash
+# 1. Export the home variable (MANDATORY step)
+export AIRFLOW_HOME=\$(pwd)/airflow
 
-# Terminal 2: Webserver
-export AIRFLOW_HOME=$(pwd)/airflow
-airflow webserver
-```
+# 2. Run everything (Scheduler + Webserver + Triggerer)
+airflow standalone
+\`\`\`
 
 Access the UI at: `http://localhost:8080`
 
