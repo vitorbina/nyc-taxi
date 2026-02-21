@@ -21,20 +21,18 @@ from utils.nyc import fetch_yellow_tripdata
 def ingestion_pipeline():
 
     @task
-    def download_taxi_nyc(**context):
-        data = context['logical_date']
-        year = data.strftime("%Y")
-        month = data.strftime("%m")
+    def download_taxi_nyc(logical_date):
+        year = logical_date.strftime("%Y")
+        month = logical_date.strftime("%m")
         
         print(f"Dowloading data for {year}-{month}")
 
         return download_yellow_tripdata(year, month)
     
     @task
-    def upload_taxi_nyc(file_path, **context):
-        data = context['logical_date']
-        year = data.strftime("%Y")
-        month = data.strftime("%m")
+    def upload_taxi_nyc(file_path, logical_date):
+        year = logical_date.strftime("%Y")
+        month = logical_date.strftime("%m")
         
         print(f"Uploading {file_path} to the Data Lake")
         
