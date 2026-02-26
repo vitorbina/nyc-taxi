@@ -1,6 +1,8 @@
 airflow-*
 airflow.db
 airflow/
+airflow.db-shm
+airflow.db-wal
 logs/
 **/__pycache__/
 *.pyc
@@ -166,10 +168,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-.dmypy.json
+.dmypy.json"
 dmypy.json
 
-# Pyre type checker
+# Pyre type checker"
 .pyre/
 
 # pytype static type analyzer
@@ -197,5 +199,8 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,python__pycache__/
 *.pyc
+
+# Docker / MinIO Volumes
+lake_data/
 
 simple_auth_manager_passwords.json.generated

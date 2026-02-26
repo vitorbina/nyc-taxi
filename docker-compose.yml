@@ -1,0 +1,19 @@
+# Infrastructure definition for the local Data Lake
+# This file provisions a MinIO container
+# exposes necessary ports for API and UI access, and ensures data 
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio_lake
+    ports:
+      # API
+      - "9000:9000"
+
+      # Console/UI
+      - "9001:9001"
+    env_file:
+      - .env 
+    volumes:
+      - ./lake_data:/data 
+    command: server /data --console-address ":9001"

@@ -2,6 +2,7 @@ import os
 import logging
 import requests
 import tempfile
+import shutil
 from utils.s3 import upload_file
 
 # Logging configuration
@@ -9,11 +10,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
  
-# Download the file and save it in the received tmpfolder.
+# Creates a temporary folder, downloads the file, and returns the local path.
 def download_yellow_tripdata(year, month):
-    file_name = f"yellow_tripdata_{year}-{month}.parquet"
+
+    tmpfolder = tempfile.mkdtemp()
+
+    file_name = f"yellow_tripdata_{year}-{int(month):02d}.parquet"
     url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/{file_name}"
-    local_path = f"/tmp/{file_name}"
+    local_path = os.path.join(tmpfolder, file_name)
+
     logger.info(f"Downloading from {url}")
 
     with requests.get(url, stream=True) as r:
@@ -23,21 +28,19 @@ def download_yellow_tripdata(year, month):
                 f.write(chunk)
                 
     logger.info(f"Download finished. File saved at: {local_path}")
+
     return local_path
 
-
 # It orchestrates downloading and uploading using a tempdir.
-def fetch_yellow_tripdata(year, month, bucket):
+def upload_yellow_tripdata(local_path, year, month, bucket):
+    file_name = os.path.basename(local_path)
 
-    with tempfile.TemporaryDirectory() as tmpfolder:
-        logger.info(f"Pasta temporária criada pelo SO: {tmpfolder}") 
-        
-        file_path = download_yellow_tripdata(year, month, tmpfolder)
+    key = f"raw/nyc_taxi/year_month={year}-{int(month):02d}/{file_name}"
 
-        file_name = os.path.basename(file_path)
-        
-        key = f"raw/nyc_taxi/{year}/{month}/{file_name}"
+    logger.info(f"Uploading {local_path} to {bucket}/{key}")
 
-        upload_file(filepath=file_path, bucket=bucket, key=key)
-        
-    logger.info("Automatic cleanup: temporary folder successfully deleted!")
+    upload_file(filepath=local_path, bucket=bucket, key=key)
+    
+    tmpfolder = os.path.dirname(local_path)
+    shutil.rmtree(tmpfolder)
+    logger.info(f"Automatic cleanup: temporary folder {tmpfolder} successfully deleted!")
