@@ -1,14 +1,21 @@
+"""
+## DAG Documentation
+# This DAG is responsible for automating the monthly extraction of New York City taxi trip data and loading it into our Data Lake (MinIO).
+"""
 import sys
 import os
 from datetime import datetime
 from airflow.decorators import dag, task
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+import logging
 from utils.default import get_default_args
 from utils.nyc import download_yellow_tripdata
 from utils.s3 import upload_file
 from utils.nyc import fetch_yellow_tripdata
+
+# Logging configuration
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 @dag(
     dag_id='nyc_taxi_ingestion',
@@ -18,6 +25,7 @@ from utils.nyc import fetch_yellow_tripdata
     catchup=False,
     default_args=get_default_args()
 )
+
 def ingestion_pipeline():
 
     @task
@@ -25,7 +33,7 @@ def ingestion_pipeline():
         year = logical_date.strftime("%Y")
         month = logical_date.strftime("%m")
         
-        print(f"Dowloading data for {year}-{month}")
+        logger.info(f"Dowloading data for {year}-{month}")
 
         return download_yellow_tripdata(year, month)
     
@@ -34,7 +42,7 @@ def ingestion_pipeline():
         year = logical_date.strftime("%Y")
         month = logical_date.strftime("%m")
         
-        print(f"Uploading {file_path} to the Data Lake")
+        logger.info(f"Uploading {file_path} to the Data Lake")
         
         file_name = os.path.basename(file_path)
         key_destino = f"raw/nyc_taxi/{year}/{month}/{file_name}"
