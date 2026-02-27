@@ -14,14 +14,14 @@ logger.setLevel(logging.INFO)
 
 
 @dag(
+    **get_default_args(
     dag_id='nyc_taxi_ingestion',
     description='Pipeline Ingestion NYC Taxi (TaskFlow)',
     schedule='@monthly',
     start_date=datetime(2024, 1, 1),
     catchup=False,
-    default_args=get_default_args()
+    )
 )
-
 def ingestion_pipeline():
 
     @task
