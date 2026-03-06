@@ -6,12 +6,10 @@ import shutil
 from utils.s3 import upload_file
 from airflow.exceptions import AirflowSkipException
 
-# Logging configuration
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
- 
-# Creates a temporary folder, downloads the file, and returns the local path.
+
 def download_taxi_data(taxi_type, year, month):
 
     tmpfolder = tempfile.mkdtemp()
@@ -37,7 +35,6 @@ def download_taxi_data(taxi_type, year, month):
 
     return local_path
 
-# It orchestrates downloading and uploading using a tempdir.
 def upload_taxi(lake_folder, local_path, year, month, bucket):
     file_name = os.path.basename(local_path)
 

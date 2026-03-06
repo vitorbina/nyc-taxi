@@ -24,9 +24,11 @@ This DAG orchestrates the monthly extraction of public taxi and ride-hailing tri
 * **Frequency**: Monthly.
 
 ## Data Sources
-1. **Yellow Taxi (`yellow_taxi`)**: Manhattan-centric taxis.
-2. **Green Taxi (`green_taxi`)**: Street-hail liveries (outer boroughs).
-3. **App Rides (`app_rides`)**: For-Hire Vehicles.
+| Name | Type | Description |
+|---|---|---|
+| `yellow_taxi` | Yellow Taxi | Manhattan-centric taxis |
+| `green_taxi` | Green Taxi | Street-hail liveries (outer boroughs) |
+| `app_rides` | FHV | For-Hire Vehicles |
 """
 
 @dag(
