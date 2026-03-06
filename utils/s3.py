@@ -33,5 +33,5 @@ def upload_file(filepath, bucket, key):
         s3_client.upload_file(filepath, bucket, key)
         logger.info("Upload completed successfully.")
     except ClientError as e:
-        logger.error(f"Erro ao fazer upload para o MinIO: {e}")
+        logger.error(f"Upload to MinIO failed: {e}")
         raise e

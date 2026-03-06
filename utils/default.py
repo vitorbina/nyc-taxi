@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-# # This function generates default arguments for Airflow DAGs, allowing for configuration across multiple DAGs
+# This function generates default arguments for Airflow DAGs, allowing for configuration across multiple DAGs
 def get_default_args(**kwargs):
 
     assert "schedule" in kwargs, "A schedule must be provided!"
@@ -21,6 +21,7 @@ def get_default_args(**kwargs):
         "catchup": kwargs.get("catchup", False),
         "tags": kwargs.get("tags", ["nyc_taxi"]),
         "description": kwargs.get("description", ""),
+        "doc_md": kwargs.get("doc_md", ""),
     }
 
     return dag_config

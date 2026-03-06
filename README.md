@@ -1,19 +1,21 @@
 # NYC Taxi Data Pipeline
 
-This is a Data Engineering pipeline designed to extract historical NYC Taxi Trip records (TLC Data), process them, and store them in a local Data Lake using **MinIO**.
+A Data Engineering pipeline that ingests NYC Taxi trip records and daily weather data into a local Data Lake using **MinIO** and **Apache Airflow**.
 
 ## Architecture
 
-1. **Source**: NYC TLC Data (Public Parquet).
-2. **Ingestion**: Modular Python logic using requests and tempfile to ensure data integrity and disk cleanup.
+1. **Sources**: NYC TLC (public Parquet files) and OpenWeatherMap API.
+2. **Ingestion**: Modular Python logic using `requests` and `tempfile` to ensure data integrity and disk cleanup.
 3. **Orchestration**: Apache Airflow 3.1.7 (Local Executor).
-4. **Storage**: MinIO (S3 Compatible Object Storage).
+4. **Storage**: MinIO (S3-compatible Object Storage).
 
 ## Tech Stack
 
 * **Python 3.13.11**
 * **Apache Airflow 3.1.7**
 * **MinIO / S3**
+* **OpenWeatherMap API**
+* **Docker / Docker Compose**
 
 ## Setup & Installation
 
@@ -21,13 +23,11 @@ This is a Data Engineering pipeline designed to extract historical NYC Taxi Trip
 
 Before cloning the repo, ensure your operating system has these core tools installed:
 
-* **Python - 3.13.11**
-* **Docker Engine - 29.2.1**
-* **Docker Compose - 5.1.0**
+* **Python 3.13.11**
+* **Docker Engine 29.2.1**
+* **Docker Compose 5.1.0**
 
 ### 2. Environment Setup (Using Conda)
-
-We use Conda for environment management to ensure clean dependency isolation.
 
 ```bash
 # 1. Create the environment with the specific Python version (if not created yet)
@@ -41,48 +41,68 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## How to Run
+### 3. Configure Environment Variables
 
-> **Note:** You will need at least **two terminal tabs** open for this.
-
-#### Infrastructure & Orchestration
+Copy the example file and fill in your credentials:
 
 ```bash
-# 1. Load environment variables
+cp .env.example .env
+```
+
+Edit `.env` with your values:
+
+| Variable | Description |
+|---|---|
+| `MINIO_ROOT_USER` | MinIO username |
+| `MINIO_ROOT_PASSWORD` | MinIO password |
+| `MINIO_ENDPOINT` | MinIO API URL (e.g. `http://localhost:9000`) |
+| `OPENWEATHER_API_KEY` | Your OpenWeatherMap API key |
+
+## How to Run
+
+```bash
 source .env
-
-# 2. Start MinIO in background
 docker compose up -d minio
-
-# 3. Start Airflow (This will stay active showing logs)
 airflow standalone
 ```
 
-#### UI Access & Monitoring
+#### UI Access
 
-Once the services are running, open your browser to access the web interfaces:
+Once the services are running, open your browser:
 
 * **Airflow UI**: http://localhost:8080
 * **MinIO Console**: http://localhost:9001
 
 ## MinIO Bucket Setup (Required)
-Before running the pipeline, you must create the destination bucket:
 
-1. Access the MinIO Console using the link above.
+Before running the pipelines, create the destination bucket:
 
-2. Login using the credentials from your .env file.
+1. Open the MinIO Console at http://localhost:9001
+2. Login with the credentials from your `.env` file
+3. Navigate to **Buckets** on the left menu and click **Create Bucket**
+4. Name the bucket exactly: `data-lake-nyc`
+5. Click **Create Bucket**
 
-3. Navigate to Buckets on the left menu and click Create Bucket.
+## Data Lake Structure
 
-4. Name the bucket exactly: data-lake-nyc
-
-5. Click Create Bucket. Your local Data Lake is ready!
+```
+data-lake-nyc/
+└── raw/
+    ├── yellow_taxi/
+    │   └── partition_date=YYYY-MM/
+    ├── green_taxi/
+    │   └── partition_date=YYYY-MM/
+    ├── app_rides/
+    │   └── partition_date=YYYY-MM/
+    └── weather/
+        └── partition_date=YYYY-MM-DD/
+```
 
 ## Project Structure
 
-* `/dags`: Airflow DAG definitions (Orchestration logic).
-* `/scripts`: Pure Python scripts for data ingestion (ETL logic).
+* `/dags`: Airflow DAG definitions (orchestration logic).
+* `/utils`: Python modules for data ingestion (ETL logic).
 * `/airflow`: Local Airflow metadata and logs (ignored by Git).
-* `docker-compose.yaml`: Infrastructure configuration for MinIO.
+* `docker-compose.yml`: Infrastructure configuration for MinIO.
 * `requirements.txt`: Python project dependencies.
 * `.env`: Local environment variables and credentials (ignored by Git).
