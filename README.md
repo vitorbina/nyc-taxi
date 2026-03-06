@@ -56,7 +56,7 @@ Edit `.env` with your values:
 | `MINIO_ROOT_USER` | MinIO username |
 | `MINIO_ROOT_PASSWORD` | MinIO password |
 | `MINIO_ENDPOINT` | MinIO API URL (e.g. `http://localhost:9000`) |
-| `OPENWEATHER_API_KEY` | Your OpenWeatherMap API key |
+| `OPENWEATHER_API_KEY` | Your OpenWeatherMap API key ([get one here](https://home.openweathermap.org/api_keys)) |
 
 ## How to Run
 
