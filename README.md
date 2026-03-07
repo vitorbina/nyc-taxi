@@ -89,11 +89,11 @@ Before running the pipelines, create the destination bucket:
 data-lake-nyc/
 └── raw/
     ├── yellow_taxi/
-    │   └── partition_date=YYYY-MM/
+    │   └── partition_date=YYYY-MM-01/
     ├── green_taxi/
-    │   └── partition_date=YYYY-MM/
+    │   └── partition_date=YYYY-MM-01/
     ├── app_rides/
-    │   └── partition_date=YYYY-MM/
+    │   └── partition_date=YYYY-MM-01/
     └── weather/
         └── partition_date=YYYY-MM-DD/
 ```

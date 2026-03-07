@@ -38,7 +38,7 @@ def download_taxi_data(taxi_type, year, month):
 def upload_taxi(lake_folder, local_path, year, month, bucket):
     file_name = os.path.basename(local_path)
 
-    key = f"raw/{lake_folder}/partition_date={year}-{int(month):02d}/{file_name}"
+    key = f"raw/{lake_folder}/partition_date={year}-{int(month):02d}-01/{file_name}"
 
     logger.info(f"Uploading {local_path} to {bucket}/{key}")
 
