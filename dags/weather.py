@@ -15,7 +15,7 @@ This DAG fetches daily weather data for New York City from the OpenWeatherMap AP
 and stores it in the data lake.
 
 ## Architecture
-* **Source**: OpenWeatherMap API (current weather).
+* **Source**: Open-Meteo Archive API (historical weather — free, no API key required).
 * **Destination**: MinIO | Bucket: data-lake-nyc.
 * **Frequency**: Daily.
 * **Partition**: `raw/weather/partition_date=YYYY-MM-DD/`

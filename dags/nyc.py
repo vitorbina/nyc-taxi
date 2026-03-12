@@ -29,6 +29,7 @@ This DAG orchestrates the monthly extraction of public taxi and ride-hailing tri
 | `yellow_taxi` | Yellow Taxi | Manhattan-centric taxis |
 | `green_taxi` | Green Taxi | Street-hail liveries (outer boroughs) |
 | `app_rides` | FHV | For-Hire Vehicles |
+| `hvfhv_rides` | High Volume FHV | Uber, Lyft and Via trips (available from 2019) |
 """
 
 @dag(
@@ -57,7 +58,8 @@ def ingestion_pipeline():
     taxi_mapping = {
         'yellow_taxi': 'yellow',
         'green_taxi': 'green',
-        'app_rides': 'fhv'
+        'app_rides': 'fhv',
+        'hvfhv_rides': 'fhvhv'
     }
     
     for folder_name, source_name in taxi_mapping.items():

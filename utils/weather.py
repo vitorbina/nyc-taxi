@@ -9,15 +9,34 @@ from utils.s3 import upload_file
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+NYC_LAT = 40.7128
+NYC_LON = -74.0060
 
-def download_weather_data(api_key, date_str):
+HOURLY_VARIABLES = [
+    "temperature_2m",
+    "relative_humidity_2m",
+    "apparent_temperature",
+    "precipitation",
+    "wind_speed_10m",
+    "wind_direction_10m",
+    "weather_code",
+]
+
+
+def download_weather_data(date_str):
     tmpfolder = tempfile.mkdtemp()
     file_name = f"weather_nyc_{date_str}.json"
     local_path = os.path.join(tmpfolder, file_name)
 
-    url = f"http://api.openweathermap.org/data/2.5/weather?q=New York,US&appid={api_key}&units=metric"
+    url = (
+        f"https://archive-api.open-meteo.com/v1/archive"
+        f"?latitude={NYC_LAT}&longitude={NYC_LON}"
+        f"&start_date={date_str}&end_date={date_str}"
+        f"&hourly={','.join(HOURLY_VARIABLES)}"
+        f"&timezone=America%2FNew_York"
+    )
 
-    logger.info("Fetching weather data from OpenWeatherMap API...")
+    logger.info(f"Fetching historical weather data from Open-Meteo for {date_str}...")
 
     response = requests.get(url)
     response.raise_for_status()
@@ -44,10 +63,6 @@ def upload_weather(local_path, date_str, bucket):
 
 
 def ingest_weather_data(execution_date, bucket):
-    api_key = os.getenv("OPENWEATHER_API_KEY")
-    if not api_key:
-        raise ValueError("OPENWEATHER_API_KEY not found.")
-
     date_str = execution_date.strftime("%Y-%m-%d")
-    local_path = download_weather_data(api_key, date_str)
+    local_path = download_weather_data(date_str)
     upload_weather(local_path, date_str, bucket)
