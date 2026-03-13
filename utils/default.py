@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-# This function generates default arguments for Airflow DAGs, allowing for configuration across multiple DAGs
 def get_default_args(**kwargs):
 
     assert "schedule" in kwargs, "A schedule must be provided!"

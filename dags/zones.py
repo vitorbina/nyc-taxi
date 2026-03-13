@@ -10,20 +10,16 @@ logger.setLevel(logging.INFO)
 dag_doc_md = """
 # NYC Zone Reference Ingestion
 
-This DAG ingests static reference files from the NYC TLC that are used to decode
-location and base IDs found in the trip data. It runs once and only needs to be
-re-triggered if the source files are updated by the TLC.
+Ingests static reference files from the NYC TLC used to decode location IDs in trip data.
+Source: NYC TLC. Destination: MinIO bucket `data-lake-nyc`. Runs once.
 
-**Source**: NYC TLC (https://d37ci6vzurychx.cloudfront.net/misc/)
-**Destination**: MinIO | Bucket: data-lake-nyc
-**Path**: `raw/reference/{file_name}/{file_name}.csv`
+Path: `raw/reference/{file_name}/{file_name}`
 """
-
 
 @dag(
     **get_default_args(
         dag_id='nyc_zones_ingestion',
-        description='One-time ingestion of NYC TLC reference files (zone lookup and FHV bases)',
+        description='One-time ingestion of NYC TLC reference files (zone lookup and shapefile)',
         schedule='@once',
         start_date=datetime(2024, 1, 1),
         catchup=False,
@@ -39,13 +35,11 @@ def zones_ingestion_pipeline():
 
     reference_files = [
         "taxi_zone_lookup.csv",
-        "fhv_bases.csv",
         "taxi_zones.zip",
     ]
 
     for file_name in reference_files:
         task_id = f"ingest_{file_name.replace('.csv', '').replace('.zip', '')}"
         ingest_reference_file.override(task_id=task_id)(file_name=file_name)
-
 
 pipeline = zones_ingestion_pipeline()

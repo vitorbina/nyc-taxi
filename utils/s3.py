@@ -23,10 +23,10 @@ def upload_file(filepath, bucket, key):
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key
     )
-    
+
     try:
         s3_client.upload_file(filepath, bucket, key)
         logger.info("Upload completed successfully.")
     except ClientError as e:
         logger.error(f"Upload to MinIO failed: {e}")
-        raise e
+        raise

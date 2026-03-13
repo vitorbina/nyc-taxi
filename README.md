@@ -4,8 +4,8 @@ A Data Engineering pipeline that ingests NYC Taxi trip records and daily weather
 
 ## Architecture
 
-1. **Sources**: NYC TLC (public Parquet files) and OpenWeatherMap API.
-2. **Ingestion**: Modular Python logic using `requests` and `tempfile` to ensure data integrity and disk cleanup.
+1. **Sources**: NYC TLC (public Parquet files) and Open-Meteo Archive API.
+2. **Ingestion**: Modular Python logic using `requests` and `tempfile` for safe file handling.
 3. **Orchestration**: Apache Airflow 3.1.7 (Local Executor).
 4. **Storage**: MinIO (S3-compatible Object Storage).
 
@@ -14,7 +14,7 @@ A Data Engineering pipeline that ingests NYC Taxi trip records and daily weather
 * **Python 3.13.11**
 * **Apache Airflow 3.1.7**
 * **MinIO / S3**
-* **OpenWeatherMap API**
+* **Open-Meteo API**
 * **Docker / Docker Compose**
 
 ## Setup & Installation
@@ -56,7 +56,6 @@ Edit `.env` with your values:
 | `MINIO_ROOT_USER` | MinIO username |
 | `MINIO_ROOT_PASSWORD` | MinIO password |
 | `MINIO_ENDPOINT` | MinIO API URL (e.g. `http://localhost:9000`) |
-| `OPENWEATHER_API_KEY` | Your OpenWeatherMap API key ([get one here](https://home.openweathermap.org/api_keys)) |
 
 ## How to Run
 
@@ -94,6 +93,11 @@ data-lake-nyc/
     │   └── partition_date=YYYY-MM-01/
     ├── app_rides/
     │   └── partition_date=YYYY-MM-01/
+    ├── high_volume_fhv/
+    │   └── partition_date=YYYY-MM-01/
+    ├── reference/
+    │   ├── taxi_zone_lookup/
+    │   └── taxi_zones/
     └── weather/
         └── partition_date=YYYY-MM-DD/
 ```
@@ -102,6 +106,7 @@ data-lake-nyc/
 
 * `/dags`: Airflow DAG definitions (orchestration logic).
 * `/utils`: Python modules for data ingestion (ETL logic).
+* `/docs`: Documentation for each pipeline.
 * `/airflow`: Local Airflow metadata and logs (ignored by Git).
 * `docker-compose.yml`: Infrastructure configuration for MinIO.
 * `requirements.txt`: Python project dependencies.

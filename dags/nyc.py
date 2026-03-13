@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from airflow.decorators import dag, task
 import logging
@@ -9,27 +8,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 dag_doc_md = """
-# NYC Taxi Data Ingestion Pipeline
+# NYC Taxi Ingestion
 
-## Project Overview
-This DAG orchestrates the monthly extraction of public taxi and ride-hailing trip records from the NYC Taxi & Limousine Commission (TLC).
+Downloads monthly trip records from the NYC TLC into the data lake.
+Source: NYC TLC. Destination: MinIO bucket `data-lake-nyc`. Runs monthly.
 
-## Data Availability & Lag
-* **Publication Lag**: Please note that NYC TLC data is typically released with a **2 to 3-month delay**. 
-* **Skip Logic**: If a task is marked as **'Skipped'**, it is likely because the source file is not yet available on the government servers. This is an expected behavior and not a pipeline failure.
+TLC data has a 2-3 month lag. Skipped tasks mean the file isn't out yet, not a failure.
 
-## Architecture
-* **Source**: NYC TLC.
-* **Destination**: MinIO | Bucket: data-lake-nyc.
-* **Frequency**: Monthly.
-
-## Data Sources
-| Name | Type | Description |
-|---|---|---|
-| `yellow_taxi` | Yellow Taxi | Manhattan-centric taxis |
-| `green_taxi` | Green Taxi | Street-hail liveries (outer boroughs) |
-| `app_rides` | FHV | For-Hire Vehicles |
-| `hvfhv_rides` | High Volume FHV | Uber, Lyft and Via trips (available from 2019) |
+Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 """
 
 @dag(
@@ -45,7 +31,7 @@ This DAG orchestrates the monthly extraction of public taxi and ride-hailing tri
 def ingestion_pipeline():
 
     @task
-    def process_taxi_color(taxi_type: str, lake_folder: str, logical_date=None):
+    def ingest_taxi_type(taxi_type: str, lake_folder: str, logical_date=None):
         bucket_name = "data-lake-nyc"
         
         ingest_taxi_data(
@@ -59,11 +45,11 @@ def ingestion_pipeline():
         'yellow_taxi': 'yellow',
         'green_taxi': 'green',
         'app_rides': 'fhv',
-        'hvfhv_rides': 'fhvhv'
+        'high_volume_fhv': 'fhvhv'
     }
     
     for folder_name, source_name in taxi_mapping.items():
-        process_taxi_color.override(task_id=f"ingest_{folder_name}")(
+        ingest_taxi_type.override(task_id=f"ingest_{folder_name}")(
             taxi_type=source_name,
             lake_folder=folder_name
         )

@@ -11,7 +11,6 @@ logger.setLevel(logging.INFO)
 
 
 def download_taxi_data(taxi_type, year, month):
-
     tmpfolder = tempfile.mkdtemp()
 
     file_name = f"{taxi_type}_tripdata_{year}-{int(month):02d}.parquet"
@@ -35,6 +34,7 @@ def download_taxi_data(taxi_type, year, month):
 
     return local_path
 
+
 def upload_taxi(lake_folder, local_path, year, month, bucket):
     file_name = os.path.basename(local_path)
 
@@ -43,10 +43,10 @@ def upload_taxi(lake_folder, local_path, year, month, bucket):
     logger.info(f"Uploading {local_path} to {bucket}/{key}")
 
     upload_file(filepath=local_path, bucket=bucket, key=key)
-    
+
     tmpfolder = os.path.dirname(local_path)
     shutil.rmtree(tmpfolder)
-    logger.info(f"Automatic cleanup: temporary folder {tmpfolder} successfully deleted!")
+    logger.info(f"Temporary folder {tmpfolder} deleted.")
 
 
 def ingest_taxi_data(lake_folder, taxi_type, logical_date, bucket):
