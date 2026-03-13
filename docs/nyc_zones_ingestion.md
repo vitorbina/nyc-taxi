@@ -16,3 +16,8 @@ Files are stored without date partitioning since they're reference data, not tim
 raw/reference/taxi_zone_lookup/taxi_zone_lookup.csv
 raw/reference/taxi_zones/taxi_zones.zip
 ```
+
+## References
+
+- [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+- [Trip Record User Guide](https://www.nyc.gov/assets/tlc/downloads/pdf/trip_record_user_guide.pdf)

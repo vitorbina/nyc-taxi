@@ -25,3 +25,8 @@ Each file contains 24 hourly records covering:
 ## Data availability
 
 Open-Meteo's archive has a lag of approximately 5 days (d-5). Since this pipeline is designed to work alongside monthly taxi data, the delay has no practical impact on the workflow.
+
+## References
+
+- [Open-Meteo Archive API](https://open-meteo.com/en/docs/historical-weather-api)
+- [WMO Weather Interpretation Codes](https://open-meteo.com/en/docs/historical-weather-api#weathervariables)

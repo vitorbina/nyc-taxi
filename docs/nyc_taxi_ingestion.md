@@ -18,6 +18,14 @@ raw/high_volume_fhv/partition_date=2024-01-01/fhvhv_tripdata_2024-01.parquet
 
 The pipeline runs monthly (`@monthly`) starting from January 2024, with 2 retries on failure.
 
+## References
+
+- [Trip Record User Guide](https://www.nyc.gov/assets/tlc/downloads/pdf/trip_record_user_guide.pdf)
+- [Yellow Trips Data Dictionary](https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf)
+- [Green Trips Data Dictionary](https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_green.pdf)
+- [FHV Trips Data Dictionary](https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_fhv.pdf)
+- [High Volume FHV Trips Data Dictionary](https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_hvfhv.pdf)
+
 ## Data availability
 
 NYC TLC publishes data with a 2 to 3-month lag. If a task shows as **Skipped**, it means the file isn't on the government servers yet — this is expected and not a pipeline error. The pipeline detects HTTP 403/404 responses and skips gracefully instead of failing.

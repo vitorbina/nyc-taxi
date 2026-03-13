@@ -106,7 +106,7 @@ data-lake-nyc/
 
 * `/dags`: Airflow DAG definitions (orchestration logic).
 * `/utils`: Python modules for data ingestion (ETL logic).
-* `/docs`: Documentation for each pipeline.
+* `/docs`: Documentation for each pipeline. See [nyc_taxi_ingestion.md](docs/nyc_taxi_ingestion.md), [nyc_weather_ingestion.md](docs/nyc_weather_ingestion.md) and [nyc_zones_ingestion.md](docs/nyc_zones_ingestion.md).
 * `/airflow`: Local Airflow metadata and logs (ignored by Git).
 * `docker-compose.yml`: Infrastructure configuration for MinIO.
 * `requirements.txt`: Python project dependencies.
