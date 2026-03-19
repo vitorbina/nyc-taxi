@@ -1,13 +1,4 @@
-from datetime import datetime
-from airflow.decorators import dag, task
-import logging
-from utils.default import get_default_args
-from utils.taxi import ingest_taxi_data
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-dag_doc_md = """
+"""
 # NYC Taxi Ingestion
 
 Downloads monthly trip records from the NYC TLC into the data lake.
@@ -18,14 +9,22 @@ TLC data has a 2-3 month lag. Skipped tasks mean the file isn't out yet, not a f
 Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 """
 
+from airflow.decorators import dag, task
+import logging
+from utils.default import get_default_args
+from utils.taxi import ingest_taxi_data
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
 @dag(
     **get_default_args(
         dag_id='nyc_taxi_ingestion',
         description='Monthly taxi trip data ingestion pipeline (NYC TLC)',
         schedule='@monthly',
-        start_date=datetime(2024, 1, 1),
-        catchup=False,
-        doc_md=dag_doc_md,
+        dag_file=__file__,
+        doc_md=__doc__,
     )
 )
 def ingestion_pipeline():
@@ -33,7 +32,7 @@ def ingestion_pipeline():
     @task
     def ingest_taxi_type(taxi_type: str, lake_folder: str, logical_date=None):
         bucket_name = "data-lake-nyc"
-        
+
         ingest_taxi_data(
             taxi_type=taxi_type,
             lake_folder=lake_folder,
@@ -47,11 +46,12 @@ def ingestion_pipeline():
         'app_rides': 'fhv',
         'high_volume_fhv': 'fhvhv'
     }
-    
+
     for folder_name, source_name in taxi_mapping.items():
         ingest_taxi_type.override(task_id=f"ingest_{folder_name}")(
             taxi_type=source_name,
             lake_folder=folder_name
         )
+
 
 pipeline = ingestion_pipeline()

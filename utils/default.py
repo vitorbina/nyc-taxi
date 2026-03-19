@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+
 def get_default_args(**kwargs):
 
     assert "schedule" in kwargs, "A schedule must be provided!"
@@ -11,6 +12,7 @@ def get_default_args(**kwargs):
         "retries": kwargs.get("retries", 2),
         "retry_delay": kwargs.get("retry_delay", timedelta(minutes=5)),
         "start_date": kwargs.get("start_date", datetime(2024, 1, 1)),
+        "dag_file": kwargs.get("dag_file", ""),
     }
 
     dag_config = {
