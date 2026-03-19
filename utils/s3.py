@@ -1,5 +1,4 @@
 import os
-import hashlib
 import logging
 import boto3
 from dotenv import load_dotenv
@@ -20,34 +19,20 @@ def _get_s3_client():
     )
 
 
-def compute_file_hash(filepath):
-    sha256 = hashlib.sha256()
-    with open(filepath, 'rb') as f:
-        for chunk in iter(lambda: f.read(8192), b''):
-            sha256.update(chunk)
-    return sha256.hexdigest()
-
-
-def file_hash_matches(filepath, bucket, key):
-    local_hash = compute_file_hash(filepath)
+def download_file(bucket, key, filepath):
+    logger.info(f"Downloading {bucket}/{key} to {filepath}...")
     try:
-        response = _get_s3_client().head_object(Bucket=bucket, Key=key)
-        stored_hash = response.get('Metadata', {}).get('content-hash')
-        return stored_hash == local_hash
+        _get_s3_client().download_file(bucket, key, filepath)
+        logger.info("Download completed successfully.")
     except ClientError as e:
-        if e.response['Error']['Code'] == '404':
-            return False
+        logger.error(f"Download from MinIO failed: {e}")
         raise
 
 
 def upload_file(filepath, bucket, key):
     logger.info(f"Uploading {filepath} to {bucket}/{key}...")
-    content_hash = compute_file_hash(filepath)
     try:
-        _get_s3_client().upload_file(
-            filepath, bucket, key,
-            ExtraArgs={'Metadata': {'content-hash': content_hash}}
-        )
+        _get_s3_client().upload_file(filepath, bucket, key)
         logger.info("Upload completed successfully.")
     except ClientError as e:
         logger.error(f"Upload to MinIO failed: {e}")
