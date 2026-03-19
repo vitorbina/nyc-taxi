@@ -16,7 +16,6 @@ def get_spark(app_name: str) -> SparkSession:
         .getOrCreate()
     )
 
-
 def get_parquet_output_path(output_dir: str) -> str:
     files = glob(os.path.join(output_dir, "part-*.parquet"))
     if not files:

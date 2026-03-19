@@ -13,7 +13,6 @@ logger.setLevel(logging.INFO)
 APP_NAME = "staging_yellow_taxi"
 
 def transform_yellow(input_path: str, output_dir: str) -> str:
-
     spark = get_spark(APP_NAME)
 
     df = spark.read.parquet(input_path)
