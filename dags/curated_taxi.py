@@ -12,6 +12,9 @@ from airflow.decorators import dag, task
 import logging
 from utils.default import get_default_args
 from utils.curated.yellow import curate_yellow
+from utils.curated.green import curate_green
+from utils.curated.fhv import curate_fhv
+from utils.curated.hvfhv import curate_hvfhv
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -20,6 +23,9 @@ BUCKET = "data-lake-nyc"
 
 TAXI_MAPPING = {
     "yellow_taxi": curate_yellow,
+    "green_taxi": curate_green,
+    "app_rides": curate_fhv,
+    "high_volume_fhv": curate_hvfhv,
 }
 
 
