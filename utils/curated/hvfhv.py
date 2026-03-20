@@ -4,7 +4,7 @@ import tempfile
 import shutil
 from pyspark.sql import functions as F
 from utils.s3 import upload_file, download_file
-from utils.spark import get_spark, get_parquet_output_path
+from utils.spark import get_spark, get_parquet_output_path, build_map_column
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -19,20 +19,13 @@ HVFHS_MAP = {
 }
 
 
-def _build_map_column(col_name: str, mapping: dict) -> F.Column:
-    column = F.lit(None).cast("string")
-    for code, label in mapping.items():
-        column = F.when(F.col(col_name) == code, label).otherwise(column)
-    return column
-
-
 def transform_hvfhv(input_path: str, zones_path: str, output_dir: str) -> str:
     spark = get_spark(APP_NAME)
 
     df = spark.read.parquet(input_path)
     zones = spark.read.parquet(zones_path)
 
-    df = df.withColumn("company_name", _build_map_column("hvfhs_license_num", HVFHS_MAP))
+    df = df.withColumn("company_name", build_map_column("hvfhs_license_num", HVFHS_MAP))
 
     df = df.withColumn(
         "trip_duration_minutes",
