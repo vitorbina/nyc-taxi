@@ -1,18 +1,21 @@
 # NYC Taxi Data Pipeline
 
-A Data Engineering pipeline that ingests NYC Taxi trip records and daily weather data into a local Data Lake using **MinIO** and **Apache Airflow**.
+A Data Engineering pipeline that ingests, cleans, and curates NYC Taxi trip records and daily weather data into a local Data Lake using **MinIO**, **Apache Airflow**, and **PySpark**. Built on the Medallion Architecture (raw → staging → curated).
 
 ## Architecture
 
 1. **Sources**: NYC TLC (public Parquet files) and Open-Meteo Archive API.
-2. **Ingestion**: Modular Python logic using `requests` and `tempfile` for safe file handling.
-3. **Orchestration**: Apache Airflow 3.1.7 (Local Executor).
-4. **Storage**: MinIO (S3-compatible Object Storage).
+2. **Raw**: Ingestion via `requests` and `tempfile`, stored as-is in MinIO.
+3. **Staging**: PySpark transformations — type casting, filtering, and column renaming.
+4. **Curated**: PySpark enrichment — ID translation, zone joins, and derived metrics.
+5. **Orchestration**: Apache Airflow 3.1.7 (Local Executor).
+6. **Storage**: MinIO (S3-compatible Object Storage).
 
 ## Tech Stack
 
 * **Python 3.13.11**
 * **Apache Airflow 3.1.7**
+* **PySpark 3.5.3**
 * **MinIO / S3**
 * **Open-Meteo API**
 * **Docker / Docker Compose**
@@ -82,32 +85,13 @@ Before running the pipelines, create the destination bucket:
 4. Name the bucket exactly: `data-lake-nyc`
 5. Click **Create Bucket**
 
-## Data Lake Structure
-
-```
-data-lake-nyc/
-└── raw/
-    ├── yellow_taxi/
-    │   └── partition_date=YYYY-MM-01/
-    ├── green_taxi/
-    │   └── partition_date=YYYY-MM-01/
-    ├── app_rides/
-    │   └── partition_date=YYYY-MM-01/
-    ├── high_volume_fhv/
-    │   └── partition_date=YYYY-MM-01/
-    ├── reference/
-    │   ├── taxi_zone_lookup/
-    │   └── taxi_zones/
-    └── weather/
-        └── partition_date=YYYY-MM-DD/
-```
 
 ## Project Structure
 
-* `/dags`: Airflow DAG definitions (orchestration logic).
-* `/utils`: Python modules for data ingestion (ETL logic).
-* `/docs`: Documentation for each pipeline. See [nyc_taxi_ingestion.md](docs/nyc_taxi_ingestion.md), [nyc_weather_ingestion.md](docs/nyc_weather_ingestion.md) and [nyc_zones_ingestion.md](docs/nyc_zones_ingestion.md).
-* `/airflow`: Local Airflow metadata and logs (ignored by Git).
+* `/dags`: Airflow DAG definitions for each pipeline layer.
+* `/utils`: Python modules organized by layer:
+  * `/utils/staging`: PySpark transformations for the staging layer.
+  * `/utils/curated`: PySpark enrichment logic for the curated layer.
 * `docker-compose.yml`: Infrastructure configuration for MinIO.
 * `requirements.txt`: Python project dependencies.
 * `.env`: Local environment variables and credentials (ignored by Git).
