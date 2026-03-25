@@ -2,9 +2,9 @@ import logging
 import os
 import tempfile
 import shutil
-from pyspark.sql import functions as F
-from utils.s3 import upload_file, download_file
-from utils.spark import get_spark, get_parquet_output_path
+from airflow.exceptions import AirflowSkipException
+from utils.s3 import upload_file, download_file, file_exists
+from utils.spark import get_spark, get_parquet_output_path, build_map_column
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -39,19 +39,12 @@ WEATHER_CODE_MAP = {
 }
 
 
-def _build_map_column(col_name: str, mapping: dict) -> F.Column:
-    column = F.lit(None).cast("string")
-    for code, label in mapping.items():
-        column = F.when(F.col(col_name) == code, label).otherwise(column)
-    return column
-
-
 def transform_weather(input_path: str, output_dir: str, date_str: str) -> str:
     spark = get_spark(APP_NAME)
 
     df = spark.read.parquet(input_path)
 
-    df = df.withColumn("weather_description", _build_map_column("weather_code", WEATHER_CODE_MAP))
+    df = df.withColumn("weather_description", build_map_column("weather_code", WEATHER_CODE_MAP))
 
     df = df.select(
         "datetime",
@@ -79,6 +72,9 @@ def curate_weather(date_str: str, bucket: str):
         file_name = f"weather_nyc_{date_str}.parquet"
         staging_key = f"staging/weather/partition_date={date_str}/{file_name}"
         curated_key = f"curated/weather/partition_date={date_str}/{file_name}"
+
+        if not file_exists(bucket=bucket, key=staging_key):
+            raise AirflowSkipException(f"Staging file not found in MinIO: {staging_key}")
 
         input_path = os.path.join(tmpfolder, "input", file_name)
         os.makedirs(os.path.dirname(input_path), exist_ok=True)

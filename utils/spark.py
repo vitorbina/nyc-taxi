@@ -17,7 +17,6 @@ def get_spark(app_name: str) -> SparkSession:
     )
 
 def get_parquet_output_path(output_dir: str) -> str:
-    # Spark writes to a folder — this finds the actual part file inside it
     files = glob(os.path.join(output_dir, "part-*.parquet"))
     if not files:
         raise RuntimeError(f"No parquet file found in: {output_dir}")

@@ -15,7 +15,6 @@ APP_NAME = "staging_fhv"
 
 
 def transform_fhv(input_path: str, output_dir: str) -> str:
-    """Cleans and casts raw FHV parquet, returns path of the output file."""
     spark = get_spark(APP_NAME)
 
     df = spark.read.parquet(input_path)

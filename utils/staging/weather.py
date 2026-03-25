@@ -5,7 +5,8 @@ import tempfile
 import shutil
 from pyspark.sql import functions as F
 from pyspark.sql.types import FloatType, IntegerType, TimestampType
-from utils.s3 import upload_file, download_file
+from airflow.exceptions import AirflowSkipException
+from utils.s3 import upload_file, download_file, file_exists
 from utils.spark import get_spark, get_parquet_output_path
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,9 @@ def stage_weather(date_str: str, bucket: str):
         file_name = f"weather_nyc_{date_str}.json"
         raw_key = f"raw/weather/partition_date={date_str}/{file_name}"
         staging_key = f"staging/weather/partition_date={date_str}/weather_nyc_{date_str}.parquet"
+
+        if not file_exists(bucket=bucket, key=raw_key):
+            raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
 
         input_path = os.path.join(tmpfolder, "input", file_name)
         os.makedirs(os.path.dirname(input_path), exist_ok=True)

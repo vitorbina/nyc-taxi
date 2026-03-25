@@ -2,6 +2,7 @@ import logging
 import os
 import tempfile
 import shutil
+from pyspark.sql import functions as F
 from airflow.exceptions import AirflowSkipException
 from utils.s3 import upload_file, download_file, file_exists
 from utils.spark import get_spark, get_parquet_output_path, build_map_column
