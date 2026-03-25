@@ -23,11 +23,7 @@ HOURLY_VARIABLES = [
 ]
 
 
-def download_weather_data(date_str):
-    tmpfolder = tempfile.mkdtemp()
-    file_name = f"weather_nyc_{date_str}.json"
-    local_path = os.path.join(tmpfolder, file_name)
-
+def download_weather_data(date_str: str, local_path: str) -> None:
     url = (
         f"https://archive-api.open-meteo.com/v1/archive"
         f"?latitude={NYC_LAT}&longitude={NYC_LON}"
@@ -43,26 +39,28 @@ def download_weather_data(date_str):
 
     data = response.json()
 
-    with open(local_path, 'w', encoding='utf-8') as f:
+    with open(local_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
     logger.info(f"Weather data saved to: {local_path}")
-    return local_path
 
 
-def upload_weather(local_path, date_str, bucket):
+def upload_weather(local_path: str, date_str: str, bucket: str) -> None:
     file_name = os.path.basename(local_path)
     key = f"raw/weather/partition_date={date_str}/{file_name}"
 
     logger.info(f"Uploading to {bucket}/{key}")
     upload_file(filepath=local_path, bucket=bucket, key=key)
 
-    tmpfolder = os.path.dirname(local_path)
-    shutil.rmtree(tmpfolder)
-    logger.info(f"Temporary folder {tmpfolder} removed.")
 
-
-def ingest_weather_data(execution_date, bucket):
+def ingest_weather_data(execution_date, bucket: str) -> None:
     date_str = execution_date.strftime("%Y-%m-%d")
-    local_path = download_weather_data(date_str)
-    upload_weather(local_path, date_str, bucket)
+    file_name = f"weather_nyc_{date_str}.json"
+
+    tmpfolder = tempfile.mkdtemp()
+    try:
+        local_path = os.path.join(tmpfolder, file_name)
+        download_weather_data(date_str, local_path)
+        upload_weather(local_path, date_str, bucket)
+    finally:
+        shutil.rmtree(tmpfolder)

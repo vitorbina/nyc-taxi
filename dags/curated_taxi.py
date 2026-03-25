@@ -1,9 +1,11 @@
 """
 # NYC Taxi Curated
 
-Reads staged yellow taxi parquet files from MinIO, translates numeric codes to
+Reads staged taxi parquet files from MinIO, translates numeric codes to
 human-readable labels, enriches trips with pickup and dropoff zone names,
 and writes the result to the curated layer.
+
+Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 
 Runs monthly, after the staging DAG completes.
 """

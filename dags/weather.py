@@ -15,6 +15,8 @@ from utils.weather import ingest_weather_data
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+BUCKET = "data-lake-nyc"
+
 
 @dag(
     **get_default_args(
@@ -31,7 +33,7 @@ def weather_ingestion_pipeline():
     def ingest_daily_weather(data_interval_end=None):
         ingest_weather_data(
             execution_date=data_interval_end,
-            bucket="data-lake-nyc"
+            bucket=BUCKET,
         )
 
     ingest_daily_weather()

@@ -19,7 +19,7 @@ def _get_s3_client():
     )
 
 
-def file_exists(bucket, key) -> bool:
+def file_exists(bucket: str, key: str) -> bool:
     try:
         _get_s3_client().head_object(Bucket=bucket, Key=key)
         return True
@@ -27,7 +27,7 @@ def file_exists(bucket, key) -> bool:
         return False
 
 
-def download_file(bucket, key, filepath):
+def download_file(bucket: str, key: str, filepath: str) -> None:
     logger.info(f"Downloading {bucket}/{key} to {filepath}...")
     try:
         _get_s3_client().download_file(bucket, key, filepath)
@@ -37,7 +37,7 @@ def download_file(bucket, key, filepath):
         raise
 
 
-def upload_file(filepath, bucket, key):
+def upload_file(filepath: str, bucket: str, key: str) -> None:
     logger.info(f"Uploading {filepath} to {bucket}/{key}...")
     try:
         _get_s3_client().upload_file(filepath, bucket, key)

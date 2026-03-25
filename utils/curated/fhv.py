@@ -14,7 +14,6 @@ APP_NAME = "curated_fhv"
 
 
 def transform_fhv(input_path: str, zones_path: str, output_dir: str) -> str:
-    """Reads staged FHV parquet, enriches with zone names, returns output path."""
     spark = get_spark(APP_NAME)
 
     df = spark.read.parquet(input_path)

@@ -6,38 +6,12 @@ from pyspark.sql import functions as F
 from airflow.exceptions import AirflowSkipException
 from utils.s3 import upload_file, download_file, file_exists
 from utils.spark import get_spark, get_parquet_output_path, build_map_column
+from utils.curated.mappings import VENDOR_MAP, RATE_CODE_MAP, PAYMENT_TYPE_MAP
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 APP_NAME = "curated_green"
-
-VENDOR_MAP = {
-    1: "Creative Mobile Technologies, LLC",
-    2: "Curb Mobility, LLC",
-    6: "Myle Technologies Inc",
-    7: "Helix",
-}
-
-RATE_CODE_MAP = {
-    1: "Standard rate",
-    2: "JFK",
-    3: "Newark",
-    4: "Nassau or Westchester",
-    5: "Negotiated fare",
-    6: "Group ride",
-    99: "Null/unknown",
-}
-
-PAYMENT_TYPE_MAP = {
-    0: "Flex Fare trip",
-    1: "Credit card",
-    2: "Cash",
-    3: "No charge",
-    4: "Dispute",
-    5: "Unknown",
-    6: "Voided trip",
-}
 
 TRIP_TYPE_MAP = {
     1: "Street-hail",

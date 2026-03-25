@@ -15,6 +15,8 @@ from utils.zones import ingest_zone_data
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+BUCKET = "data-lake-nyc"
+
 
 @dag(
     **get_default_args(
@@ -29,8 +31,7 @@ def zones_ingestion_pipeline():
 
     @task
     def ingest_reference_file(file_name: str):
-        bucket_name = "data-lake-nyc"
-        ingest_zone_data(file_name=file_name, bucket=bucket_name)
+        ingest_zone_data(file_name=file_name, bucket=BUCKET)
 
     reference_files = [
         "taxi_zone_lookup.csv",

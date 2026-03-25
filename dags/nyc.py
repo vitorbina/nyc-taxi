@@ -19,12 +19,19 @@ logger.setLevel(logging.INFO)
 
 BUCKET = "data-lake-nyc"
 
+TAXI_MAPPING = {
+    "yellow_taxi": "yellow",
+    "green_taxi": "green",
+    "app_rides": "fhv",
+    "high_volume_fhv": "fhvhv",
+}
+
 
 @dag(
     **get_default_args(
-        dag_id='nyc_taxi_ingestion',
-        description='Monthly taxi trip data ingestion pipeline (NYC TLC)',
-        schedule='@monthly',
+        dag_id="nyc_taxi_ingestion",
+        description="Monthly taxi trip data ingestion pipeline (NYC TLC)",
+        schedule="@monthly",
         dag_file=__file__,
         doc_md=__doc__,
     )
@@ -40,14 +47,7 @@ def ingestion_pipeline():
             bucket=BUCKET,
         )
 
-    taxi_mapping = {
-        'yellow_taxi': 'yellow',
-        'green_taxi': 'green',
-        'app_rides': 'fhv',
-        'high_volume_fhv': 'fhvhv'
-    }
-
-    for folder_name, source_name in taxi_mapping.items():
+    for folder_name, source_name in TAXI_MAPPING.items():
         ingest_taxi_type.override(task_id=f"ingest_{folder_name}")(
             taxi_type=source_name,
             lake_folder=folder_name
