@@ -4,7 +4,8 @@ import tempfile
 import shutil
 from pyspark.sql import functions as F
 from pyspark.sql.types import IntegerType, FloatType, TimestampType, StringType
-from utils.s3 import upload_file, download_file
+from airflow.exceptions import AirflowSkipException
+from utils.s3 import upload_file, download_file, file_exists
 from utils.spark import get_spark, get_parquet_output_path
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,9 @@ def stage_green(lake_folder: str, year: str, month: str, bucket: str):
         file_name = f"green_tripdata_{year}-{int(month):02d}.parquet"
         raw_key = f"raw/{lake_folder}/partition_date={year}-{int(month):02d}-01/{file_name}"
         staging_key = f"staging/{lake_folder}/partition_date={year}-{int(month):02d}-01/{file_name}"
+
+        if not file_exists(bucket=bucket, key=raw_key):
+            raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
 
         input_path = os.path.join(tmpfolder, "input", file_name)
         os.makedirs(os.path.dirname(input_path), exist_ok=True)

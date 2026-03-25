@@ -3,7 +3,8 @@ import os
 import tempfile
 import shutil
 from pyspark.sql import functions as F
-from utils.s3 import upload_file, download_file
+from airflow.exceptions import AirflowSkipException
+from utils.s3 import upload_file, download_file, file_exists
 from utils.spark import get_spark, get_parquet_output_path, build_map_column
 
 logger = logging.getLogger(__name__)
@@ -113,6 +114,9 @@ def curate_green(lake_folder: str, year: str, month: str, bucket: str):
         staging_key = f"staging/{lake_folder}/partition_date={year}-{int(month):02d}-01/{file_name}"
         zones_key = "staging/reference/taxi_zone_lookup/taxi_zone_lookup.parquet"
         curated_key = f"curated/{lake_folder}/partition_date={year}-{int(month):02d}-01/{file_name}"
+
+        if not file_exists(bucket=bucket, key=staging_key):
+            raise AirflowSkipException(f"Staging file not found in MinIO: {staging_key}")
 
         input_path = os.path.join(tmpfolder, "input", file_name)
         os.makedirs(os.path.dirname(input_path), exist_ok=True)

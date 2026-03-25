@@ -9,6 +9,7 @@ Runs monthly, after the staging DAG completes.
 """
 
 from airflow.decorators import dag, task
+from airflow.sensors.external_task import ExternalTaskSensor
 import logging
 from utils.default import get_default_args
 from utils.curated.yellow import curate_yellow
@@ -40,6 +41,14 @@ TAXI_MAPPING = {
 )
 def curated_pipeline():
 
+    wait_for_staging = ExternalTaskSensor(
+        task_id="wait_for_staging",
+        external_dag_id="nyc_taxi_staging",
+        external_task_id=None,
+        mode="reschedule",
+        timeout=3600,
+    )
+
     @task
     def curate_taxi_type(lake_folder: str, logical_date=None):
         curate_fn = TAXI_MAPPING[lake_folder]
@@ -47,10 +56,14 @@ def curated_pipeline():
         month = logical_date.strftime("%m")
         curate_fn(lake_folder=lake_folder, year=year, month=month, bucket=BUCKET)
 
-    for folder_name in TAXI_MAPPING:
+    curated_tasks = [
         curate_taxi_type.override(task_id=f"curate_{folder_name}")(
             lake_folder=folder_name
         )
+        for folder_name in TAXI_MAPPING
+    ]
+
+    wait_for_staging >> curated_tasks
 
 
 pipeline = curated_pipeline()

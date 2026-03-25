@@ -20,6 +20,7 @@ def get_default_args(**kwargs):
         "schedule": kwargs["schedule"],
         "default_args": base_default_args,
         "catchup": kwargs.get("catchup", False),
+        "is_paused_upon_creation": kwargs.get("is_paused_upon_creation", True),
         "tags": kwargs.get("tags", ["nyc_taxi"]),
         "description": kwargs.get("description", ""),
         "doc_md": kwargs.get("doc_md", ""),

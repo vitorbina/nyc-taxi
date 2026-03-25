@@ -19,6 +19,14 @@ def _get_s3_client():
     )
 
 
+def file_exists(bucket, key) -> bool:
+    try:
+        _get_s3_client().head_object(Bucket=bucket, Key=key)
+        return True
+    except ClientError:
+        return False
+
+
 def download_file(bucket, key, filepath):
     logger.info(f"Downloading {bucket}/{key} to {filepath}...")
     try:

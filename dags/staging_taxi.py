@@ -9,6 +9,7 @@ Runs monthly, triggered after the raw ingestion DAG completes.
 """
 
 from airflow.decorators import dag, task
+from airflow.sensors.external_task import ExternalTaskSensor
 import logging
 from utils.default import get_default_args
 from utils.staging.yellow import stage_yellow
@@ -40,6 +41,14 @@ TAXI_MAPPING = {
 )
 def staging_pipeline():
 
+    wait_for_ingestion = ExternalTaskSensor(
+        task_id="wait_for_ingestion",
+        external_dag_id="nyc_taxi_ingestion",
+        external_task_id=None,
+        mode="reschedule",
+        timeout=3600,
+    )
+
     @task
     def stage_taxi_type(lake_folder: str, logical_date=None):
         stage_fn = TAXI_MAPPING[lake_folder]
@@ -47,10 +56,14 @@ def staging_pipeline():
         month = logical_date.strftime("%m")
         stage_fn(lake_folder=lake_folder, year=year, month=month, bucket=BUCKET)
 
-    for folder_name in TAXI_MAPPING:
+    staging_tasks = [
         stage_taxi_type.override(task_id=f"stage_{folder_name}")(
             lake_folder=folder_name
         )
+        for folder_name in TAXI_MAPPING
+    ]
+
+    wait_for_ingestion >> staging_tasks
 
 
 pipeline = staging_pipeline()
