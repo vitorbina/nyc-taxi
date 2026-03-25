@@ -17,6 +17,8 @@ from utils.taxi import ingest_taxi_data
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+BUCKET = "data-lake-nyc"
+
 
 @dag(
     **get_default_args(
@@ -31,13 +33,11 @@ def ingestion_pipeline():
 
     @task
     def ingest_taxi_type(taxi_type: str, lake_folder: str, logical_date=None):
-        bucket_name = "data-lake-nyc"
-
         ingest_taxi_data(
             taxi_type=taxi_type,
             lake_folder=lake_folder,
             logical_date=logical_date,
-            bucket=bucket_name
+            bucket=BUCKET,
         )
 
     taxi_mapping = {

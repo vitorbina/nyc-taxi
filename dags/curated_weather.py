@@ -8,6 +8,7 @@ Runs daily, after the staging weather DAG completes.
 """
 
 from airflow.decorators import dag, task
+from airflow.sensors.external_task import ExternalTaskSensor
 import logging
 from utils.default import get_default_args
 from utils.curated.weather import curate_weather
@@ -29,12 +30,20 @@ BUCKET = "data-lake-nyc"
 )
 def weather_curated_pipeline():
 
+    wait_for_staging = ExternalTaskSensor(
+        task_id="wait_for_staging",
+        external_dag_id="nyc_weather_staging",
+        external_task_id=None,
+        mode="reschedule",
+        timeout=3600,
+    )
+
     @task
     def curate_daily_weather(data_interval_end=None):
         date_str = data_interval_end.strftime("%Y-%m-%d")
         curate_weather(date_str=date_str, bucket=BUCKET)
 
-    curate_daily_weather()
+    wait_for_staging >> curate_daily_weather()
 
 
 pipeline = weather_curated_pipeline()
