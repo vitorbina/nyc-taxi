@@ -23,6 +23,7 @@ BUCKET = "data-lake-nyc"
         dag_id='nyc_weather_ingestion',
         description='Daily weather data ingestion pipeline (Open-Meteo Archive API)',
         schedule='@daily',
+        catchup=True,
         dag_file=__file__,
         doc_md=__doc__,
     )

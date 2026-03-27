@@ -32,6 +32,7 @@ TAXI_MAPPING = {
         dag_id="nyc_taxi_ingestion",
         description="Monthly taxi trip data ingestion pipeline (NYC TLC)",
         schedule="@monthly",
+        catchup=True,
         dag_file=__file__,
         doc_md=__doc__,
     )

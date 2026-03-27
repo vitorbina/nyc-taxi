@@ -11,9 +11,10 @@ Runs monthly, after the staging DAG completes.
 """
 
 from airflow.decorators import dag, task
-from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.sensors.base import PokeReturnValue
 import logging
 from utils.default import get_default_args
+from utils.s3 import file_exists
 from utils.curated.yellow import curate_yellow
 from utils.curated.green import curate_green
 from utils.curated.fhv import curate_fhv
@@ -37,19 +38,19 @@ TAXI_MAPPING = {
         dag_id="nyc_taxi_curated",
         description="Monthly curated pipeline for NYC taxi trip data",
         schedule="@monthly",
+        catchup=True,
         dag_file=__file__,
         doc_md=__doc__,
     )
 )
 def curated_pipeline():
 
-    wait_for_staging = ExternalTaskSensor(
-        task_id="wait_for_staging",
-        external_dag_id="nyc_taxi_staging",
-        external_task_id=None,
-        mode="reschedule",
-        timeout=3600,
-    )
+    @task.sensor(task_id="wait_for_staging", mode="reschedule", timeout=3600, poke_interval=120)
+    def wait_for_staging(logical_date=None) -> PokeReturnValue:
+        year = logical_date.strftime("%Y")
+        month = logical_date.strftime("%m")
+        key = f"staging/yellow_taxi/partition_date={year}-{int(month):02d}-01/yellow_tripdata_{year}-{int(month):02d}.parquet"
+        return PokeReturnValue(is_done=file_exists(bucket=BUCKET, key=key))
 
     @task
     def curate_taxi_type(lake_folder: str, logical_date=None):
@@ -65,7 +66,7 @@ def curated_pipeline():
         for folder_name in TAXI_MAPPING
     ]
 
-    wait_for_staging >> curated_tasks
+    wait_for_staging() >> curated_tasks
 
 
 pipeline = curated_pipeline()

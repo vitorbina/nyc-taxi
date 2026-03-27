@@ -24,6 +24,7 @@ BUCKET = "data-lake-nyc"
         dag_id="nyc_weather_staging",
         description="Daily staging pipeline for NYC weather data",
         schedule="@daily",
+        catchup=True,
         dag_file=__file__,
         doc_md=__doc__,
     )
