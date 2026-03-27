@@ -92,6 +92,7 @@ Before running the pipelines, create the destination bucket:
 * `/utils`: Python modules organized by layer:
   * `/utils/staging`: PySpark transformations for the staging layer.
   * `/utils/curated`: PySpark enrichment logic for the curated layer.
+* `/queries`: Analytical Spark SQL queries on the curated layer.
 * `docker-compose.yml`: Infrastructure configuration for MinIO.
 * `requirements.txt`: Python project dependencies.
 * `.env`: Local environment variables and credentials (ignored by Git).
