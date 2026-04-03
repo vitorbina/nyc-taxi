@@ -20,7 +20,7 @@ BUCKET = "data-lake-nyc"
 
 @dag(
     **get_default_args(
-        dag_id='nyc_zones_ingestion',
+        dag_id='zones_ingestion',
         description='One-time ingestion of NYC TLC reference files (zone lookup and shapefile)',
         schedule='@once',
         dag_file=__file__,

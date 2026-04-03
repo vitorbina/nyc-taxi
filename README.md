@@ -1,98 +1,127 @@
 # NYC Taxi Data Pipeline
 
-A Data Engineering pipeline that ingests, cleans, and curates NYC Taxi trip records and daily weather data into a local Data Lake using **MinIO**, **Apache Airflow**, and **PySpark**. Built on the Medallion Architecture (raw → staging → curated).
+A Data Engineering pipeline that ingests, cleans, and curates NYC Taxi trip records and daily weather data into a local Data Lake. Built on the **Medallion Architecture** (raw → staging → curated) with full infrastructure as code.
 
 ## Architecture
 
-1. **Sources**: NYC TLC (public Parquet files) and Open-Meteo Archive API.
-2. **Raw**: Ingestion via `requests` and `tempfile`, stored as-is in MinIO.
-3. **Staging**: PySpark transformations — type casting, filtering, and column renaming.
-4. **Curated**: PySpark enrichment — ID translation, zone joins, and derived metrics.
-5. **Orchestration**: Apache Airflow 3.1.7 (Local Executor).
-6. **Storage**: MinIO (S3-compatible Object Storage).
+```
+Sources → Raw (MinIO) → Staging (MinIO) → Curated (MinIO) → Hive Metastore → Queries
+```
+
+1. **Sources**: NYC TLC (public Parquet files) and Open-Meteo Archive API
+2. **Raw**: Files ingested as-is into MinIO
+3. **Staging**: PySpark transformations — type casting, filtering, column renaming
+4. **Curated**: PySpark enrichment — code translation, zone joins, derived metrics
+5. **Hive Metastore**: Metadata catalog — curated tables registered and queryable by name
+6. **Orchestration**: Apache Airflow 3.1.7 (Local Executor)
+7. **Processing**: Apache Spark 3.5.3 cluster (master + worker)
 
 ## Tech Stack
 
-* **Python 3.13.11**
 * **Apache Airflow 3.1.7**
+* **Apache Spark 3.5.3**
+* **Apache Hive 4.0.0** (Metastore)
+* **MinIO** (S3-compatible Object Storage)
+* **PostgreSQL 15** (Airflow metadata + Hive metadata)
 * **PySpark 3.5.3**
-* **MinIO / S3**
-* **Open-Meteo API**
 * **Docker / Docker Compose**
 
-## Setup & Installation
+## Prerequisites
 
-### 1. Prerequisites (System Level)
+* Docker Engine
+* Docker Compose
+* wget (for downloading the Hive JDBC driver)
 
-Before cloning the repo, ensure your operating system has these core tools installed:
+## Setup
 
-* **Python 3.13.11**
-* **Docker Engine 29.2.1**
-* **Docker Compose 5.1.0**
-
-### 2. Environment Setup (Using Conda)
+### 1. Clone the repo
 
 ```bash
-# 1. Create the environment with the specific Python version (if not created yet)
-conda create --name your_project_name python=3.13.11 -y
-
-# 2. Activate the environment
-conda activate your_project_name
-
-# 3. Install the project dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
+git clone <repo-url>
+cd nyc-taxi
 ```
 
-### 3. Configure Environment Variables
+### 2. Download the Hive JDBC driver
 
-Copy the example file and fill in your credentials:
+Required once before starting the infrastructure:
 
 ```bash
-cp .env.example .env
+mkdir -p hive-lib && wget -q https://jdbc.postgresql.org/download/postgresql-42.7.3.jar -O hive-lib/postgresql.jar
 ```
 
-Edit `.env` with your values:
+### 3. Start the infrastructure
 
-| Variable | Description |
-|---|---|
-| `MINIO_ROOT_USER` | MinIO username |
-| `MINIO_ROOT_PASSWORD` | MinIO password |
-| `MINIO_ENDPOINT` | MinIO API URL (e.g. `http://localhost:9000`) |
+```bash
+docker compose up -d
+```
 
-## How to Run
+This starts: MinIO, PostgreSQL (Airflow), PostgreSQL (Hive), Hive Metastore, Airflow (webserver + scheduler + dag-processor), Spark (master + worker).
+
+### 4. Get the Airflow password
+
+```bash
+docker logs nyc_airflow_webserver 2>&1 | grep Password
+```
+
+### 5. Access the UIs
+
+| Service | URL | Credentials |
+|---|---|---|
+| Airflow | http://localhost:8080 | admin / (see step 4) |
+| MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
+| Spark Master UI | http://localhost:8081 | — |
+
+### 6. Create the MinIO bucket
+
+1. Open http://localhost:9001
+2. Login with `minioadmin` / `minioadmin`
+3. Create a bucket named exactly: `data-lake-nyc`
+
+## Running the Pipeline
+
+Activate the DAGs in the Airflow UI in this order:
+
+| DAG | Schedule | Description |
+|---|---|---|
+| `zones_ingestion` | `@once` | Ingests taxi zone reference files |
+| `zones_staging` | `@once` | Stages zone reference data |
+| `taxi_ingestion` | `@monthly` | Ingests monthly taxi trip records |
+| `weather_ingestion` | `@daily` | Ingests daily weather data |
+| `taxi_staging` | `@monthly` | Stages and curates taxi data, updates Hive |
+| `weather_staging` | `@daily` | Stages and curates weather data, updates Hive |
+| `hive_setup` | `@once` | Registers curated tables in Hive Metastore |
+
+> The staging DAGs trigger automatically via sensor when ingestion completes.
+> Run `nyc_hive_setup` once after the first ingestion cycle finishes.
+
+## Analytical Queries
+
+Located in `/queries/`. Run locally against the Spark cluster:
 
 ```bash
 source .env
-docker compose up -d minio
-airflow standalone
+python queries/covid_impact.py
+python queries/market_share.py
+python queries/demand_heatmap.py
+python queries/weather_demand.py
 ```
 
-#### UI Access
-
-Once the services are running, open your browser:
-
-* **Airflow UI**: http://localhost:8080
-* **MinIO Console**: http://localhost:9001
-
-## MinIO Bucket Setup (Required)
-
-Before running the pipelines, create the destination bucket:
-
-1. Open the MinIO Console at http://localhost:9001
-2. Login with the credentials from your `.env` file
-3. Navigate to **Buckets** on the left menu and click **Create Bucket**
-4. Name the bucket exactly: `data-lake-nyc`
-5. Click **Create Bucket**
-
+> To use the Docker Spark cluster, set in `.env`:
+> `SPARK_MASTER_URL=spark://spark-master:7077`
+> `SPARK_S3A_ENDPOINT=http://minio:9000`
 
 ## Project Structure
 
-* `/dags`: Airflow DAG definitions for each pipeline layer.
-* `/utils`: Python modules organized by layer:
-  * `/utils/staging`: PySpark transformations for the staging layer.
-  * `/utils/curated`: PySpark enrichment logic for the curated layer.
-* `/queries`: Analytical Spark SQL queries on the curated layer.
-* `docker-compose.yml`: Infrastructure configuration for MinIO.
-* `requirements.txt`: Python project dependencies.
-* `.env`: Local environment variables and credentials (ignored by Git).
+```
+dags/           Airflow DAG definitions
+utils/
+  staging/      PySpark staging transformations
+  curated/      PySpark curated enrichment logic
+  hive.py       Hive Metastore registration logic
+  spark.py      SparkSession factory
+  s3.py         MinIO client helpers
+queries/        Analytical Spark SQL queries
+hive-lib/       Hive JDBC driver (not versioned)
+docker-compose.yml  Full infrastructure definition
+requirements-docker.txt  Airflow container dependencies
+```

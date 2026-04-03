@@ -20,7 +20,7 @@ BUCKET = "data-lake-nyc"
 
 @dag(
     **get_default_args(
-        dag_id='nyc_weather_ingestion',
+        dag_id='weather_ingestion',
         description='Daily weather data ingestion pipeline (Open-Meteo Archive API)',
         schedule='@daily',
         catchup=True,

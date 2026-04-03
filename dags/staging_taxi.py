@@ -1,8 +1,9 @@
 """
 # NYC Taxi Staging
 
-Reads raw taxi parquet files from MinIO, applies cleaning and type casting,
-and writes the result to the staging layer.
+Reads raw taxi parquet files from MinIO, applies cleaning, type casting,
+code translation, and zone enrichment in a single step, then writes
+the result to the staging layer.
 
 Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 Runs monthly, triggered after the raw ingestion DAG completes.
@@ -17,13 +18,14 @@ from utils.staging.yellow import stage_yellow
 from utils.staging.green import stage_green
 from utils.staging.fhv import stage_fhv
 from utils.staging.hvfhv import stage_hvfhv
+from utils.hive import repair_table
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 BUCKET = "data-lake-nyc"
 
-TAXI_MAPPING = {
+STAGING_MAPPING = {
     "yellow_taxi": stage_yellow,
     "green_taxi": stage_green,
     "app_rides": stage_fhv,
@@ -33,7 +35,7 @@ TAXI_MAPPING = {
 
 @dag(
     **get_default_args(
-        dag_id="nyc_taxi_staging",
+        dag_id="taxi_staging",
         description="Monthly staging pipeline for NYC taxi trip data",
         schedule="@monthly",
         catchup=True,
@@ -52,19 +54,21 @@ def staging_pipeline():
 
     @task
     def stage_taxi_type(lake_folder: str, logical_date=None):
-        stage_fn = TAXI_MAPPING[lake_folder]
+        stage_fn = STAGING_MAPPING[lake_folder]
         year = logical_date.strftime("%Y")
         month = logical_date.strftime("%m")
         stage_fn(lake_folder=lake_folder, year=year, month=month, bucket=BUCKET)
 
-    staging_tasks = [
-        stage_taxi_type.override(task_id=f"stage_{folder_name}")(
-            lake_folder=folder_name
-        )
-        for folder_name in TAXI_MAPPING
-    ]
+    @task
+    def update_hive(lake_folder: str):
+        repair_table(lake_folder)
 
-    wait_for_ingestion() >> staging_tasks
+    sensor = wait_for_ingestion()
+
+    for folder_name in STAGING_MAPPING:
+        stage_task = stage_taxi_type.override(task_id=f"stage_{folder_name}")(lake_folder=folder_name)
+        hive_task = update_hive.override(task_id=f"hive_{folder_name}")(lake_folder=folder_name)
+        sensor >> stage_task >> hive_task
 
 
 pipeline = staging_pipeline()

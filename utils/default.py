@@ -11,7 +11,7 @@ def get_default_args(**kwargs):
         "depends_on_past": kwargs.get("depends_on_past", False),
         "retries": kwargs.get("retries", 2),
         "retry_delay": kwargs.get("retry_delay", timedelta(minutes=5)),
-        "start_date": kwargs.get("start_date", datetime(2024, 1, 1)),
+        "start_date": kwargs.get("start_date", datetime(2026, 4, 1)),
         "dag_file": kwargs.get("dag_file", ""),
     }
 

@@ -20,7 +20,7 @@ BUCKET = "data-lake-nyc"
 
 @dag(
     **get_default_args(
-        dag_id="nyc_zones_staging",
+        dag_id="zones_staging",
         description="One-time staging pipeline for NYC taxi zone reference data",
         schedule="@once",
         dag_file=__file__,

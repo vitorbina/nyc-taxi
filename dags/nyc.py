@@ -29,7 +29,7 @@ TAXI_MAPPING = {
 
 @dag(
     **get_default_args(
-        dag_id="nyc_taxi_ingestion",
+        dag_id="taxi_ingestion",
         description="Monthly taxi trip data ingestion pipeline (NYC TLC)",
         schedule="@monthly",
         catchup=True,
