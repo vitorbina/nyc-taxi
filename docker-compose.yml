@@ -33,6 +33,8 @@ x-airflow-common: &airflow-common
     HIVE_METASTORE_URI: thrift://hive-metastore:9083
     PYTHONPATH: /opt/airflow
     _PIP_ADDITIONAL_REQUIREMENTS: ""
+    AIRFLOW__CORE__PARALLELISM: "2"
+    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "2"
 
 services:
 
@@ -132,6 +134,10 @@ services:
       airflow-init:
         condition: service_completed_successfully
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6g
 
   # ── Hive Metastore ────────────────────────────────────────────────────────
   hive-metastore:
@@ -141,6 +147,7 @@ services:
     container_name: nyc_hive_metastore
     volumes:
       - ./hive-lib/postgresql.jar:/opt/hive/lib/postgresql.jar
+      - ./hive-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
     environment:
       SERVICE_NAME: metastore
       DB_DRIVER: postgres
@@ -149,12 +156,6 @@ services:
         -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres-hive:5432/hive_metastore
         -Djavax.jdo.option.ConnectionUserName=hive
         -Djavax.jdo.option.ConnectionPassword=hive
-        -Dfs.s3a.endpoint=http://minio:9000
-        -Dfs.s3a.access.key=minioadmin
-        -Dfs.s3a.secret.key=minioadmin
-        -Dfs.s3a.path.style.access=true
-        -Dfs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem
-        -Dfs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider
     ports:
       - "9083:9083"
     depends_on:

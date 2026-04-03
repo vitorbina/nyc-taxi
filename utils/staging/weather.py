@@ -88,4 +88,5 @@ def stage_weather(date_str: str, bucket: str):
 
         logger.info(f"Weather staging written to s3a://{bucket}/{staging_key}")
     finally:
+        spark.stop()
         shutil.rmtree(tmpfolder)

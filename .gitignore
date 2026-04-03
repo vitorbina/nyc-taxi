@@ -206,6 +206,9 @@ lake_data/
 # Hive JDBC driver (download with: mkdir -p hive-lib && wget -q https://jdbc.postgresql.org/download/postgresql-42.7.3.jar -O hive-lib/postgresql.jar)
 hive-lib/
 
+# Hive S3A credentials (contains plaintext MinIO credentials)
+hive-conf/
+
 simple_auth_manager_passwords.json.generated
 
 airflow.cfg

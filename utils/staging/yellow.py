@@ -85,3 +85,4 @@ def stage_yellow(lake_folder: str, year: str, month: str, bucket: str):
     """).coalesce(1).write.mode("overwrite").parquet(f"s3a://{bucket}/{staging_key}")
 
     logger.info(f"Yellow staging written to s3a://{bucket}/{staging_key}")
+    spark.stop()
