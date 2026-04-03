@@ -1,142 +1,114 @@
 # NYC Taxi Data Pipeline
 
-A Data Engineering pipeline that ingests, processes, and serves NYC Taxi trip records and daily weather data into a local Data Lake. Built on the **Medallion Architecture** (raw → staging → final) with full infrastructure as code.
+Data engineering pipeline that ingests, processes, and serves NYC taxi trip records and daily weather data into a local Data Lake.
+
+Medallion architecture (raw → staging) with Airflow orchestrating, Spark processing via SQL, MinIO as storage, and Hive Metastore as the catalog.
 
 ## Architecture
 
 ```
-Sources → Raw (MinIO) → Staging (MinIO) → Hive Metastore
+Sources (NYC TLC, Open-Meteo)
+  ↓
+Raw (MinIO) ── raw files, no transformation
+  ↓
+Staging (MinIO) ── cleaning, type casting, joins, code translations (Spark SQL)
+  ↓
+Hive Metastore ── registered tables, queryable by name
 ```
 
-1. **Sources**: NYC TLC (public Parquet files) and Open-Meteo Archive API
-2. **Raw**: Files ingested as-is into MinIO
-3. **Staging**: PySpark (SQL) transformations — type casting, filtering, column renaming, zone joins, code translations
-4. **Hive Metastore**: Metadata catalog — staging tables registered and queryable by name
-5. **Orchestration**: Apache Airflow 3.1.7 (Local Executor)
-6. **Processing**: Apache Spark 3.5.3 cluster (master + worker)
+## Stack
 
-## Tech Stack
-
-| Component | Version |
+| | |
 |---|---|
-| Apache Airflow | 3.1.7 |
-| Apache Spark | 3.5.3 |
-| Apache Hive Metastore | 4.0.0 |
+| Airflow | 3.1.7 |
+| Spark | 3.5.3 |
+| Hive Metastore | 4.0.0 |
 | MinIO | latest |
 | PostgreSQL | 15 |
-| PySpark | 3.5.3 |
-| Docker / Docker Compose | — |
+| Docker Compose | — |
 
 ## Prerequisites
 
-* Docker Engine
-* Docker Compose
-* `wget` (for downloading drivers)
+- Docker and Docker Compose
+- wget
 
----
-
-## Setup
-
-### 1. Clone the repo
+## Getting started
 
 ```bash
 git clone <repo-url>
 cd nyc-taxi
-```
 
-### 2. Run the setup script
-
-Downloads the Hive JDBC driver, creates the Hive S3A config, and creates the MinIO bucket automatically:
-
-```bash
+# initial setup (JDBC driver, Hive config, MinIO bucket)
 ./setup.sh
-```
 
-### 3. Build and start the infrastructure
-
-```bash
+# start the infrastructure
 docker compose up -d
 ```
 
-On first run this will build two custom Docker images (takes a few minutes — downloads S3A jars from Maven):
-- **Dockerfile.airflow** — Airflow with Java and S3A jars so PySpark can read/write MinIO
-- **Dockerfile.hive** — Hive Metastore with S3A jars so it can scan MinIO partitions
+First build takes a few minutes since it downloads jars from Maven. The `PYTHONPATH` warning that shows up is harmless.
 
-> You may see warnings like `The "PYTHONPATH" variable is not set` — these are harmless.
-
-Wait for all containers to be healthy before proceeding:
+Wait for everything to come up:
 
 ```bash
 docker compose ps
 ```
 
-### 4. Get the Airflow admin password
+### Airflow password
 
-The password is auto-generated on first start:
+Auto-generated on first start:
 
 ```bash
 docker exec nyc_airflow_webserver cat /opt/airflow/simple_auth_manager_passwords.json.generated
 ```
 
-> If you restart the stack without deleting volumes, the password stays the same.
-> If you do a full teardown (`docker compose down -v`), a new password is generated on next start.
+Password persists across restarts. Only changes if you tear down volumes (`docker compose down -v`).
 
-### 5. Access the UIs
+### UIs
 
-| Service | URL | Credentials |
+| Service | URL | Login |
 |---|---|---|
-| Airflow | http://localhost:8080 | admin / (from step 4) |
-| MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
-| Spark Master UI | http://localhost:8081 | — |
+| Airflow | localhost:8080 | admin / (password above) |
+| MinIO | localhost:9001 | minioadmin / minioadmin |
+| Spark | localhost:8081 | — |
 
----
+## Pipeline
 
-## Running the Pipeline
+Enable DAGs in the Airflow UI in this order:
 
-Go to the Airflow UI (http://localhost:8080) and activate the DAGs in the following order. Each DAG must complete before enabling the next group.
+**1. Reference data (run once)**
 
-### Step 1 — Reference data (run once)
+- `zones_ingestion` — downloads zone lookup CSV from NYC TLC
+- `zones_staging` — cleans and converts to Parquet (wait for ingestion to finish)
 
-| DAG | Description |
-|---|---|
-| `zones_ingestion` | Downloads taxi zone lookup CSV into raw layer |
-| `zones_staging` | Cleans and stages zone data — **wait for zones_ingestion to finish** |
+**2. Hive (run once, after step 1)**
 
-### Step 2 — Setup Hive (run once, after step 1)
+- `hive_setup` — registers tables in the metastore
 
-| DAG | Description |
-|---|---|
-| `hive_setup` | Registers all staging tables in the Hive Metastore |
+**3. Recurring ingestion**
 
-> Run this once after `zones_staging` completes. Re-run it if you ever wipe the Hive Metastore database.
-
-### Step 3 — Ongoing ingestion (runs on schedule)
-
-| DAG | Schedule | Description |
+| DAG | Schedule | |
 |---|---|---|
-| `taxi_ingestion` | `@monthly` | Downloads monthly taxi Parquet files into raw layer |
-| `weather_ingestion` | `@daily` | Downloads daily weather JSON into raw layer |
-| `taxi_staging` | `@monthly` | Triggered automatically after `taxi_ingestion` — cleans, enriches, and updates Hive |
-| `weather_staging` | `@daily` | Triggered automatically after `weather_ingestion` — cleans and updates Hive |
+| `taxi_ingestion` | monthly | downloads Parquet files for 4 taxi types |
+| `weather_ingestion` | daily | downloads weather JSON from Open-Meteo |
+| `taxi_staging` | monthly | automatic staging after ingestion |
+| `weather_staging` | daily | automatic staging after ingestion |
 
-> `taxi_staging` and `weather_staging` use sensors to wait for ingestion to finish before running — you don't need to trigger them manually.
+Staging DAGs have sensors — they trigger on their own when ingestion finishes.
 
----
-
-## Project Structure
+## Project structure
 
 ```
-dags/                    Airflow DAG definitions
+dags/                    DAG definitions
 utils/
-  staging/               PySpark staging transformations (SQL-based)
-  hive.py                Hive Metastore registration logic
+  staging/               staging transformations (Spark SQL)
+  hive.py                Hive Metastore table registration
   spark.py               SparkSession factory
-  s3.py                  MinIO client helpers
-setup.sh                 One-time setup script (run before first docker compose up)
-Dockerfile.airflow       Custom Airflow image (Java + S3A jars)
-Dockerfile.hive          Custom Hive Metastore image (S3A jars)
-docker-compose.yml       Full infrastructure definition
+  s3.py                  MinIO helpers (boto3)
+setup.sh                 initial setup script
+Dockerfile.airflow       custom Airflow image (Java + S3A jars)
+Dockerfile.hive          custom Hive image (S3A jars)
+docker-compose.yml       full infrastructure
 requirements.txt         Python dependencies
-hive-lib/                Hive JDBC driver — not versioned, created by setup.sh
-hive-conf/               Hive S3A credentials — not versioned, created by setup.sh
+hive-lib/                JDBC driver (created by setup.sh)
+hive-conf/               Hive S3A config (created by setup.sh)
 ```

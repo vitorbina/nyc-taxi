@@ -94,7 +94,7 @@ services:
     networks:
       - nyc-network
 
-  # ── Airflow Init (roda uma vez pra criar as tabelas e o usuário admin) ─────
+  # ── Airflow Init (runs once to create tables and admin user) ─────
   airflow-init:
     <<: *airflow-common
     container_name: nyc_airflow_init
