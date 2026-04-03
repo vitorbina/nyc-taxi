@@ -61,7 +61,7 @@ services:
       POSTGRES_PASSWORD: hive
       POSTGRES_DB: hive_metastore
     volumes:
-      - postgres_hive_data:/var/lib/postgresql/data
+      - postgres_hive_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "hive"]
       interval: 10s
@@ -82,7 +82,7 @@ services:
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
