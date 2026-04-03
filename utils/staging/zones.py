@@ -2,8 +2,6 @@ import logging
 import os
 import tempfile
 import shutil
-from pyspark.sql import functions as F
-from pyspark.sql.types import IntegerType, StringType
 from utils.s3 import upload_file, download_file
 from utils.spark import get_spark, get_parquet_output_path
 
@@ -16,27 +14,23 @@ APP_NAME = "staging_zones"
 def transform_zones(input_path: str, output_dir: str) -> str:
     spark = get_spark(APP_NAME)
 
-    df = spark.read.option("header", "true").csv(input_path)
+    spark.read.option("header", "true").csv(input_path).createOrReplaceTempView("raw")
 
-    df = df.select(
-        F.col("LocationID").cast(IntegerType()).alias("location_id"),
-        F.col("Borough").cast(StringType()).alias("borough"),
-        F.col("Zone").cast(StringType()).alias("zone"),
-        F.col("service_zone").cast(StringType()),
-    )
+    spark.sql("""
+        SELECT
+            CAST(LocationID AS INT)    AS location_id,
+            CAST(Borough AS STRING)    AS borough,
+            CAST(Zone AS STRING)       AS zone,
+            CAST(service_zone AS STRING) AS service_zone
+        FROM raw
+        WHERE LocationID IS NOT NULL
+          AND Borough IS NOT NULL
+          AND Zone IS NOT NULL
+    """).coalesce(1).write.mode("overwrite").parquet(os.path.join(output_dir, "taxi_zone_lookup.parquet"))
 
-    df = df.filter(
-        F.col("location_id").isNotNull() &
-        F.col("borough").isNotNull() &
-        F.col("zone").isNotNull()
-    )
-
-    file_name = "taxi_zone_lookup.parquet"
-    output_path = os.path.join(output_dir, file_name)
-    df.coalesce(1).write.mode("overwrite").parquet(output_path)
-
-    final_path = get_parquet_output_path(output_path)
+    final_path = get_parquet_output_path(os.path.join(output_dir, "taxi_zone_lookup.parquet"))
     logger.info(f"Zones staging saved to: {final_path}")
+    spark.stop()
     return final_path
 
 

@@ -1,7 +1,7 @@
 """
 # Hive Metastore Setup
 
-Registers all curated tables in the Hive Metastore, pointing to their
+Registers all staging tables in the Hive Metastore, pointing to their
 respective locations in MinIO. Runs once after the first ingestion cycle.
 
 After this DAG runs, Spark jobs can query data by table name instead of
@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 @dag(
     **get_default_args(
         dag_id="hive_setup",
-        description="One-time registration of curated tables in the Hive Metastore",
+        description="One-time registration of staging tables in the Hive Metastore",
         schedule="@once",
         dag_file=__file__,
         doc_md=__doc__,
