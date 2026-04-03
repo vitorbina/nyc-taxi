@@ -14,8 +14,8 @@ RUN mkdir -p /opt/spark-jars && \
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 
 USER airflow
-COPY requirements-docker.txt /requirements-docker.txt
-RUN pip install --no-cache-dir -r /requirements-docker.txt
+COPY requirements.txt /requirements.txt
+RUN pip install --no-cache-dir -r /requirements.txt
 
 # Copy S3A jars into PySpark's built-in jars directory so they are loaded
 # into the JVM system classloader — required for Hive's IsolatedClientLoader
