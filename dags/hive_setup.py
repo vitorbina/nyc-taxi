@@ -16,13 +16,20 @@ from utils.hive import setup_hive
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+TABLES = [
+    "yellow_taxi",
+    "green_taxi",
+    "app_rides",
+    "high_volume_fhv",
+    "weather",
+]
+
 
 @dag(
     **get_default_args(
         dag_id="hive_setup",
         description="One-time registration of staging tables in the Hive Metastore",
         schedule="@once",
-        dag_file=__file__,
         doc_md=__doc__,
     )
 )
@@ -30,7 +37,7 @@ def hive_setup_pipeline():
 
     @task
     def register_tables():
-        setup_hive()
+        setup_hive(tables=TABLES)
 
     register_tables()
 

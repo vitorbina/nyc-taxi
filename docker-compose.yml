@@ -47,14 +47,14 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - ./lake_data:/data
+      - ./setup/lake_data:/data
     command: server /data --console-address ":9001"
     networks:
       - nyc-network
 
   # ── Postgres (Hive Metastore metadata) ───────────────────────────────────
   postgres-hive:
-    image: postgres:15
+    image: postgres:latest
     container_name: nyc_postgres_hive
     environment:
       POSTGRES_USER: hive
@@ -75,7 +75,7 @@ services:
 
   # ── Postgres (Airflow metadata) ────────────────────────────────────────────
   postgres:
-    image: postgres:15
+    image: postgres:latest
     container_name: nyc_postgres
     environment:
       POSTGRES_USER: airflow
@@ -144,8 +144,8 @@ services:
       dockerfile: Dockerfile.hive
     container_name: nyc_hive_metastore
     volumes:
-      - ./hive-lib/postgresql.jar:/opt/hive/lib/postgresql.jar
-      - ./hive-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./setup/hive-lib/postgresql.jar:/opt/hive/lib/postgresql.jar
+      - ./setup/hive-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
     environment:
       SERVICE_NAME: metastore
       DB_DRIVER: postgres
@@ -168,7 +168,9 @@ services:
 
   # ── Spark Master ───────────────────────────────────────────────────────────
   spark-master:
-    image: apache/spark:3.5.3
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
     container_name: nyc_spark_master
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.master.Master
@@ -188,7 +190,9 @@ services:
 
   # ── Spark Worker ───────────────────────────────────────────────────────────
   spark-worker:
-    image: apache/spark:3.5.3
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
     container_name: nyc_spark_worker
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077

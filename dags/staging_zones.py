@@ -23,7 +23,6 @@ BUCKET = "data-lake-nyc"
         dag_id="zones_staging",
         description="One-time staging pipeline for NYC taxi zone reference data",
         schedule="@once",
-        dag_file=__file__,
         doc_md=__doc__,
     )
 )

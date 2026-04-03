@@ -23,7 +23,6 @@ BUCKET = "data-lake-nyc"
         dag_id='zones_ingestion',
         description='One-time ingestion of NYC TLC reference files (zone lookup and shapefile)',
         schedule='@once',
-        dag_file=__file__,
         doc_md=__doc__,
     )
 )

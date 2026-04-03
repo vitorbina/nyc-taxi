@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 set -e
 
+echo "==> [0/3] Creating logs directory..."
+mkdir -p logs
+chmod 777 logs
+echo "    Done: logs/"
+
 echo "==> [1/3] Downloading Hive JDBC driver..."
-mkdir -p hive-lib
-wget -q "https://jdbc.postgresql.org/download/postgresql-42.7.3.jar" -O hive-lib/postgresql.jar
-echo "    Done: hive-lib/postgresql.jar"
+mkdir -p setup/hive-lib
+wget -q "https://jdbc.postgresql.org/download/postgresql-42.7.3.jar" -O setup/hive-lib/postgresql.jar
+echo "    Done: setup/hive-lib/postgresql.jar"
 
 echo "==> [2/3] Creating Hive S3A config..."
-mkdir -p hive-conf
-cat > hive-conf/core-site.xml << 'EOF'
+mkdir -p setup/hive-conf
+cat > setup/hive-conf/core-site.xml << 'EOF'
 <?xml version="1.0"?>
 <configuration>
   <property>
@@ -41,17 +46,18 @@ cat > hive-conf/core-site.xml << 'EOF'
   </property>
 </configuration>
 EOF
-echo "    Done: hive-conf/core-site.xml"
+echo "    Done: setup/hive-conf/core-site.xml"
 
 echo "==> [3/3] Creating MinIO bucket..."
+mkdir -p setup/lake_data
 docker compose up -d minio
 echo "    Waiting for MinIO to be ready..."
 until curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1; do
     sleep 2
 done
-docker run --rm --network nyc-taxi_nyc-network \
+docker run --rm --entrypoint sh --network nyc-taxi_nyc-network \
     minio/mc:latest \
-    sh -c "mc alias set local http://minio:9000 minioadmin minioadmin && mc mb --ignore-existing local/data-lake-nyc"
+    -c "mc alias set local http://minio:9000 minioadmin minioadmin && mc mb --ignore-existing local/data-lake-nyc"
 echo "    Done: bucket data-lake-nyc created"
 
 echo ""

@@ -4,7 +4,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends default-jre-headless wget && \
     rm -rf /var/lib/apt/lists/*
 
-# Download S3A jars to a shared location (also used by spark.jars for executors)
 RUN mkdir -p /opt/spark-jars && \
     wget -q "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar" \
       -O /opt/spark-jars/hadoop-aws-3.3.4.jar && \
@@ -17,9 +16,6 @@ USER airflow
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
 
-# Copy S3A jars into PySpark's built-in jars directory so they are loaded
-# into the JVM system classloader — required for Hive's IsolatedClientLoader
-# to find S3AFileSystem via spark.sql.hive.metastore.sharedPrefixes
 RUN PYSPARK_JARS=$(python3 -c "import pyspark, os; print(os.path.join(os.path.dirname(pyspark.__file__), 'jars'))") && \
     cp /opt/spark-jars/hadoop-aws-3.3.4.jar "$PYSPARK_JARS/" && \
     cp /opt/spark-jars/aws-java-sdk-bundle-1.12.262.jar "$PYSPARK_JARS/"

@@ -24,7 +24,6 @@ BUCKET = "data-lake-nyc"
         description='Daily weather data ingestion pipeline (Open-Meteo Archive API)',
         schedule='@daily',
         catchup=True,
-        dag_file=__file__,
         doc_md=__doc__,
     )
 )
