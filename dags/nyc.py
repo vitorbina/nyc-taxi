@@ -13,6 +13,7 @@ from airflow.decorators import dag, task
 import logging
 from utils.default import get_default_args
 from utils.taxi import ingest_taxi_data
+from utils.hive import repair_table, RAW_DATABASE
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -47,11 +48,17 @@ def ingestion_pipeline():
             bucket=BUCKET,
         )
 
+    @task
+    def update_hive(lake_folder: str):
+        repair_table(lake_folder, database=RAW_DATABASE)
+
     for folder_name, source_name in TAXI_MAPPING.items():
-        ingest_taxi_type.override(task_id=f"ingest_{folder_name}")(
+        ingest_task = ingest_taxi_type.override(task_id=f"ingest_{folder_name}")(
             taxi_type=source_name,
             lake_folder=folder_name
         )
+        hive_task = update_hive.override(task_id=f"hive_{folder_name}")(lake_folder=folder_name)
+        ingest_task >> hive_task
 
 
 pipeline = ingestion_pipeline()

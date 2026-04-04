@@ -6,39 +6,40 @@ logger.setLevel(logging.INFO)
 
 APP_NAME = "hive_setup"
 DATABASE = "nyc_taxi"
+RAW_DATABASE = "nyc_taxi_raw"
 BUCKET = "data-lake-nyc"
 
 
-def repair_table(table: str):
+def repair_table(table: str, database: str = DATABASE):
     spark = get_spark(f"hive_repair_{table}")
-    logger.info(f"Repairing partitions for {DATABASE}.{table}...")
-    spark.sql(f"MSCK REPAIR TABLE {DATABASE}.{table}")
+    logger.info(f"Repairing partitions for {database}.{table}...")
+    spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
     spark.stop()
-    logger.info(f"Partitions updated for {DATABASE}.{table}.")
+    logger.info(f"Partitions updated for {database}.{table}.")
 
 
-def setup_hive(tables: list):
+def setup_hive(tables: list, database: str = DATABASE, location_prefix: str = "staging"):
     spark = get_spark(APP_NAME)
 
-    logger.info(f"Creating database {DATABASE}...")
-    spark.sql(f"CREATE DATABASE IF NOT EXISTS {DATABASE}")
+    logger.info(f"Creating database {database}...")
+    spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
 
     for table in tables:
-        location = f"s3a://{BUCKET}/staging/{table}/"
+        location = f"s3a://{BUCKET}/{location_prefix}/{table}/"
 
-        drop_sql = f"DROP TABLE IF EXISTS {DATABASE}.{table}"
+        drop_sql = f"DROP TABLE IF EXISTS {database}.{table}"
         logger.info(f"Dropping table if exists: {drop_sql}")
         spark.sql(drop_sql)
 
         create_sql = f"""
-            CREATE EXTERNAL TABLE {DATABASE}.{table}
+            CREATE EXTERNAL TABLE {database}.{table}
             USING PARQUET
             LOCATION '{location}'
         """
         logger.info(f"Creating table: {create_sql.strip()}")
         spark.sql(create_sql)
 
-        logger.info(f"Table {DATABASE}.{table} registered at {location}.")
+        logger.info(f"Table {database}.{table} registered at {location}.")
 
     spark.stop()
-    logger.info("Hive setup completed.")
+    logger.info(f"Hive setup completed for database {database}.")

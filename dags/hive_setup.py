@@ -11,12 +11,12 @@ S3A paths: `SELECT * FROM nyc_taxi.yellow_taxi`
 from airflow.decorators import dag, task
 import logging
 from utils.default import get_default_args
-from utils.hive import setup_hive
+from utils.hive import setup_hive, RAW_DATABASE
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-TABLES = [
+STAGING_TABLES = [
     "yellow_taxi",
     "green_taxi",
     "app_rides",
@@ -24,11 +24,18 @@ TABLES = [
     "weather",
 ]
 
+RAW_TABLES = [
+    "yellow_taxi",
+    "green_taxi",
+    "app_rides",
+    "high_volume_fhv",
+]
+
 
 @dag(
     **get_default_args(
         dag_id="hive_setup",
-        description="One-time registration of staging tables in the Hive Metastore",
+        description="One-time registration of staging and raw tables in the Hive Metastore",
         schedule="@once",
         doc_md=__doc__,
     )
@@ -36,10 +43,15 @@ TABLES = [
 def hive_setup_pipeline():
 
     @task
-    def register_tables():
-        setup_hive(tables=TABLES)
+    def register_staging_tables():
+        setup_hive(tables=STAGING_TABLES)
 
-    register_tables()
+    @task
+    def register_raw_tables():
+        setup_hive(tables=RAW_TABLES, database=RAW_DATABASE, location_prefix="raw")
+
+    register_staging_tables()
+    register_raw_tables()
 
 
 pipeline = hive_setup_pipeline()
