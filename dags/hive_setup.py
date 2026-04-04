@@ -11,7 +11,7 @@ S3A paths: `SELECT * FROM nyc_taxi.yellow_taxi`
 from airflow.decorators import dag, task
 import logging
 from utils.default import get_default_args
-from utils.hive import setup_hive, RAW_DATABASE
+from utils.hive import setup_hive, DATABASE, RAW_DATABASE
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -43,15 +43,35 @@ RAW_TABLES = [
 def hive_setup_pipeline():
 
     @task
-    def register_staging_tables():
-        setup_hive(tables=STAGING_TABLES)
+    def register_table(table: str, database: str, location_prefix: str):
+        setup_hive(tables=[table], database=database, location_prefix=location_prefix)
 
     @task
-    def register_raw_tables():
-        setup_hive(tables=RAW_TABLES, database=RAW_DATABASE, location_prefix="raw")
+    def show_tables():
+        from utils.spark import get_spark
+        spark = get_spark("hive_show_tables")
+        for db in [DATABASE, RAW_DATABASE]:
+            tables = spark.sql(f"SHOW TABLES IN {db}").collect()
+            logger.info(f"Tables in {db}: {[t.tableName for t in tables]}")
+        spark.stop()
 
-    register_staging_tables()
-    register_raw_tables()
+    all_tasks = []
+
+    for table in STAGING_TABLES:
+        all_tasks.append(
+            register_table.override(task_id=f"staging_{table}")(
+                table=table, database=DATABASE, location_prefix="staging"
+            )
+        )
+
+    for table in RAW_TABLES:
+        all_tasks.append(
+            register_table.override(task_id=f"raw_{table}")(
+                table=table, database=RAW_DATABASE, location_prefix="raw"
+            )
+        )
+
+    all_tasks >> show_tables()
 
 
 pipeline = hive_setup_pipeline()
