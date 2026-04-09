@@ -199,6 +199,7 @@ services:
     environment:
       SPARK_WORKER_MEMORY: 3g
       SPARK_WORKER_CORES: "2"
+      PYSPARK_PYTHON: python3
     depends_on:
       - spark-master
     deploy:
