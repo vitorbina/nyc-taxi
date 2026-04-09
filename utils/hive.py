@@ -12,10 +12,14 @@ BUCKET = "data-lake-nyc"
 
 def repair_table(table: str, database: str = DATABASE):
     spark = get_spark(f"hive_repair_{table}")
-    logger.info(f"Repairing partitions for {database}.{table}...")
-    spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
-    spark.stop()
-    logger.info(f"Partitions updated for {database}.{table}.")
+    try:
+        logger.info(f"Repairing partitions for {database}.{table}...")
+        spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
+        logger.info(f"Partitions updated for {database}.{table}.")
+    except Exception as e:
+        logger.warning(f"Skipping repair for {database}.{table} — table not registered yet: {e}")
+    finally:
+        spark.stop()
 
 
 def setup_hive(tables: list, database: str = DATABASE, location_prefix: str = "staging"):
