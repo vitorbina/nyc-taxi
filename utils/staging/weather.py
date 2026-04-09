@@ -19,7 +19,7 @@ def stage_weather(date_str: str, bucket: str):
         raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
 
     spark = get_spark(APP_NAME)
-    spark.read.json(raw_path).createOrReplaceTempView("raw")
+    spark.read.option("multiline", "true").json(raw_path).createOrReplaceTempView("raw")
 
     spark.sql("""
         SELECT inline(arrays_zip(
