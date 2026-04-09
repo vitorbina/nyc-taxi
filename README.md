@@ -81,11 +81,7 @@ Enable DAGs in the Airflow UI in this order:
 - `zones_ingestion` — downloads zone lookup CSV from NYC TLC
 - `zones_staging` — cleans and converts to Parquet (wait for ingestion to finish)
 
-**2. Hive (run once, after step 1)**
-
-- `hive_setup` — registers tables in the metastore
-
-**3. Recurring ingestion**
+**2. Recurring ingestion (enable and wait for at least one cycle to complete)**
 
 | DAG | Schedule | |
 |---|---|---|
@@ -95,6 +91,10 @@ Enable DAGs in the Airflow UI in this order:
 | `weather_staging` | daily | automatic staging after ingestion |
 
 Staging DAGs have sensors — they trigger on their own when ingestion finishes.
+
+**3. Hive (run once, after step 2)**
+
+- `hive_setup` — registers raw and staging tables in the metastore (requires data to exist in both layers)
 
 ## Project structure
 
