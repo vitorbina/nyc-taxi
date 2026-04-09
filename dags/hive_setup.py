@@ -46,32 +46,15 @@ def hive_setup_pipeline():
     def register_table(table: str, database: str, location_prefix: str):
         setup_hive(tables=[table], database=database, location_prefix=location_prefix)
 
-    @task
-    def show_tables():
-        from utils.spark import get_spark
-        spark = get_spark("hive_show_tables")
-        for db in [DATABASE, RAW_DATABASE]:
-            tables = spark.sql(f"SHOW TABLES IN {db}").collect()
-            logger.info(f"Tables in {db}: {[t.tableName for t in tables]}")
-        spark.stop()
-
-    all_tasks = []
-
     for table in STAGING_TABLES:
-        all_tasks.append(
-            register_table.override(task_id=f"staging_{table}")(
-                table=table, database=DATABASE, location_prefix="staging"
-            )
+        register_table.override(task_id=f"staging_{table}")(
+            table=table, database=DATABASE, location_prefix="staging"
         )
 
     for table in RAW_TABLES:
-        all_tasks.append(
-            register_table.override(task_id=f"raw_{table}")(
-                table=table, database=RAW_DATABASE, location_prefix="raw"
-            )
+        register_table.override(task_id=f"raw_{table}")(
+            table=table, database=RAW_DATABASE, location_prefix="raw"
         )
-
-    all_tasks >> show_tables()
 
 
 pipeline = hive_setup_pipeline()
