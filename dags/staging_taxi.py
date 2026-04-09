@@ -38,7 +38,7 @@ STAGING_MAPPING = {
         dag_id="taxi_staging",
         description="Monthly staging pipeline for NYC taxi trip data",
         schedule="@monthly",
-        catchup=True,
+        catchup=False,
         doc_md=__doc__,
     )
 )
