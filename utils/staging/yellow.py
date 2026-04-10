@@ -13,7 +13,7 @@ def stage_yellow(lake_folder: str, year: str, month: str, bucket: str):
     partition = f"partition_date={year}-{int(month):02d}-01"
     file_name = f"yellow_tripdata_{year}-{int(month):02d}.parquet"
     raw_key = f"raw/{lake_folder}/{partition}/{file_name}"
-    staging_key = f"staging/{lake_folder}/{partition}/{file_name}"
+    staging_key = f"staging/{lake_folder}/{partition}"
     zones_path = f"s3a://{bucket}/staging/reference/taxi_zone_lookup/taxi_zone_lookup.parquet"
 
     if not file_exists(bucket=bucket, key=raw_key):
