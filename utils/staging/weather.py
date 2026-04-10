@@ -13,7 +13,7 @@ def stage_weather(date_str: str, bucket: str):
     file_name = f"weather_nyc_{date_str}.json"
     raw_key = f"raw/weather/partition_date={date_str}/{file_name}"
     raw_path = f"s3a://{bucket}/{raw_key}"
-    staging_key = f"staging/weather/partition_date={date_str}/weather_nyc_{date_str}.parquet"
+    staging_key = f"staging/weather/partition_date={date_str}"
 
     if not file_exists(bucket=bucket, key=raw_key):
         raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
