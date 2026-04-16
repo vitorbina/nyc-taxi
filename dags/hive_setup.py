@@ -11,7 +11,7 @@ S3A paths: `SELECT * FROM nyc_taxi.yellow_taxi`
 from airflow.decorators import dag, task
 import logging
 from utils.default import get_default_args
-from utils.hive import setup_hive, DATABASE, RAW_DATABASE
+from utils.hive import setup_hive, DATABASE, RAW_DATABASE, FINAL_DATABASE
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -29,6 +29,12 @@ RAW_TABLES = [
     "green_taxi",
     "app_rides",
     "high_volume_fhv",
+]
+
+FINAL_TABLES = [
+    "trips_by_month",
+    "revenue_by_zone",
+    "weather_impact",
 ]
 
 
@@ -54,6 +60,11 @@ def hive_setup_pipeline():
     for table in RAW_TABLES:
         register_table.override(task_id=f"raw_{table}")(
             table=table, database=RAW_DATABASE, location_prefix="raw"
+        )
+
+    for table in FINAL_TABLES:
+        register_table.override(task_id=f"final_{table}")(
+            table=table, database=FINAL_DATABASE, location_prefix="final"
         )
 
 

@@ -7,6 +7,7 @@ logger.setLevel(logging.INFO)
 APP_NAME = "hive_setup"
 DATABASE = "nyc_taxi"
 RAW_DATABASE = "nyc_taxi_raw"
+FINAL_DATABASE = "nyc_taxi_final"
 BUCKET = "data-lake-nyc"
 
 

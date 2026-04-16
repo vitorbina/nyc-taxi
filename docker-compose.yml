@@ -1,5 +1,5 @@
 # Infrastructure definition for the NYC Taxi Data Lake
-# Provisions: MinIO, Postgres, Airflow (webserver + scheduler), Spark (master + worker)
+# Provisions: MinIO, Postgres, Airflow (webserver + scheduler), Spark (master + worker), Trino, Metabase
 
 x-airflow-common: &airflow-common
   build:
@@ -208,10 +208,49 @@ services:
     networks:
       - nyc-network
 
+  # ── Trino ─────────────────────────────────────────────────────────────────
+  trino:
+    image: trinodb/trino:latest
+    container_name: nyc_trino
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./trino/etc:/etc/trino
+    depends_on:
+      - hive-metastore
+      - minio
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - nyc-network
+
+  # ── Metabase ───────────────────────────────────────────────────────────────
+  metabase:
+    image: metabase/metabase:latest
+    container_name: nyc_metabase
+    ports:
+      - "3000:3000"
+    volumes:
+      - metabase_data:/metabase-data
+    environment:
+      MB_DB_TYPE: h2
+      MB_DB_FILE: /metabase-data/metabase.db
+    depends_on:
+      - trino
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - nyc-network
+
 volumes:
   postgres_data:
   postgres_hive_data:
   airflow_home:
+  metabase_data:
 
 networks:
   nyc-network:
