@@ -18,7 +18,7 @@ from airflow.decorators import dag, task
 from airflow.sensors.base import PokeReturnValue
 import logging
 from utils.default import get_default_args
-from utils.s3 import file_exists
+from utils.s3 import folder_exists
 from utils.hive import setup_hive, FINAL_DATABASE
 from utils.final.trips_by_month import compute_trips_by_month
 from utils.final.revenue_by_zone import compute_revenue_by_zone
@@ -47,8 +47,8 @@ def final_pipeline():
     def wait_for_staging(logical_date=None) -> PokeReturnValue:
         year = logical_date.strftime("%Y")
         month = logical_date.strftime("%m")
-        key = f"staging/yellow_taxi/partition_date={year}-{int(month):02d}-01/part-00000.parquet"
-        return PokeReturnValue(is_done=file_exists(bucket=BUCKET, key=key))
+        prefix = f"staging/yellow_taxi/partition_date={year}-{int(month):02d}-01"
+        return PokeReturnValue(is_done=folder_exists(bucket=BUCKET, prefix=prefix))
 
     @task
     def build_trips_by_month():

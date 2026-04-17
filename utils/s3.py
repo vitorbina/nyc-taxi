@@ -27,6 +27,12 @@ def file_exists(bucket: str, key: str) -> bool:
         return False
 
 
+def folder_exists(bucket: str, prefix: str) -> bool:
+    prefix = prefix.rstrip("/") + "/"
+    response = _get_s3_client().list_objects_v2(Bucket=bucket, Prefix=prefix, MaxKeys=1)
+    return response.get("KeyCount", 0) > 0
+
+
 def download_file(bucket: str, key: str, filepath: str) -> None:
     logger.info(f"Downloading {bucket}/{key} to {filepath}...")
     try:
