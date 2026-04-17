@@ -38,9 +38,12 @@ def setup_hive(tables: list, database: str = DATABASE, location_prefix: str = "s
             logger.warning(f"No data at {location} — skipping {database}.{table}")
             continue
 
+        def hive_type(spark_type: str) -> str:
+            return spark_type.replace("timestamp_ntz", "timestamp")
+
         partition_col = next((f for f in fields if f.name == "partition_date"), None)
         regular_fields = [f for f in fields if f.name != "partition_date"]
-        schema_ddl = ", ".join(f"`{f.name}` {f.dataType.simpleString()}" for f in regular_fields)
+        schema_ddl = ", ".join(f"`{f.name}` {hive_type(f.dataType.simpleString())}" for f in regular_fields)
 
         spark.sql(f"DROP TABLE IF EXISTS {database}.{table}")
 
