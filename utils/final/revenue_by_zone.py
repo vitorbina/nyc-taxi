@@ -23,7 +23,7 @@ def compute_revenue_by_zone(bucket: str):
             ROUND(AVG(fare_amount), 2)   AS avg_fare,
             ROUND(AVG(tip_amount),  2)   AS avg_tip,
             ROUND(AVG(total_amount), 2)  AS avg_total
-        FROM nyc_taxi.yellow_taxi
+        FROM staging.yellow_taxi
         WHERE pickup_zone IS NOT NULL
         GROUP BY pickup_zone, pickup_borough
 
@@ -37,7 +37,7 @@ def compute_revenue_by_zone(bucket: str):
             ROUND(AVG(fare_amount), 2),
             ROUND(AVG(tip_amount),  2),
             ROUND(AVG(total_amount), 2)
-        FROM nyc_taxi.green_taxi
+        FROM staging.green_taxi
         WHERE pickup_zone IS NOT NULL
         GROUP BY pickup_zone, pickup_borough
 
@@ -51,7 +51,7 @@ def compute_revenue_by_zone(bucket: str):
             ROUND(AVG(base_passenger_fare), 2),
             ROUND(AVG(tip_amount), 2),
             ROUND(AVG(base_passenger_fare + COALESCE(tip_amount, 0)), 2)
-        FROM nyc_taxi.high_volume_fhv
+        FROM staging.high_volume_fhv
         WHERE pickup_zone IS NOT NULL
         GROUP BY pickup_zone, pickup_borough
     """).coalesce(1).write.mode("overwrite").parquet(f"s3a://{bucket}/final/revenue_by_zone")

@@ -24,23 +24,23 @@ def compute_weather_impact(bucket: str):
             ROUND(SUM(precipitation_mm), 1)      AS total_precipitation_mm,
             ROUND(AVG(wind_speed_kmh), 1)        AS avg_wind_speed_kmh,
             MAX(CASE WHEN HOUR(datetime) = 12 THEN weather_description END) AS weather_description
-        FROM nyc_taxi.weather
+        FROM staging.weather
         GROUP BY TO_DATE(datetime)
     """).createOrReplaceTempView("weather_daily")
 
     # Daily trip counts — union all taxi types
     spark.sql("""
         SELECT TO_DATE(pickup_datetime) AS date, COUNT(*) AS trips, AVG(total_amount) AS fare
-        FROM nyc_taxi.yellow_taxi GROUP BY TO_DATE(pickup_datetime)
+        FROM staging.yellow_taxi GROUP BY TO_DATE(pickup_datetime)
         UNION ALL
         SELECT TO_DATE(pickup_datetime), COUNT(*), AVG(total_amount)
-        FROM nyc_taxi.green_taxi GROUP BY TO_DATE(pickup_datetime)
+        FROM staging.green_taxi GROUP BY TO_DATE(pickup_datetime)
         UNION ALL
         SELECT TO_DATE(pickup_datetime), COUNT(*), NULL
-        FROM nyc_taxi.app_rides GROUP BY TO_DATE(pickup_datetime)
+        FROM staging.app_rides GROUP BY TO_DATE(pickup_datetime)
         UNION ALL
         SELECT TO_DATE(pickup_datetime), COUNT(*), AVG(base_passenger_fare)
-        FROM nyc_taxi.high_volume_fhv GROUP BY TO_DATE(pickup_datetime)
+        FROM staging.high_volume_fhv GROUP BY TO_DATE(pickup_datetime)
     """).createOrReplaceTempView("trips_raw")
 
     spark.sql("""
