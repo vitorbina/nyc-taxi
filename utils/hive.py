@@ -32,12 +32,19 @@ def setup_hive(tables: list, database: str = DATABASE, location_prefix: str = "s
     for table in tables:
         location = f"s3a://{BUCKET}/{location_prefix}/{table}/"
 
-        drop_sql = f"DROP TABLE IF EXISTS {database}.{table}"
-        logger.info(f"Dropping table if exists: {drop_sql}")
-        spark.sql(drop_sql)
+        try:
+            schema_ddl = ", ".join(
+                f"`{f.name}` {f.dataType.simpleString()}"
+                for f in spark.read.parquet(location).schema.fields
+            )
+        except Exception:
+            logger.warning(f"No data at {location} — skipping {database}.{table}")
+            continue
+
+        spark.sql(f"DROP TABLE IF EXISTS {database}.{table}")
 
         create_sql = f"""
-            CREATE EXTERNAL TABLE {database}.{table}
+            CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
             STORED AS PARQUET
             LOCATION '{location}'
         """
