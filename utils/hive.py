@@ -45,6 +45,11 @@ def setup_hive(tables: list, database: str = DATABASE, location_prefix: str = "s
         spark.sql(create_sql)
 
         logger.info(f"Table {database}.{table} registered at {location}.")
+        try:
+            spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
+            logger.info(f"Partitions repaired for {database}.{table}.")
+        except Exception as e:
+            logger.warning(f"Repair skipped for {database}.{table} — no data yet: {e}")
 
     spark.stop()
     logger.info(f"Hive setup completed for database {database}.")
