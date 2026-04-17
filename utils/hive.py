@@ -33,21 +33,30 @@ def setup_hive(tables: list, database: str = DATABASE, location_prefix: str = "s
         location = f"s3a://{BUCKET}/{location_prefix}/{table}/"
 
         try:
-            schema_ddl = ", ".join(
-                f"`{f.name}` {f.dataType.simpleString()}"
-                for f in spark.read.parquet(location).schema.fields
-            )
+            fields = spark.read.parquet(location).schema.fields
         except Exception:
             logger.warning(f"No data at {location} — skipping {database}.{table}")
             continue
 
+        partition_col = next((f for f in fields if f.name == "partition_date"), None)
+        regular_fields = [f for f in fields if f.name != "partition_date"]
+        schema_ddl = ", ".join(f"`{f.name}` {f.dataType.simpleString()}" for f in regular_fields)
+
         spark.sql(f"DROP TABLE IF EXISTS {database}.{table}")
 
-        create_sql = f"""
-            CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
-            STORED AS PARQUET
-            LOCATION '{location}'
-        """
+        if partition_col:
+            create_sql = f"""
+                CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
+                PARTITIONED BY (partition_date STRING)
+                STORED AS PARQUET
+                LOCATION '{location}'
+            """
+        else:
+            create_sql = f"""
+                CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
+                STORED AS PARQUET
+                LOCATION '{location}'
+            """
         logger.info(f"Creating table: {create_sql.strip()}")
         spark.sql(create_sql)
 
