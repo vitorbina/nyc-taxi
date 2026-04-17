@@ -38,7 +38,7 @@ def setup_hive(tables: list, database: str = DATABASE, location_prefix: str = "s
 
         create_sql = f"""
             CREATE EXTERNAL TABLE {database}.{table}
-            USING PARQUET
+            STORED AS PARQUET
             LOCATION '{location}'
         """
         logger.info(f"Creating table: {create_sql.strip()}")
