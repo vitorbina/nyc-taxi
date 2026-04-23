@@ -6,7 +6,7 @@ from utils.spark import get_spark
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-APP_NAME = "staging_fhv"
+APP_NAME = "staging_app_rides"
 
 
 def stage_fhv(lake_folder: str, year: str, month: str, bucket: str):

@@ -1,8 +1,8 @@
 """
 # NYC Taxi Final Layer
 
-Reads from the staging Hive tables (nyc_taxi.*) and produces three pre-aggregated
-tables written to MinIO under final/ and registered in the nyc_taxi_final database.
+Reads from the staging Hive tables (staging.*) and produces three pre-aggregated
+tables written to MinIO under final/ and registered in the final database.
 
 | Table             | Description                                      |
 |-------------------|--------------------------------------------------|
@@ -29,13 +29,13 @@ logger.setLevel(logging.INFO)
 
 BUCKET = "data-lake-nyc"
 
-FINAL_TABLES = ["trips_by_month", "revenue_by_zone", "weather_impact"]
+FINAL_TABLES = ["trips", "revenue", "weather_impact"]
 
 
 @dag(
     **get_default_args(
         dag_id="taxi_final",
-        description="Monthly aggregation into the final layer (nyc_taxi_final)",
+        description="Monthly aggregation into the final layer",
         schedule="@monthly",
         catchup=False,
         doc_md=__doc__,

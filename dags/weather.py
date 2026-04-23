@@ -20,9 +20,9 @@ BUCKET = "data-lake-nyc"
 
 @dag(
     **get_default_args(
-        dag_id='weather_ingestion',
-        description='Daily weather data ingestion pipeline (Open-Meteo Archive API)',
-        schedule='@daily',
+        dag_id="weather_ingestion",
+        description="Daily weather data ingestion pipeline (Open-Meteo Archive API)",
+        schedule="@daily",
         catchup=False,
         doc_md=__doc__,
     )

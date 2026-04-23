@@ -12,59 +12,71 @@ def compute_trips_by_month(bucket: str):
 
     spark.sql("""
         SELECT
-            year(pickup_datetime)  AS year,
-            month(pickup_datetime) AS month,
-            'yellow_taxi'          AS taxi_type,
+            pickup_datetime,
+            dropoff_datetime,
+            trip_duration_minutes,
+            'yellow_taxi' AS taxi_type,
+            pickup_zone,
             pickup_borough,
-            COUNT(*)                        AS total_trips,
-            ROUND(AVG(total_amount),  2)    AS avg_fare,
-            ROUND(AVG(trip_distance_miles), 2) AS avg_distance_miles
+            dropoff_zone,
+            dropoff_borough,
+            trip_distance_miles,
+            total_amount    AS fare_amount,
+            passenger_count
         FROM staging.yellow_taxi
         WHERE pickup_borough IS NOT NULL
-        GROUP BY year(pickup_datetime), month(pickup_datetime), pickup_borough
 
         UNION ALL
 
         SELECT
-            year(pickup_datetime),
-            month(pickup_datetime),
+            pickup_datetime,
+            dropoff_datetime,
+            trip_duration_minutes,
             'green_taxi',
+            pickup_zone,
             pickup_borough,
-            COUNT(*),
-            ROUND(AVG(total_amount), 2),
-            ROUND(AVG(trip_distance_miles), 2)
+            dropoff_zone,
+            dropoff_borough,
+            trip_distance_miles,
+            total_amount,
+            passenger_count
         FROM staging.green_taxi
         WHERE pickup_borough IS NOT NULL
-        GROUP BY year(pickup_datetime), month(pickup_datetime), pickup_borough
 
         UNION ALL
 
         SELECT
-            year(pickup_datetime),
-            month(pickup_datetime),
+            pickup_datetime,
+            dropoff_datetime,
+            trip_duration_minutes,
             'app_rides',
+            pickup_zone,
             pickup_borough,
-            COUNT(*),
-            NULL AS avg_fare,
-            NULL AS avg_distance_miles
+            dropoff_zone,
+            dropoff_borough,
+            NULL AS trip_distance_miles,
+            NULL AS fare_amount,
+            NULL AS passenger_count
         FROM staging.app_rides
         WHERE pickup_borough IS NOT NULL
-        GROUP BY year(pickup_datetime), month(pickup_datetime), pickup_borough
 
         UNION ALL
 
         SELECT
-            year(pickup_datetime),
-            month(pickup_datetime),
+            pickup_datetime,
+            dropoff_datetime,
+            trip_duration_minutes,
             'high_volume_fhv',
+            pickup_zone,
             pickup_borough,
-            COUNT(*),
-            ROUND(AVG(base_passenger_fare), 2),
-            ROUND(AVG(trip_distance_miles), 2)
+            dropoff_zone,
+            dropoff_borough,
+            trip_distance_miles,
+            base_passenger_fare AS fare_amount,
+            NULL AS passenger_count
         FROM staging.high_volume_fhv
         WHERE pickup_borough IS NOT NULL
-        GROUP BY year(pickup_datetime), month(pickup_datetime), pickup_borough
-    """).coalesce(1).write.mode("overwrite").parquet(f"s3a://{bucket}/final/trips_by_month")
+    """).coalesce(1).write.mode("overwrite").parquet(f"s3a://{bucket}/final/trips")
 
-    logger.info(f"trips_by_month written to s3a://{bucket}/final/trips_by_month")
+    logger.info(f"trips written to s3a://{bucket}/final/trips")
     spark.stop()

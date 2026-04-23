@@ -1,5 +1,9 @@
 FROM apache/airflow:3.1.7
 USER root
+
+# Java is required because Spark jobs run in client mode:
+# the Spark driver executes inside the Airflow worker process.
+# The S3A jars allow the driver to read/write MinIO (s3a://).
 RUN apt-get update && \
     apt-get install -y --no-install-recommends default-jre-headless wget && \
     rm -rf /var/lib/apt/lists/*

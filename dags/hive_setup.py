@@ -5,7 +5,7 @@ Registers all staging tables in the Hive Metastore, pointing to their
 respective locations in MinIO. Runs once after the first ingestion cycle.
 
 After this DAG runs, Spark jobs can query data by table name instead of
-S3A paths: `SELECT * FROM nyc_taxi.yellow_taxi`
+S3A paths: `SELECT * FROM staging.yellow_taxi`
 """
 
 from airflow.decorators import dag, task
@@ -32,8 +32,8 @@ RAW_TABLES = [
 ]
 
 FINAL_TABLES = [
-    "trips_by_month",
-    "revenue_by_zone",
+    "trips",
+    "revenue",
     "weather_impact",
 ]
 
