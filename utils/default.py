@@ -24,4 +24,5 @@ def get_dag_config(**kwargs) -> dict:
         "tags": kwargs.get("tags", ["nyc-taxi"]),
         "description": kwargs.get("description", ""),
         "doc_md": kwargs.get("doc_md", ""),
+        "max_active_tasks": kwargs.get("max_active_tasks", 2),
     }

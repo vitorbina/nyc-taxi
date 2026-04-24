@@ -42,6 +42,7 @@ STAGING_MAPPING = {
         schedule="@monthly",
         catchup=False,
         doc_md=__doc__,
+        max_active_tasks=1,
     )
 )
 def staging_pipeline():
