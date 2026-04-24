@@ -7,19 +7,21 @@ and writes a parquet file to the staging layer.
 Runs once, triggered after the raw zones ingestion DAG completes.
 """
 
-from airflow.decorators import dag, task
+import os
 import logging
-from utils.default import get_default_args
+
+from airflow.decorators import dag, task
+
+from utils.default import get_dag_config
 from utils.staging.zones import stage_zones
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-BUCKET = "data-lake-nyc"
+BUCKET = os.getenv("MINIO_BUCKET")
 
 
 @dag(
-    **get_default_args(
+    **get_dag_config(
         dag_id="zones_staging",
         description="One-time staging pipeline for NYC taxi zone reference data",
         schedule="@once",

@@ -14,10 +14,13 @@ Run this DAG once after hive_setup completes, then keep it on monthly schedule
 to refresh aggregations as new data arrives.
 """
 
+import os
+import logging
+
 from airflow.decorators import dag, task
 from airflow.sensors.base import PokeReturnValue
-import logging
-from utils.default import get_default_args
+
+from utils.default import get_dag_config
 from utils.s3 import folder_exists
 from utils.hive import setup_hive, FINAL_DATABASE
 from utils.final.trips_by_month import compute_trips_by_month
@@ -25,15 +28,14 @@ from utils.final.revenue_by_zone import compute_revenue_by_zone
 from utils.final.weather_impact import compute_weather_impact
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-BUCKET = "data-lake-nyc"
+BUCKET = os.getenv("MINIO_BUCKET")
 
 FINAL_TABLES = ["trips", "revenue", "weather_impact"]
 
 
 @dag(
-    **get_default_args(
+    **get_dag_config(
         dag_id="taxi_final",
         description="Monthly aggregation into the final layer",
         schedule="@monthly",
@@ -64,7 +66,7 @@ def final_pipeline():
 
     @task
     def register_final_tables():
-        setup_hive(tables=FINAL_TABLES, database=FINAL_DATABASE, location_prefix="final")
+        setup_hive(tables=FINAL_TABLES, database=FINAL_DATABASE, location_prefix="final", bucket=BUCKET)
 
     sensor = wait_for_staging()
     trips = build_trips_by_month()

@@ -9,16 +9,18 @@ TLC data has a 2-3 month lag. Skipped tasks mean the file isn't out yet, not a f
 Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 """
 
-from airflow.decorators import dag, task
+import os
 import logging
-from utils.default import get_default_args
+
+from airflow.decorators import dag, task
+
+from utils.default import get_dag_config
 from utils.taxi import ingest_taxi_data
 from utils.hive import repair_table, RAW_DATABASE
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-BUCKET = "data-lake-nyc"
+BUCKET = os.getenv("MINIO_BUCKET")
 
 TAXI_MAPPING = {
     "yellow_taxi": "yellow",
@@ -29,7 +31,7 @@ TAXI_MAPPING = {
 
 
 @dag(
-    **get_default_args(
+    **get_dag_config(
         dag_id="taxi_ingestion",
         description="Monthly taxi trip data ingestion pipeline (NYC TLC)",
         schedule="@monthly",
@@ -55,7 +57,7 @@ def ingestion_pipeline():
     for folder_name, source_name in TAXI_MAPPING.items():
         ingest_task = ingest_taxi_type.override(task_id=f"ingest_{folder_name}")(
             taxi_type=source_name,
-            lake_folder=folder_name
+            lake_folder=folder_name,
         )
         hive_task = update_hive.override(task_id=f"hive_{folder_name}")(lake_folder=folder_name)
         ingest_task >> hive_task

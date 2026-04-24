@@ -9,10 +9,13 @@ Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft,
 Runs monthly, triggered after the raw ingestion DAG completes.
 """
 
+import os
+import logging
+
 from airflow.decorators import dag, task
 from airflow.sensors.base import PokeReturnValue
-import logging
-from utils.default import get_default_args
+
+from utils.default import get_dag_config
 from utils.s3 import file_exists
 from utils.staging.yellow import stage_yellow
 from utils.staging.green import stage_green
@@ -21,9 +24,8 @@ from utils.staging.hvfhv import stage_hvfhv
 from utils.hive import repair_table
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-BUCKET = "data-lake-nyc"
+BUCKET = os.getenv("MINIO_BUCKET")
 
 STAGING_MAPPING = {
     "yellow_taxi": stage_yellow,
@@ -34,7 +36,7 @@ STAGING_MAPPING = {
 
 
 @dag(
-    **get_default_args(
+    **get_dag_config(
         dag_id="taxi_staging",
         description="Monthly staging pipeline for NYC taxi trip data",
         schedule="@monthly",
@@ -53,7 +55,9 @@ def staging_pipeline():
 
     @task
     def stage_taxi_type(lake_folder: str, logical_date=None):
-        stage_fn = STAGING_MAPPING[lake_folder]
+        stage_fn = STAGING_MAPPING.get(lake_folder)
+        if stage_fn is None:
+            raise ValueError(f"No staging function registered for lake_folder: {lake_folder!r}")
         year = logical_date.strftime("%Y")
         month = logical_date.strftime("%m")
         stage_fn(lake_folder=lake_folder, year=year, month=month, bucket=BUCKET)

@@ -8,22 +8,24 @@ then writes to the staging layer.
 Runs daily, triggered after the raw weather ingestion DAG completes.
 """
 
+import os
+import logging
+
 from airflow.decorators import dag, task
 from airflow.sensors.base import PokeReturnValue
-import logging
-from utils.default import get_default_args
+
+from utils.default import get_dag_config
 from utils.s3 import file_exists
 from utils.staging.weather import stage_weather
 from utils.hive import repair_table
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-BUCKET = "data-lake-nyc"
+BUCKET = os.getenv("MINIO_BUCKET")
 
 
 @dag(
-    **get_default_args(
+    **get_dag_config(
         dag_id="weather_staging",
         description="Daily staging pipeline for NYC weather data",
         schedule="@daily",

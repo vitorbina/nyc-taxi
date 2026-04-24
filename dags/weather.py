@@ -7,19 +7,21 @@ Source: Open-Meteo (free, no API key). Destination: MinIO bucket `data-lake-nyc`
 Partition: `raw/weather/partition_date=YYYY-MM-DD/`
 """
 
-from airflow.decorators import dag, task
+import os
 import logging
-from utils.default import get_default_args
+
+from airflow.decorators import dag, task
+
+from utils.default import get_dag_config
 from utils.weather import ingest_weather_data
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-BUCKET = "data-lake-nyc"
+BUCKET = os.getenv("MINIO_BUCKET")
 
 
 @dag(
-    **get_default_args(
+    **get_dag_config(
         dag_id="weather_ingestion",
         description="Daily weather data ingestion pipeline (Open-Meteo Archive API)",
         schedule="@daily",
@@ -31,6 +33,7 @@ def weather_ingestion_pipeline():
 
     @task
     def ingest_daily_weather(data_interval_end=None):
+        # data_interval_end: the completed day we are fetching data for
         ingest_weather_data(
             execution_date=data_interval_end,
             bucket=BUCKET,

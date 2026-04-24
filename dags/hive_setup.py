@@ -8,13 +8,17 @@ After this DAG runs, Spark jobs can query data by table name instead of
 S3A paths: `SELECT * FROM staging.yellow_taxi`
 """
 
-from airflow.decorators import dag, task
+import os
 import logging
-from utils.default import get_default_args
-from utils.hive import setup_hive, DATABASE, RAW_DATABASE, FINAL_DATABASE
+
+from airflow.decorators import dag, task
+
+from utils.default import get_dag_config
+from utils.hive import setup_hive, STAGING_DATABASE, RAW_DATABASE, FINAL_DATABASE
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
+BUCKET = os.getenv("MINIO_BUCKET")
 
 STAGING_TABLES = [
     "yellow_taxi",
@@ -39,7 +43,7 @@ FINAL_TABLES = [
 
 
 @dag(
-    **get_default_args(
+    **get_dag_config(
         dag_id="hive_setup",
         description="One-time registration of staging and raw tables in the Hive Metastore",
         schedule="@once",
@@ -50,11 +54,11 @@ def hive_setup_pipeline():
 
     @task
     def register_table(table: str, database: str, location_prefix: str):
-        setup_hive(tables=[table], database=database, location_prefix=location_prefix)
+        setup_hive(tables=[table], database=database, location_prefix=location_prefix, bucket=BUCKET)
 
     for table in STAGING_TABLES:
         register_table.override(task_id=f"staging_{table}")(
-            table=table, database=DATABASE, location_prefix="staging"
+            table=table, database=STAGING_DATABASE, location_prefix="staging"
         )
 
     for table in RAW_TABLES:

@@ -1,15 +1,16 @@
 import logging
+
 from airflow.exceptions import AirflowSkipException
+
 from utils.s3 import file_exists
 from utils.spark import get_spark
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 APP_NAME = "staging_weather"
 
 
-def stage_weather(date_str: str, bucket: str):
+def stage_weather(date_str: str, bucket: str) -> None:
     file_name = f"weather_nyc_{date_str}.json"
     raw_key = f"raw/weather/partition_date={date_str}/{file_name}"
     raw_path = f"s3a://{bucket}/{raw_key}"
@@ -19,64 +20,66 @@ def stage_weather(date_str: str, bucket: str):
         raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
 
     spark = get_spark(APP_NAME)
-    spark.read.option("multiline", "true").json(raw_path).createOrReplaceTempView("raw")
+    try:
+        spark.read.option("multiline", "true").json(raw_path).createOrReplaceTempView("raw")
 
-    spark.sql("""
-        SELECT inline(arrays_zip(
-            hourly.time,
-            hourly.temperature_2m,
-            hourly.apparent_temperature,
-            hourly.relative_humidity_2m,
-            hourly.precipitation,
-            hourly.wind_speed_10m,
-            hourly.wind_direction_10m,
-            hourly.weather_code
-        ))
-        FROM raw
-    """).toDF(
-        "datetime", "temperature_c", "apparent_temperature_c",
-        "humidity_pct", "precipitation_mm", "wind_speed_kmh",
-        "wind_direction_deg", "weather_code"
-    ).createOrReplaceTempView("hourly")
+        spark.sql("""
+            SELECT inline(arrays_zip(
+                hourly.time,
+                hourly.temperature_2m,
+                hourly.apparent_temperature,
+                hourly.relative_humidity_2m,
+                hourly.precipitation,
+                hourly.wind_speed_10m,
+                hourly.wind_direction_10m,
+                hourly.weather_code
+            ))
+            FROM raw
+        """).toDF(
+            "datetime", "temperature_c", "apparent_temperature_c",
+            "humidity_pct", "precipitation_mm", "wind_speed_kmh",
+            "wind_direction_deg", "weather_code"
+        ).createOrReplaceTempView("hourly")
 
-    spark.sql("""
-        SELECT
-            CAST(datetime AS TIMESTAMP)          AS datetime,
-            CAST(temperature_c AS FLOAT)         AS temperature_c,
-            CAST(apparent_temperature_c AS FLOAT) AS apparent_temperature_c,
-            CAST(humidity_pct AS INT)             AS humidity_pct,
-            CAST(precipitation_mm AS FLOAT)       AS precipitation_mm,
-            CAST(wind_speed_kmh AS FLOAT)         AS wind_speed_kmh,
-            CAST(wind_direction_deg AS INT)       AS wind_direction_deg,
-            CAST(weather_code AS INT)             AS weather_code,
-            CASE CAST(weather_code AS INT)
-                WHEN 0  THEN 'Clear sky'
-                WHEN 1  THEN 'Mainly clear'
-                WHEN 2  THEN 'Partly cloudy'
-                WHEN 3  THEN 'Overcast'
-                WHEN 45 THEN 'Fog'
-                WHEN 48 THEN 'Rime fog'
-                WHEN 51 THEN 'Light drizzle'
-                WHEN 53 THEN 'Moderate drizzle'
-                WHEN 55 THEN 'Dense drizzle'
-                WHEN 61 THEN 'Slight rain'
-                WHEN 63 THEN 'Moderate rain'
-                WHEN 65 THEN 'Heavy rain'
-                WHEN 71 THEN 'Slight snow'
-                WHEN 73 THEN 'Moderate snow'
-                WHEN 75 THEN 'Heavy snow'
-                WHEN 77 THEN 'Snow grains'
-                WHEN 80 THEN 'Slight showers'
-                WHEN 81 THEN 'Moderate showers'
-                WHEN 82 THEN 'Violent showers'
-                WHEN 85 THEN 'Slight snow showers'
-                WHEN 86 THEN 'Heavy snow showers'
-                WHEN 95 THEN 'Thunderstorm'
-                WHEN 96 THEN 'Thunderstorm with hail'
-                WHEN 99 THEN 'Thunderstorm with heavy hail'
-            END AS weather_description
-        FROM hourly
-    """).coalesce(1).write.mode("overwrite").parquet(f"s3a://{bucket}/{staging_key}")
+        spark.sql("""
+            SELECT
+                CAST(datetime AS TIMESTAMP)           AS datetime,
+                CAST(temperature_c AS DOUBLE)         AS temperature_c,
+                CAST(apparent_temperature_c AS DOUBLE) AS apparent_temperature_c,
+                CAST(humidity_pct AS INT)              AS humidity_pct,
+                CAST(precipitation_mm AS DOUBLE)       AS precipitation_mm,
+                CAST(wind_speed_kmh AS DOUBLE)         AS wind_speed_kmh,
+                CAST(wind_direction_deg AS INT)        AS wind_direction_deg,
+                CAST(weather_code AS INT)              AS weather_code,
+                CASE CAST(weather_code AS INT)
+                    WHEN 0  THEN 'Clear sky'
+                    WHEN 1  THEN 'Mainly clear'
+                    WHEN 2  THEN 'Partly cloudy'
+                    WHEN 3  THEN 'Overcast'
+                    WHEN 45 THEN 'Fog'
+                    WHEN 48 THEN 'Rime fog'
+                    WHEN 51 THEN 'Light drizzle'
+                    WHEN 53 THEN 'Moderate drizzle'
+                    WHEN 55 THEN 'Dense drizzle'
+                    WHEN 61 THEN 'Slight rain'
+                    WHEN 63 THEN 'Moderate rain'
+                    WHEN 65 THEN 'Heavy rain'
+                    WHEN 71 THEN 'Slight snow'
+                    WHEN 73 THEN 'Moderate snow'
+                    WHEN 75 THEN 'Heavy snow'
+                    WHEN 77 THEN 'Snow grains'
+                    WHEN 80 THEN 'Slight showers'
+                    WHEN 81 THEN 'Moderate showers'
+                    WHEN 82 THEN 'Violent showers'
+                    WHEN 85 THEN 'Slight snow showers'
+                    WHEN 86 THEN 'Heavy snow showers'
+                    WHEN 95 THEN 'Thunderstorm'
+                    WHEN 96 THEN 'Thunderstorm with hail'
+                    WHEN 99 THEN 'Thunderstorm with heavy hail'
+                END AS weather_description
+            FROM hourly
+        """).write.mode("overwrite").parquet(f"s3a://{bucket}/{staging_key}")
 
-    logger.info(f"Weather staging written to s3a://{bucket}/{staging_key}")
-    spark.stop()
+        logger.info("Weather staging written to s3a://%s/%s", bucket, staging_key)
+    finally:
+        spark.stop()
