@@ -10,6 +10,8 @@ x-airflow-common: &airflow-common
     - airflow_home:/opt/airflow
     - ./dags:/opt/airflow/dags
     - ./utils:/opt/airflow/utils
+    - ./staging:/opt/airflow/staging
+    - ./final:/opt/airflow/final
     - ./logs:/opt/airflow/logs
   depends_on:
     postgres:
