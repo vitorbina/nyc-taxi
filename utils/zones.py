@@ -1,18 +1,19 @@
-import os
 import logging
-import requests
-import tempfile
+import os
 import shutil
+import tempfile
+
+import requests
 
 from utils.s3 import upload_file
 
 logger = logging.getLogger(__name__)
 
-TLC_MISC_BASE_URL = "https://d37ci6vzurychx.cloudfront.net/misc"
+TLC_ZONE_DATA_URL = "https://d37ci6vzurychx.cloudfront.net/misc"
 
 
 def _download_zone_file(file_name: str, local_path: str) -> None:
-    url = f"{TLC_MISC_BASE_URL}/{file_name}"
+    url = f"{TLC_ZONE_DATA_URL}/{file_name}"
     logger.info("Downloading %s...", url)
 
     response = requests.get(url)

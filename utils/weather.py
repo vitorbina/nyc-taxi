@@ -1,9 +1,11 @@
-import os
 import json
 import logging
-import requests
-import tempfile
+import os
 import shutil
+import tempfile
+from datetime import datetime
+
+import requests
 
 from utils.s3 import upload_file
 
@@ -23,7 +25,7 @@ HOURLY_VARIABLES = [
 ]
 
 
-def _download_weather_data(date_str: str, local_path: str) -> None:
+def _download_weather_file(date_str: str, local_path: str) -> None:
     url = (
         f"https://archive-api.open-meteo.com/v1/archive"
         f"?latitude={NYC_LAT}&longitude={NYC_LON}"
@@ -50,14 +52,14 @@ def _upload_weather_file(local_path: str, date_str: str, bucket: str) -> None:
     upload_file(filepath=local_path, bucket=bucket, key=key)
 
 
-def ingest_weather_data(execution_date, bucket: str) -> None:
+def ingest_weather_data(execution_date: datetime, bucket: str) -> None:
     date_str = execution_date.strftime("%Y-%m-%d")
     file_name = f"weather_nyc_{date_str}.json"
 
     tmpdir = tempfile.mkdtemp()
     try:
         local_path = os.path.join(tmpdir, file_name)
-        _download_weather_data(date_str, local_path)
+        _download_weather_file(date_str, local_path)
         _upload_weather_file(local_path, date_str, bucket)
     finally:
         shutil.rmtree(tmpdir)

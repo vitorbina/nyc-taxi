@@ -1,8 +1,10 @@
-import os
 import logging
-import requests
-import tempfile
+import os
 import shutil
+import tempfile
+from datetime import datetime
+
+import requests
 
 from airflow.exceptions import AirflowSkipException
 
@@ -10,12 +12,12 @@ from utils.s3 import upload_file
 
 logger = logging.getLogger(__name__)
 
-TLC_BASE_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data"
+TLC_TRIP_DATA_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data"
 
 
 def _download_taxi_file(local_path: str) -> None:
     file_name = os.path.basename(local_path)
-    url = f"{TLC_BASE_URL}/{file_name}"
+    url = f"{TLC_TRIP_DATA_URL}/{file_name}"
 
     logger.info("Downloading from %s", url)
 
@@ -39,7 +41,7 @@ def _upload_taxi_file(local_path: str, lake_folder: str, year: str, month: str, 
     upload_file(filepath=local_path, bucket=bucket, key=key)
 
 
-def ingest_taxi_data(lake_folder: str, taxi_type: str, logical_date, bucket: str) -> None:
+def ingest_taxi_data(lake_folder: str, taxi_type: str, logical_date: datetime, bucket: str) -> None:
     year = str(logical_date.year)
     month = str(logical_date.month)
     file_name = f"{taxi_type}_tripdata_{year}-{int(month):02d}.parquet"
