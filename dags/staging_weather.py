@@ -16,7 +16,7 @@ from airflow.sensors.base import PokeReturnValue
 
 from utils.default import get_dag_config
 from utils.s3 import file_exists
-from utils.staging.weather import stage_weather
+from staging.weather import stage_weather
 from utils.hive import repair_table
 
 logger = logging.getLogger(__name__)

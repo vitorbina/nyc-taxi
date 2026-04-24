@@ -13,7 +13,7 @@ import logging
 from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
-from utils.staging.zones import stage_zones
+from staging.zones import stage_zones
 
 logger = logging.getLogger(__name__)
 

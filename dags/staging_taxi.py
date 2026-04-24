@@ -17,10 +17,10 @@ from airflow.sensors.base import PokeReturnValue
 
 from utils.default import get_dag_config
 from utils.s3 import file_exists
-from utils.staging.yellow import stage_yellow
-from utils.staging.green import stage_green
-from utils.staging.fhv import stage_fhv
-from utils.staging.hvfhv import stage_hvfhv
+from staging.yellow import stage_yellow
+from staging.green import stage_green
+from staging.fhv import stage_fhv
+from staging.hvfhv import stage_hvfhv
 from utils.hive import repair_table
 
 logger = logging.getLogger(__name__)

@@ -23,9 +23,9 @@ from airflow.sensors.base import PokeReturnValue
 from utils.default import get_dag_config
 from utils.s3 import folder_exists
 from utils.hive import setup_hive, FINAL_DATABASE
-from utils.final.trips_by_month import compute_trips_by_month
-from utils.final.revenue_by_zone import compute_revenue_by_zone
-from utils.final.weather_impact import compute_weather_impact
+from final.trips_by_month import compute_trips_by_month
+from final.revenue_by_zone import compute_revenue_by_zone
+from final.weather_impact import compute_weather_impact
 
 logger = logging.getLogger(__name__)
 
