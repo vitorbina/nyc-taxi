@@ -1,10 +1,10 @@
-import json
 import logging
 import os
 import shutil
 import tempfile
 from datetime import datetime
 
+import pandas as pd
 import requests
 
 from utils.s3 import upload_file
@@ -25,7 +25,7 @@ HOURLY_VARIABLES = [
 ]
 
 
-def _download_weather_file(date_str: str, local_path: str) -> None:
+def _fetch_weather_data(date_str: str) -> dict:
     url = (
         f"https://archive-api.open-meteo.com/v1/archive"
         f"?latitude={NYC_LAT}&longitude={NYC_LON}"
@@ -35,14 +35,15 @@ def _download_weather_file(date_str: str, local_path: str) -> None:
     )
 
     logger.info("Fetching weather data from Open-Meteo for %s...", date_str)
-
     response = requests.get(url)
     response.raise_for_status()
+    return response.json()
 
-    with open(local_path, "w", encoding="utf-8") as f:
-        json.dump(response.json(), f, ensure_ascii=False, indent=4)
 
-    logger.info("Weather data saved to: %s", local_path)
+def _write_parquet(payload: dict, local_path: str) -> None:
+    df = pd.DataFrame(payload["hourly"])
+    df.to_parquet(local_path, index=False)
+    logger.info("Weather data written as parquet to %s (%d rows).", local_path, len(df))
 
 
 def _upload_weather_file(local_path: str, date_str: str, bucket: str) -> None:
@@ -54,12 +55,13 @@ def _upload_weather_file(local_path: str, date_str: str, bucket: str) -> None:
 
 def ingest_weather_data(execution_date: datetime, bucket: str) -> None:
     date_str = execution_date.strftime("%Y-%m-%d")
-    file_name = f"weather_nyc_{date_str}.json"
+    file_name = f"weather_nyc_{date_str}.parquet"
 
     tmpdir = tempfile.mkdtemp()
     try:
         local_path = os.path.join(tmpdir, file_name)
-        _download_weather_file(date_str, local_path)
+        payload = _fetch_weather_data(date_str)
+        _write_parquet(payload, local_path)
         _upload_weather_file(local_path, date_str, bucket)
     finally:
         shutil.rmtree(tmpdir)

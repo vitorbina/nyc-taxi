@@ -5,19 +5,18 @@ Reads raw weather JSON files from MinIO, converts hourly arrays into
 row-per-hour parquet files with type casting and weather code descriptions,
 then writes to the staging layer.
 
-Runs daily, triggered after the raw weather ingestion DAG completes.
+Triggered by the raw_weather asset, produced by the weather_ingestion DAG.
 """
 
 import os
 import logging
 
 from airflow.decorators import dag, task
-from airflow.sensors.base import PokeReturnValue
 
 from utils.default import get_dag_config
-from utils.s3 import file_exists
 from staging.weather import stage_weather
 from utils.hive import repair_table
+from utils.assets import raw_weather, staging_weather
 
 logger = logging.getLogger(__name__)
 
@@ -27,30 +26,24 @@ BUCKET = os.getenv("MINIO_BUCKET")
 @dag(
     **get_dag_config(
         dag_id="weather_staging",
-        description="Daily staging pipeline for NYC weather data",
-        schedule="@daily",
+        description="Staging pipeline for NYC weather data, triggered by raw ingestion",
+        schedule=[raw_weather],
         catchup=False,
         doc_md=__doc__,
     )
 )
 def weather_staging_pipeline():
 
-    @task.sensor(task_id="wait_for_ingestion", mode="reschedule", timeout=3600, poke_interval=120)
-    def wait_for_ingestion(data_interval_end=None) -> PokeReturnValue:
-        date_str = data_interval_end.strftime("%Y-%m-%d")
-        key = f"raw/weather/partition_date={date_str}/weather_nyc_{date_str}.json"
-        return PokeReturnValue(is_done=file_exists(bucket=BUCKET, key=key))
-
     @task
     def stage_daily_weather(data_interval_end=None):
         date_str = data_interval_end.strftime("%Y-%m-%d")
         stage_weather(date_str=date_str, bucket=BUCKET)
 
-    @task
+    @task(outlets=[staging_weather])
     def update_hive():
         repair_table("weather")
 
-    wait_for_ingestion() >> stage_daily_weather() >> update_hive()
+    stage_daily_weather() >> update_hive()
 
 
 pipeline = weather_staging_pipeline()

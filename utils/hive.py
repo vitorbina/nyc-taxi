@@ -2,6 +2,7 @@ import os
 import logging
 
 from utils.spark import get_spark
+from utils.s3 import folder_exists
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,6 @@ def repair_table(table: str, database: str = STAGING_DATABASE) -> None:
         logger.info("Repairing partitions for %s.%s...", database, table)
         spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
         logger.info("Partitions updated for %s.%s.", database, table)
-    except Exception as e:
-        logger.warning("Skipping repair for %s.%s — table not registered yet: %s", database, table, e)
     finally:
         spark.stop()
 
@@ -31,18 +30,22 @@ def repair_table(table: str, database: str = STAGING_DATABASE) -> None:
 def setup_hive(tables: list, database: str, location_prefix: str, bucket: str = _DEFAULT_BUCKET) -> None:
     spark = get_spark("hive_setup")
 
-    logger.info("Creating database %s...", database)
-    spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
-
     try:
-        for table in tables:
-            location = f"s3a://{bucket}/{location_prefix}/{table}/"
+        logger.info("Creating database %s if not exists...", database)
+        spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
 
-            try:
-                fields = spark.read.parquet(location).schema.fields
-            except Exception:
-                logger.warning("No data at %s — skipping %s.%s", location, database, table)
-                continue
+        for table in tables:
+            prefix = f"{location_prefix}/{table}/"
+            location = f"s3a://{bucket}/{prefix}"
+
+            if not folder_exists(bucket, prefix):
+                raise FileNotFoundError(
+                    f"No data found at s3a://{bucket}/{prefix}. "
+                    f"Run the ingestion DAG for '{table}' before hive_setup."
+                )
+
+            logger.info("Reading schema from %s...", location)
+            fields = spark.read.parquet(location).schema.fields
 
             partition_col = next((f for f in fields if f.name == "partition_date"), None)
             regular_fields = [f for f in fields if f.name != "partition_date"]
@@ -67,16 +70,13 @@ def setup_hive(tables: list, database: str, location_prefix: str, bucket: str = 
                     LOCATION '{location}'
                 """
 
-            logger.info("Creating table: %s", create_sql.strip())
+            logger.info("Creating table %s.%s at %s", database, table, location)
             spark.sql(create_sql)
-            logger.info("Table %s.%s registered at %s.", database, table, location)
 
-            try:
+            if partition_col:
+                logger.info("Repairing partitions for %s.%s...", database, table)
                 spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
-                logger.info("Partitions repaired for %s.%s.", database, table)
-            except Exception as e:
-                logger.warning("Repair skipped for %s.%s — no data yet: %s", database, table, e)
+
+            logger.info("Table %s.%s registered successfully.", database, table)
     finally:
         spark.stop()
-
-    logger.info("Hive setup completed for database %s.", database)

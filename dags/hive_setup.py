@@ -33,6 +33,7 @@ RAW_TABLES = [
     "green_taxi",
     "app_rides",
     "high_volume_fhv",
+    "weather",
 ]
 
 FINAL_TABLES = [

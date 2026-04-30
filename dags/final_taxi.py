@@ -10,19 +10,18 @@ tables written to MinIO under final/ and registered in the final database.
 | revenue_by_zone   | Revenue metrics per pickup zone and taxi type    |
 | weather_impact    | Daily trips + avg fare joined with weather data  |
 
-Run this DAG once after hive_setup completes, then keep it on monthly schedule
-to refresh aggregations as new data arrives.
+Triggered when all four staging taxi assets have been updated by the taxi_staging DAG.
 """
 
 import os
 import logging
 
 from airflow.decorators import dag, task
-from airflow.sensors.base import PokeReturnValue
+from airflow.sdk import AssetAll
 
 from utils.default import get_dag_config
-from utils.s3 import folder_exists
 from utils.hive import setup_hive, FINAL_DATABASE
+from utils.assets import staging_taxi_assets
 from final.trips_by_month import compute_trips_by_month
 from final.revenue_by_zone import compute_revenue_by_zone
 from final.weather_impact import compute_weather_impact
@@ -37,20 +36,13 @@ FINAL_TABLES = ["trips", "revenue", "weather_impact"]
 @dag(
     **get_dag_config(
         dag_id="taxi_final",
-        description="Monthly aggregation into the final layer",
-        schedule="@monthly",
+        description="Aggregation into the final layer, triggered by staging completion",
+        schedule=AssetAll(*staging_taxi_assets.values()),
         catchup=False,
         doc_md=__doc__,
     )
 )
 def final_pipeline():
-
-    @task.sensor(task_id="wait_for_staging", mode="reschedule", timeout=3600, poke_interval=120)
-    def wait_for_staging(logical_date=None) -> PokeReturnValue:
-        year = logical_date.strftime("%Y")
-        month = logical_date.strftime("%m")
-        prefix = f"staging/yellow_taxi/partition_date={year}-{int(month):02d}-01"
-        return PokeReturnValue(is_done=folder_exists(bucket=BUCKET, prefix=prefix))
 
     @task
     def build_trips_by_month():
@@ -68,13 +60,12 @@ def final_pipeline():
     def register_final_tables():
         setup_hive(tables=FINAL_TABLES, database=FINAL_DATABASE, location_prefix="final", bucket=BUCKET)
 
-    sensor = wait_for_staging()
     trips = build_trips_by_month()
     revenue = build_revenue_by_zone()
     weather = build_weather_impact()
     register = register_final_tables()
 
-    sensor >> [trips, revenue, weather] >> register
+    [trips, revenue, weather] >> register
 
 
 pipeline = final_pipeline()

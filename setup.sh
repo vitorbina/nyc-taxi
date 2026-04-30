@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
+if [ ! -f .env ]; then
+    echo "ERROR: .env file not found. Copy .env.example to .env and fill in the values."
+    exit 1
+fi
+
+set -a
+source .env
+set +a
+
 echo "==> [0/3] Creating logs directory..."
 mkdir -p logs
 chmod 777 logs
@@ -13,7 +22,7 @@ echo "    Done: setup/hive-lib/postgresql.jar"
 
 echo "==> [2/3] Creating Hive S3A config..."
 mkdir -p setup/hive-conf
-cat > setup/hive-conf/core-site.xml << 'EOF'
+cat > setup/hive-conf/core-site.xml << EOF
 <?xml version="1.0"?>
 <configuration>
   <property>
@@ -22,11 +31,11 @@ cat > setup/hive-conf/core-site.xml << 'EOF'
   </property>
   <property>
     <name>fs.s3a.access.key</name>
-    <value>minioadmin</value>
+    <value>${MINIO_ROOT_USER}</value>
   </property>
   <property>
     <name>fs.s3a.secret.key</name>
-    <value>minioadmin</value>
+    <value>${MINIO_ROOT_PASSWORD}</value>
   </property>
   <property>
     <name>fs.s3a.path.style.access</name>
@@ -58,8 +67,8 @@ done
 NETWORK_NAME="$(basename "$(pwd)")_nyc-network"
 docker run --rm --entrypoint sh --network "$NETWORK_NAME" \
     minio/mc:latest \
-    -c "mc alias set local http://minio:9000 minioadmin minioadmin && mc mb --ignore-existing local/data-lake-nyc"
-echo "    Done: bucket data-lake-nyc created"
+    -c "mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && mc mb --ignore-existing local/${MINIO_BUCKET}"
+echo "    Done: bucket ${MINIO_BUCKET} created"
 
 echo ""
 echo "Setup complete. Run 'docker compose up -d' to start the full infrastructure."

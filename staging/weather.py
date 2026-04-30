@@ -11,7 +11,7 @@ APP_NAME = "staging_weather"
 
 
 def stage_weather(date_str: str, bucket: str) -> None:
-    file_name = f"weather_nyc_{date_str}.json"
+    file_name = f"weather_nyc_{date_str}.parquet"
     raw_key = f"raw/weather/partition_date={date_str}/{file_name}"
     raw_path = f"s3a://{bucket}/{raw_key}"
     staging_key = f"staging/weather/partition_date={date_str}"
@@ -21,36 +21,18 @@ def stage_weather(date_str: str, bucket: str) -> None:
 
     spark = get_spark(APP_NAME)
     try:
-        spark.read.option("multiline", "true").json(raw_path).createOrReplaceTempView("raw")
-
-        spark.sql("""
-            SELECT inline(arrays_zip(
-                hourly.time,
-                hourly.temperature_2m,
-                hourly.apparent_temperature,
-                hourly.relative_humidity_2m,
-                hourly.precipitation,
-                hourly.wind_speed_10m,
-                hourly.wind_direction_10m,
-                hourly.weather_code
-            ))
-            FROM raw
-        """).toDF(
-            "datetime", "temperature_c", "apparent_temperature_c",
-            "humidity_pct", "precipitation_mm", "wind_speed_kmh",
-            "wind_direction_deg", "weather_code"
-        ).createOrReplaceTempView("hourly")
+        spark.read.parquet(raw_path).createOrReplaceTempView("raw")
 
         spark.sql("""
             SELECT
-                CAST(datetime AS TIMESTAMP)           AS datetime,
-                CAST(temperature_c AS DOUBLE)         AS temperature_c,
-                CAST(apparent_temperature_c AS DOUBLE) AS apparent_temperature_c,
-                CAST(humidity_pct AS INT)              AS humidity_pct,
-                CAST(precipitation_mm AS DOUBLE)       AS precipitation_mm,
-                CAST(wind_speed_kmh AS DOUBLE)         AS wind_speed_kmh,
-                CAST(wind_direction_deg AS INT)        AS wind_direction_deg,
-                CAST(weather_code AS INT)              AS weather_code,
+                CAST(time AS TIMESTAMP)                  AS datetime,
+                CAST(temperature_2m AS DOUBLE)           AS temperature_c,
+                CAST(apparent_temperature AS DOUBLE)     AS apparent_temperature_c,
+                CAST(relative_humidity_2m AS INT)        AS humidity_pct,
+                CAST(precipitation AS DOUBLE)            AS precipitation_mm,
+                CAST(wind_speed_10m AS DOUBLE)           AS wind_speed_kmh,
+                CAST(wind_direction_10m AS INT)          AS wind_direction_deg,
+                CAST(weather_code AS INT)                AS weather_code,
                 CASE CAST(weather_code AS INT)
                     WHEN 0  THEN 'Clear sky'
                     WHEN 1  THEN 'Mainly clear'
@@ -77,7 +59,7 @@ def stage_weather(date_str: str, bucket: str) -> None:
                     WHEN 96 THEN 'Thunderstorm with hail'
                     WHEN 99 THEN 'Thunderstorm with heavy hail'
                 END AS weather_description
-            FROM hourly
+            FROM raw
         """).write.mode("overwrite").parquet(f"s3a://{bucket}/{staging_key}")
 
         logger.info("Weather staging written to s3a://%s/%s", bucket, staging_key)

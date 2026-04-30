@@ -14,6 +14,8 @@ from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
 from utils.weather import ingest_weather_data
+from utils.hive import repair_table, RAW_DATABASE
+from utils.assets import raw_weather
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,11 @@ def weather_ingestion_pipeline():
             bucket=BUCKET,
         )
 
-    ingest_daily_weather()
+    @task(outlets=[raw_weather])
+    def update_hive():
+        repair_table("weather", database=RAW_DATABASE)
+
+    ingest_daily_weather() >> update_hive()
 
 
 pipeline = weather_ingestion_pipeline()

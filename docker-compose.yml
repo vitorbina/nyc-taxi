@@ -22,13 +22,13 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-    AIRFLOW__WEBSERVER__SECRET_KEY: nyc-taxi-secret-key
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres:5432/${POSTGRES_AIRFLOW_DB}
+    AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-webserver:8080/execution"
     MINIO_ENDPOINT: http://minio:9000
-    MINIO_ROOT_USER: minioadmin
-    MINIO_ROOT_PASSWORD: minioadmin
-    MINIO_BUCKET: data-lake-nyc
+    MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    MINIO_BUCKET: ${MINIO_BUCKET}
     SPARK_MASTER_URL: spark://spark-master:7077
     HIVE_METASTORE_URI: thrift://hive-metastore:9083
     PYTHONPATH: /opt/airflow
@@ -46,8 +46,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - ./setup/lake_data:/data
     command: server /data --console-address ":9001"
@@ -59,13 +59,13 @@ services:
     image: postgres:latest
     container_name: nyc_postgres_hive
     environment:
-      POSTGRES_USER: hive
-      POSTGRES_PASSWORD: hive
-      POSTGRES_DB: hive_metastore
+      POSTGRES_USER: ${POSTGRES_HIVE_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_HIVE_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_HIVE_DB}
     volumes:
       - postgres_hive_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "hive"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_HIVE_USER}"]
       interval: 10s
       retries: 5
     deploy:
@@ -80,13 +80,34 @@ services:
     image: postgres:latest
     container_name: nyc_postgres
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
+      POSTGRES_USER: ${POSTGRES_AIRFLOW_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_AIRFLOW_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_AIRFLOW_DB}
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_AIRFLOW_USER}"]
+      interval: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    networks:
+      - nyc-network
+
+  # ── Postgres (Metabase metadata) ───────────────────────────────────────────
+  postgres-metabase:
+    image: postgres:latest
+    container_name: nyc_postgres_metabase
+    environment:
+      POSTGRES_USER: ${POSTGRES_METABASE_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_METABASE_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_METABASE_DB}
+    volumes:
+      - postgres_metabase_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_METABASE_USER}"]
       interval: 10s
       retries: 5
     deploy:
@@ -153,9 +174,9 @@ services:
       DB_DRIVER: postgres
       SERVICE_OPTS: >-
         -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
-        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres-hive:5432/hive_metastore
-        -Djavax.jdo.option.ConnectionUserName=hive
-        -Djavax.jdo.option.ConnectionPassword=hive
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres-hive:5432/${POSTGRES_HIVE_DB}
+        -Djavax.jdo.option.ConnectionUserName=${POSTGRES_HIVE_USER}
+        -Djavax.jdo.option.ConnectionPassword=${POSTGRES_HIVE_PASSWORD}
     ports:
       - "9083:9083"
     depends_on:
@@ -218,6 +239,9 @@ services:
       - "8082:8080"
     volumes:
       - ./trino/etc:/etc/trino
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     depends_on:
       - hive-metastore
       - minio
@@ -234,13 +258,18 @@ services:
     container_name: nyc_metabase
     ports:
       - "3000:3000"
-    volumes:
-      - metabase_data:/metabase-data
     environment:
-      MB_DB_TYPE: h2
-      MB_DB_FILE: /metabase-data/metabase.db
+      MB_DB_TYPE: postgres
+      MB_DB_HOST: postgres-metabase
+      MB_DB_PORT: 5432
+      MB_DB_DBNAME: ${POSTGRES_METABASE_DB}
+      MB_DB_USER: ${POSTGRES_METABASE_USER}
+      MB_DB_PASS: ${POSTGRES_METABASE_PASSWORD}
     depends_on:
-      - trino
+      postgres-metabase:
+        condition: service_healthy
+      trino:
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -251,8 +280,8 @@ services:
 volumes:
   postgres_data:
   postgres_hive_data:
+  postgres_metabase_data:
   airflow_home:
-  metabase_data:
 
 networks:
   nyc-network:
