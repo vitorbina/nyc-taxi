@@ -254,7 +254,9 @@ services:
 
   # ── Superset Init (runs once to migrate DB and create admin user) ──────────
   superset-init:
-    image: apache/superset:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.superset
     container_name: nyc_superset_init
     command: >-
       bash -c
@@ -275,7 +277,9 @@ services:
 
   # ── Superset ───────────────────────────────────────────────────────────────
   superset:
-    image: apache/superset:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.superset
     container_name: nyc_superset
     ports:
       - "3000:8088"
