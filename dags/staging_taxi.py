@@ -7,12 +7,17 @@ the result to the staging layer.
 
 Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 Triggered when all four raw taxi assets have been updated by the taxi_ingestion DAG.
+
+Auto-discovers missing partitions: each task lists what's in raw and what's
+already in staging, then processes the difference. Idempotent and resilient
+to backfills.
 """
 
 import os
 import logging
 
 from airflow.decorators import dag, task
+from airflow.exceptions import AirflowSkipException
 from airflow.sdk import AssetAll
 
 from utils.default import get_dag_config
@@ -22,6 +27,7 @@ from staging.fhv import stage_fhv
 from staging.hvfhv import stage_hvfhv
 from utils.hive import repair_table
 from utils.assets import raw_taxi_assets, staging_taxi_assets
+from utils.s3 import list_partitions
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +54,19 @@ STAGING_MAPPING = {
 def staging_pipeline():
 
     @task
-    def stage_taxi_type(lake_folder: str, logical_date=None):
-        stage_fn = STAGING_MAPPING.get(lake_folder)
-        if stage_fn is None:
-            raise ValueError(f"No staging function registered for lake_folder: {lake_folder!r}")
-        year = logical_date.strftime("%Y")
-        month = logical_date.strftime("%m")
-        stage_fn(lake_folder=lake_folder, year=year, month=month, bucket=BUCKET)
+    def stage_taxi_type(lake_folder: str):
+        raw_partitions = set(list_partitions(BUCKET, f"raw/{lake_folder}/"))
+        staging_partitions = set(list_partitions(BUCKET, f"staging/{lake_folder}/"))
+        missing = sorted(raw_partitions - staging_partitions)
+
+        if not missing:
+            raise AirflowSkipException(f"No new partitions to stage for {lake_folder}")
+
+        stage_fn = STAGING_MAPPING[lake_folder]
+        logger.info("Staging %d new partition(s) for %s: %s", len(missing), lake_folder, missing)
+        for partition in missing:
+            year, month, _ = partition.split("-")
+            stage_fn(lake_folder=lake_folder, year=year, month=month, bucket=BUCKET)
 
     @task
     def update_hive(lake_folder: str):

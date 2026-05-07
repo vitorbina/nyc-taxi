@@ -32,6 +32,18 @@ def folder_exists(bucket: str, prefix: str) -> bool:
     return response.get("KeyCount", 0) > 0
 
 
+def list_partitions(bucket: str, prefix: str) -> list[str]:
+    prefix = prefix.rstrip("/") + "/"
+    paginator = _get_s3_client().get_paginator("list_objects_v2")
+    partitions = []
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter="/"):
+        for cp in page.get("CommonPrefixes", []):
+            sub = cp["Prefix"].rstrip("/").rsplit("/", 1)[-1]
+            if sub.startswith("partition_date="):
+                partitions.append(sub.split("=", 1)[1])
+    return sorted(partitions)
+
+
 def download_file(bucket: str, key: str, filepath: str) -> None:
     logger.info("Downloading %s/%s to %s...", bucket, key, filepath)
     try:

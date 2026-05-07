@@ -1,22 +1,27 @@
 """
 # NYC Weather Staging
 
-Reads raw weather JSON files from MinIO, converts hourly arrays into
-row-per-hour parquet files with type casting and weather code descriptions,
-then writes to the staging layer.
+Reads raw weather parquet files from MinIO, applies type casting and
+weather code translation, then writes to the staging layer.
 
 Triggered by the raw_weather asset, produced by the weather_ingestion DAG.
+
+Auto-discovers missing partitions: lists what's in raw and what's already
+in staging, then processes the difference. Idempotent and resilient to
+backfills.
 """
 
 import os
 import logging
 
 from airflow.decorators import dag, task
+from airflow.exceptions import AirflowSkipException
 
 from utils.default import get_dag_config
 from staging.weather import stage_weather
 from utils.hive import repair_table
 from utils.assets import raw_weather, staging_weather
+from utils.s3 import list_partitions
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +40,17 @@ BUCKET = os.getenv("MINIO_BUCKET")
 def weather_staging_pipeline():
 
     @task
-    def stage_daily_weather(data_interval_end=None):
-        date_str = data_interval_end.strftime("%Y-%m-%d")
-        stage_weather(date_str=date_str, bucket=BUCKET)
+    def stage_daily_weather():
+        raw_partitions = set(list_partitions(BUCKET, "raw/weather/"))
+        staging_partitions = set(list_partitions(BUCKET, "staging/weather/"))
+        missing = sorted(raw_partitions - staging_partitions)
+
+        if not missing:
+            raise AirflowSkipException("No new weather partitions to stage")
+
+        logger.info("Staging %d new weather partition(s): %s", len(missing), missing)
+        for date_str in missing:
+            stage_weather(date_str=date_str, bucket=BUCKET)
 
     @task(outlets=[staging_weather])
     def update_hive():
