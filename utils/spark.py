@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_spark(app_name: str) -> SparkSession:
+    logger.info("Creating Spark session: %s", app_name)
     return (
         SparkSession.builder
         .appName(app_name)

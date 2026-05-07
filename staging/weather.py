@@ -19,6 +19,8 @@ def stage_weather(date_str: str, bucket: str) -> None:
     if not file_exists(bucket=bucket, key=raw_key):
         raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
 
+    logger.info("Staging weather for %s — raw: %s", date_str, raw_path)
+
     spark = get_spark(APP_NAME)
     try:
         spark.read.parquet(raw_path).createOrReplaceTempView("raw")
@@ -62,6 +64,7 @@ def stage_weather(date_str: str, bucket: str) -> None:
             FROM raw
         """).write.mode("overwrite").parquet(f"s3a://{bucket}/{staging_key}")
 
-        logger.info("Weather staging written to s3a://%s/%s", bucket, staging_key)
+        row_count = spark.read.parquet(f"s3a://{bucket}/{staging_key}").count()
+        logger.info("Wrote %d rows to s3a://%s/%s", row_count, bucket, staging_key)
     finally:
         spark.stop()

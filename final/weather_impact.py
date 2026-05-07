@@ -8,6 +8,7 @@ APP_NAME = "final_weather_impact"
 
 
 def compute_weather_impact(bucket: str) -> None:
+    logger.info("Computing weather_impact from staging tables...")
     spark = get_spark(APP_NAME)
     try:
         spark.sql("""
@@ -48,6 +49,7 @@ def compute_weather_impact(bucket: str) -> None:
             LEFT JOIN _weather_daily w ON t.date = w.date
         """).write.mode("overwrite").parquet(f"s3a://{bucket}/final/weather_impact")
 
-        logger.info("weather_impact written to s3a://%s/final/weather_impact", bucket)
+        row_count = spark.read.parquet(f"s3a://{bucket}/final/weather_impact").count()
+        logger.info("Wrote %d rows to s3a://%s/final/weather_impact", row_count, bucket)
     finally:
         spark.stop()

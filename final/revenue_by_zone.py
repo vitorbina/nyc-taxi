@@ -8,6 +8,7 @@ APP_NAME = "final_revenue_by_zone"
 
 
 def compute_revenue_by_zone(bucket: str) -> None:
+    logger.info("Computing revenue_by_zone from staging tables...")
     spark = get_spark(APP_NAME)
     try:
         spark.sql("""
@@ -49,6 +50,7 @@ def compute_revenue_by_zone(bucket: str) -> None:
             WHERE pickup_zone IS NOT NULL
         """).write.mode("overwrite").parquet(f"s3a://{bucket}/final/revenue")
 
-        logger.info("revenue written to s3a://%s/final/revenue", bucket)
+        row_count = spark.read.parquet(f"s3a://{bucket}/final/revenue").count()
+        logger.info("Wrote %d rows to s3a://%s/final/revenue", row_count, bucket)
     finally:
         spark.stop()

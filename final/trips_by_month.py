@@ -8,6 +8,7 @@ APP_NAME = "final_trips_by_month"
 
 
 def compute_trips_by_month(bucket: str) -> None:
+    logger.info("Computing trips_by_month from staging tables...")
     spark = get_spark(APP_NAME)
     try:
         spark.sql("""
@@ -78,6 +79,7 @@ def compute_trips_by_month(bucket: str) -> None:
             WHERE pickup_borough IS NOT NULL
         """).write.mode("overwrite").parquet(f"s3a://{bucket}/final/trips")
 
-        logger.info("trips written to s3a://%s/final/trips", bucket)
+        row_count = spark.read.parquet(f"s3a://{bucket}/final/trips").count()
+        logger.info("Wrote %d rows to s3a://%s/final/trips", row_count, bucket)
     finally:
         spark.stop()

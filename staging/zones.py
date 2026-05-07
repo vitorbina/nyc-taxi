@@ -18,6 +18,8 @@ def stage_zones(bucket: str) -> None:
     if not file_exists(bucket=bucket, key=raw_key):
         raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
 
+    logger.info("Staging zones — raw: %s", raw_path)
+
     spark = get_spark(APP_NAME)
     try:
         spark.read.option("header", "true").csv(raw_path).createOrReplaceTempView("raw")
@@ -34,6 +36,7 @@ def stage_zones(bucket: str) -> None:
               AND Zone IS NOT NULL
         """).coalesce(1).write.mode("overwrite").parquet(staging_path)
 
-        logger.info("Zones staging written to %s", staging_path)
+        row_count = spark.read.parquet(staging_path).count()
+        logger.info("Wrote %d rows to %s", row_count, staging_path)
     finally:
         spark.stop()

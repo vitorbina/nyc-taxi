@@ -10,6 +10,7 @@ raw_green_taxi = Asset(f"s3://{_bucket}/raw/green_taxi")
 raw_app_rides = Asset(f"s3://{_bucket}/raw/app_rides")
 raw_high_volume_fhv = Asset(f"s3://{_bucket}/raw/high_volume_fhv")
 raw_weather = Asset(f"s3://{_bucket}/raw/weather")
+raw_taxi_zones = Asset(f"s3://{_bucket}/raw/reference/taxi_zone_lookup")
 
 # Staging layer
 staging_yellow_taxi = Asset(f"s3://{_bucket}/staging/yellow_taxi")

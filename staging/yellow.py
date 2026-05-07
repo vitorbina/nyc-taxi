@@ -20,6 +20,8 @@ def stage_yellow(lake_folder: str, year: str, month: str, bucket: str) -> None:
     if not file_exists(bucket=bucket, key=raw_key):
         raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
 
+    logger.info("Staging %s for %s-%s — raw: s3a://%s/%s", lake_folder, year, month, bucket, raw_key)
+
     spark = get_spark(APP_NAME)
     try:
         spark.read.parquet(f"s3a://{bucket}/{raw_key}").createOrReplaceTempView("raw")
@@ -86,6 +88,7 @@ def stage_yellow(lake_folder: str, year: str, month: str, bucket: str) -> None:
               AND (r.passenger_count IS NULL OR CAST(r.passenger_count AS INT) > 0)
         """).write.mode("overwrite").parquet(f"s3a://{bucket}/{staging_key}")
 
-        logger.info("Yellow staging written to s3a://%s/%s", bucket, staging_key)
+        row_count = spark.read.parquet(f"s3a://{bucket}/{staging_key}").count()
+        logger.info("Wrote %d rows to s3a://%s/%s", row_count, bucket, staging_key)
     finally:
         spark.stop()
