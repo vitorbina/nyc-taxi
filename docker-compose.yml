@@ -256,17 +256,11 @@ services:
   superset-init:
     image: apache/superset:latest
     container_name: nyc_superset_init
-    command: >
-      bash -c "
-        superset db upgrade &&
-        superset fab create-admin
-          --username admin
-          --firstname Admin
-          --lastname User
-          --email admin@localhost
-          --password ${SUPERSET_ADMIN_PASSWORD} &&
-        superset init
-      "
+    command: >-
+      bash -c
+      "superset db upgrade &&
+      superset fab create-admin --username admin --firstname Admin --lastname User --email admin@localhost --password ${SUPERSET_ADMIN_PASSWORD} &&
+      superset init"
     environment:
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${POSTGRES_SUPERSET_USER}:${POSTGRES_SUPERSET_PASSWORD}@postgres-superset:5432/${POSTGRES_SUPERSET_DB}
