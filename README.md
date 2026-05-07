@@ -2,7 +2,7 @@
 
 Data engineering pipeline that ingests, processes, and serves NYC taxi trip records and daily weather data into a local Data Lake.
 
-Medallion architecture (raw → staging → final) with Airflow orchestrating, Spark processing via SQL, MinIO as storage, Hive Metastore as the catalog, and Trino + Metabase as the consumption layer.
+Medallion architecture (raw → staging → final) with Airflow orchestrating, Spark processing via SQL, MinIO as storage, Hive Metastore as the catalog, and Trino + Superset as the consumption layer.
 
 ## Architecture
 
@@ -15,11 +15,11 @@ Staging (MinIO) ── cleaning, type casting, joins, code translations (Spark S
   ↓
 Final (MinIO) ── pre-aggregated tables optimized for BI queries
   ↓
-Hive Metastore ── catalog for raw, staging and final (raw, staging, final)
+Hive Metastore ── catalog for raw, staging and final layers
   ↓
 Trino ── SQL engine that queries MinIO via Hive Metastore
   ↓
-Metabase ── BI dashboards connected to Trino
+Superset ── BI dashboards connected to Trino
 ```
 
 ## Stack
@@ -30,7 +30,7 @@ Metabase ── BI dashboards connected to Trino
 | Spark | 3.5.3 |
 | Hive Metastore | 4.0.0 |
 | Trino | latest |
-| Metabase | latest |
+| Superset | latest |
 | MinIO | latest |
 | PostgreSQL | latest |
 | Docker | 29.2.1 |
@@ -47,6 +47,15 @@ Metabase ── BI dashboards connected to Trino
 git clone <repo-url>
 cd nyc-taxi
 
+# copy and fill in credentials
+cp .env.example .env
+```
+
+Open `.env` and replace all `changeme` values. MinIO has minimum requirements:
+- `MINIO_ROOT_USER` — at least 3 characters
+- `MINIO_ROOT_PASSWORD` — at least 8 characters
+
+```bash
 # initial setup (JDBC driver, Hive config, MinIO bucket)
 ./setup.sh
 
@@ -77,10 +86,10 @@ Password persists across restarts. Only changes if you tear down volumes (`docke
 | Service | URL | Login |
 |---|---|---|
 | Airflow | localhost:8080 | admin / (password above) |
-| MinIO | localhost:9001 | minioadmin / minioadmin |
+| MinIO | localhost:9001 | values from .env |
 | Spark | localhost:8081 | — |
 | Trino | localhost:8082 | — |
-| Metabase | localhost:3000 | set up on first access |
+| Superset | localhost:3000 | admin / SUPERSET_ADMIN_PASSWORD from .env |
 
 ## Pipeline
 
@@ -88,12 +97,12 @@ Enable DAGs in the Airflow UI in this order:
 
 **1. Reference data (run once)**
 
-- `zones_ingestion` — downloads zone lookup CSV from NYC TLC
-- `zones_staging` — cleans and converts to Parquet (wait for ingestion to finish)
+- `zones_ingestion` — downloads zone lookup CSV from NYC TLC and emits the `raw_taxi_zones` asset
+- `zones_staging` — triggered automatically by the asset, cleans and converts to Parquet
 
 **2. First ingestion cycle (run once to bootstrap Hive)**
 
-Trigger a backfill for at least one month of `taxi_ingestion` + `taxi_staging` and a few days of `weather_ingestion` + `weather_staging` before proceeding. Wait for all runs to complete.
+Trigger a backfill for at least one month of `taxi_ingestion` and a few days of `weather_ingestion` before proceeding. Staging DAGs (`taxi_staging`, `weather_staging`) trigger automatically via asset-based scheduling when ingestion completes. Wait for all runs to complete.
 
 **3. Hive (run once, after step 2)**
 
@@ -101,21 +110,19 @@ Trigger a backfill for at least one month of `taxi_ingestion` + `taxi_staging` a
 
 **4. Final layer (run once, after step 3)**
 
-- `taxi_final` — reads from staging Hive tables, computes 3 aggregated tables, registers them in `nyc_taxi_final`
+- `taxi_final` — reads from staging Hive tables, computes 3 aggregated tables, registers them in the final database
 
 **5. Recurring ingestion (backfill remaining history)**
 
-After Hive and final are set up, backfill the remaining history — partition repair and aggregation refresh happen automatically:
+After Hive and final are set up, backfill the remaining history — staging and aggregation refresh happen automatically via assets:
 
 | DAG | Schedule | |
 |---|---|---|
 | `taxi_ingestion` | monthly | downloads Parquet files for 4 taxi types |
-| `weather_ingestion` | daily | downloads weather JSON from Open-Meteo |
-| `taxi_staging` | monthly | automatic staging after ingestion |
-| `weather_staging` | daily | automatic staging after ingestion |
-| `taxi_final` | monthly | refreshes aggregated tables after staging |
-
-Staging DAGs have sensors — they trigger on their own when ingestion finishes. `taxi_final` waits for staging to complete before running.
+| `weather_ingestion` | daily | downloads weather Parquet from Open-Meteo |
+| `taxi_staging` | asset-triggered | runs automatically after all 4 raw taxi assets update |
+| `weather_staging` | asset-triggered | runs automatically after raw weather asset updates |
+| `taxi_final` | asset-triggered | runs automatically after all 4 staging taxi assets update |
 
 ## Project structure
 
@@ -124,6 +131,7 @@ dags/                    DAG definitions
 staging/                 staging transformations (Spark SQL)
 final/                   final layer aggregations (Spark SQL)
 utils/
+  assets.py              Airflow asset definitions (single source of truth)
   hive.py                Hive Metastore table registration
   spark.py               SparkSession factory
   s3.py                  MinIO helpers (boto3)
@@ -140,8 +148,8 @@ setup/                   local files generated by setup.sh (not versioned)
   lake_data/             MinIO data volume
 ```
 
-## Connecting Metabase to Trino
+## Connecting Superset to Trino
 
-On first access to `localhost:3000`, set up an admin account.
+On first access to `localhost:3000`, log in with `admin` and the password set in `SUPERSET_ADMIN_PASSWORD`.
 
-Each medallion layer is exposed as a separate database in Metabase so queries and dashboards are scoped to their layer. Add three **Starburst (Trino)** connections with `host=trino`, `port=8080`, `catalog=hive`, `username=admin`, and `schema` set to `raw`, `staging`, or `final`.
+Go to **Settings → Database Connections → Add database** and select **Trino**. Each medallion layer is exposed as a separate database so queries and dashboards are scoped to their layer. Add three connections with `host=trino`, `port=8080`, `catalog=hive`, `username=admin`, and `schema` set to `raw`, `staging`, or `final`.
