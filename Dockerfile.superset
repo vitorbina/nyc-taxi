@@ -1,4 +1,4 @@
 FROM apache/superset:latest
 USER root
-RUN /app/.venv/bin/python -m ensurepip && /app/.venv/bin/python -m pip install psycopg2-binary
+RUN /app/.venv/bin/python -m ensurepip && /app/.venv/bin/python -m pip install psycopg2-binary sqlalchemy-trino
 USER superset
