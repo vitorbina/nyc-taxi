@@ -1,5 +1,5 @@
 # Infrastructure definition for the NYC Taxi Data Lake
-# Provisions: MinIO, Postgres, Airflow (webserver + scheduler), Spark (master + worker), Trino, Metabase
+# Provisions: MinIO, Postgres, Airflow (webserver + scheduler), Spark (master + worker), Trino, Superset
 
 x-airflow-common: &airflow-common
   build:
@@ -96,18 +96,18 @@ services:
     networks:
       - nyc-network
 
-  # ── Postgres (Metabase metadata) ───────────────────────────────────────────
-  postgres-metabase:
+  # ── Postgres (Superset metadata) ───────────────────────────────────────────
+  postgres-superset:
     image: postgres:latest
-    container_name: nyc_postgres_metabase
+    container_name: nyc_postgres_superset
     environment:
-      POSTGRES_USER: ${POSTGRES_METABASE_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_METABASE_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_METABASE_DB}
+      POSTGRES_USER: ${POSTGRES_SUPERSET_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERSET_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_SUPERSET_DB}
     volumes:
-      - postgres_metabase_data:/var/lib/postgresql
+      - postgres_superset_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_METABASE_USER}"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_SUPERSET_USER}"]
       interval: 10s
       retries: 5
     deploy:
@@ -252,22 +252,43 @@ services:
     networks:
       - nyc-network
 
-  # ── Metabase ───────────────────────────────────────────────────────────────
-  metabase:
-    image: metabase/metabase:latest
-    container_name: nyc_metabase
-    ports:
-      - "3000:3000"
+  # ── Superset Init (runs once to migrate DB and create admin user) ──────────
+  superset-init:
+    image: apache/superset:latest
+    container_name: nyc_superset_init
+    command: >
+      bash -c "
+        superset db upgrade &&
+        superset fab create-admin
+          --username admin
+          --firstname Admin
+          --lastname User
+          --email admin@localhost
+          --password ${SUPERSET_ADMIN_PASSWORD} &&
+        superset init
+      "
     environment:
-      MB_DB_TYPE: postgres
-      MB_DB_HOST: postgres-metabase
-      MB_DB_PORT: 5432
-      MB_DB_DBNAME: ${POSTGRES_METABASE_DB}
-      MB_DB_USER: ${POSTGRES_METABASE_USER}
-      MB_DB_PASS: ${POSTGRES_METABASE_PASSWORD}
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${POSTGRES_SUPERSET_USER}:${POSTGRES_SUPERSET_PASSWORD}@postgres-superset:5432/${POSTGRES_SUPERSET_DB}
     depends_on:
-      postgres-metabase:
+      postgres-superset:
         condition: service_healthy
+    restart: "no"
+    networks:
+      - nyc-network
+
+  # ── Superset ───────────────────────────────────────────────────────────────
+  superset:
+    image: apache/superset:latest
+    container_name: nyc_superset
+    ports:
+      - "3000:8088"
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${POSTGRES_SUPERSET_USER}:${POSTGRES_SUPERSET_PASSWORD}@postgres-superset:5432/${POSTGRES_SUPERSET_DB}
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
       trino:
         condition: service_started
     deploy:
@@ -280,7 +301,7 @@ services:
 volumes:
   postgres_data:
   postgres_hive_data:
-  postgres_metabase_data:
+  postgres_superset_data:
   airflow_home:
 
 networks:
