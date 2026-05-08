@@ -40,6 +40,7 @@ FINAL_TABLES = ["trips", "revenue", "weather_impact"]
         schedule=AssetAll(*staging_taxi_assets.values()),
         catchup=False,
         doc_md=__doc__,
+        max_active_runs=1,
     )
 )
 def final_pipeline():
