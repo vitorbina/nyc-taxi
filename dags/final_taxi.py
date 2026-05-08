@@ -1,14 +1,14 @@
 """
 # NYC Taxi Final Layer
 
-Reads from the staging Hive tables (staging.*) and produces three pre-aggregated
+Reads from the staging Hive tables (staging.*) and produces three unified
 tables written to MinIO under final/ and registered in the final database.
 
-| Table             | Description                                      |
-|-------------------|--------------------------------------------------|
-| trips_by_month    | Trip counts and avg fare per month/borough/type  |
-| revenue_by_zone   | Revenue metrics per pickup zone and taxi type    |
-| weather_impact    | Daily trips + avg fare joined with weather data  |
+| Table          | Description                                                |
+|----------------|------------------------------------------------------------|
+| trips          | Trip-level data unified across the 4 taxi types            |
+| revenue        | Trip revenue with pickup zone and borough enrichment       |
+| weather_impact | Trip-level fares joined with daily weather conditions      |
 
 Triggered when all four staging taxi assets have been updated by the taxi_staging DAG.
 """
@@ -22,7 +22,7 @@ from airflow.sdk import AssetAll
 from utils.default import get_dag_config
 from utils.hive import setup_hive, FINAL_DATABASE
 from utils.assets import staging_taxi_assets
-from final.trips_by_month import compute_trips_by_month
+from final.trips import compute_trips
 from final.revenue_by_zone import compute_revenue_by_zone
 from final.weather_impact import compute_weather_impact
 
@@ -46,8 +46,8 @@ FINAL_TABLES = ["trips", "revenue", "weather_impact"]
 def final_pipeline():
 
     @task
-    def build_trips_by_month():
-        compute_trips_by_month(bucket=BUCKET)
+    def build_trips():
+        compute_trips(bucket=BUCKET)
 
     @task
     def build_revenue_by_zone():
@@ -61,7 +61,7 @@ def final_pipeline():
     def register_final_tables():
         setup_hive(tables=FINAL_TABLES, database=FINAL_DATABASE, location_prefix="final", bucket=BUCKET)
 
-    trips = build_trips_by_month()
+    trips = build_trips()
     revenue = build_revenue_by_zone()
     weather = build_weather_impact()
     register = register_final_tables()

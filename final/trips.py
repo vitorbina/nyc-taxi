@@ -4,11 +4,11 @@ from utils.spark import get_spark
 
 logger = logging.getLogger(__name__)
 
-APP_NAME = "final_trips_by_month"
+APP_NAME = "final_trips"
 
 
-def compute_trips_by_month(bucket: str) -> None:
-    logger.info("Computing trips_by_month from staging tables...")
+def compute_trips(bucket: str) -> None:
+    logger.info("Computing trips from staging tables...")
     spark = get_spark(APP_NAME)
     try:
         spark.sql("""
