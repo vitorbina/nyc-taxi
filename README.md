@@ -173,6 +173,18 @@ docker compose up -d
 
 Re-run `./setup.sh` and the pipeline from scratch after a full reset.
 
+## Dashboards
+
+The `dashboards/` directory contains exported Superset dashboards as ZIP files, versioned in Git.
+
+To restore dashboards after a full reset or on a new machine, go to **Dashboards → Import** in Superset and upload the ZIP file.
+
+To export an updated dashboard, go to **Dashboards → ... → Export** and replace the file in `dashboards/`.
+
+| File | Description |
+|---|---|
+| `nyc_taxi_overview.zip` | Revenue, trips, and weather impact overview |
+
 ## Connecting Superset to Trino
 
 On first access to `localhost:3000`, log in with `admin` and the password set in `SUPERSET_ADMIN_PASSWORD`.
