@@ -177,7 +177,7 @@ Re-run `./setup.sh` and the pipeline from scratch after a full reset.
 
 The `dashboards/` directory contains exported Superset dashboards as ZIP files, versioned in Git.
 
-To restore dashboards after a full reset or on a new machine, go to **Dashboards → Import** in Superset and upload the ZIP file.
+To restore dashboards after a full reset or on a new machine, first create the three Trino database connections (see [Connecting Superset to Trino](#connecting-superset-to-trino)), then go to **Dashboards → Import** and upload the ZIP file.
 
 To export an updated dashboard, go to **Dashboards → ... → Export** and replace the file in `dashboards/`.
 
