@@ -4,6 +4,7 @@ from airflow.exceptions import AirflowSkipException
 
 from utils.s3 import file_exists
 from utils.spark import get_spark
+from utils.constants import PARTITION_COL
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +13,9 @@ APP_NAME = "staging_weather"
 
 def stage_weather(date_str: str, bucket: str) -> None:
     file_name = f"weather_nyc_{date_str}.parquet"
-    raw_key = f"raw/weather/partition_date={date_str}/{file_name}"
+    raw_key = f"raw/weather/{PARTITION_COL}={date_str}/{file_name}"
     raw_path = f"s3a://{bucket}/{raw_key}"
-    staging_key = f"staging/weather/partition_date={date_str}"
+    staging_key = f"staging/weather/{PARTITION_COL}={date_str}"
 
     if not file_exists(bucket=bucket, key=raw_key):
         raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")

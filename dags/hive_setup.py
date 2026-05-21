@@ -14,7 +14,8 @@ import logging
 from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
-from utils.hive import setup_hive, STAGING_DATABASE, RAW_DATABASE, FINAL_DATABASE
+from utils.hive import setup_hive
+from utils.constants import STAGING_DATABASE, RAW_DATABASE, FINAL_DATABASE
 
 logger = logging.getLogger(__name__)
 

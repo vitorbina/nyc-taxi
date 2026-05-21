@@ -189,4 +189,10 @@ To export an updated dashboard, go to **Dashboards → ... → Export** and repl
 
 On first access to `localhost:3000`, log in with `admin` and the password set in `SUPERSET_ADMIN_PASSWORD`.
 
-Go to **Settings → Database Connections → Add database** and select **Trino**. Each medallion layer is exposed as a separate database so queries and dashboards are scoped to their layer. Add three connections with `host=trino`, `port=8080`, `catalog=hive`, `username=admin`, and `schema` set to `raw`, `staging`, or `final`.
+Go to **Settings → Database Connections → Add database** and select **Trino**. Each medallion layer is exposed as a separate database so queries and dashboards are scoped to their layer. Add three connections:
+
+| Display Name | SQLAlchemy URI |
+|---|---|
+| trino raw | `trino://admin@trino:8080/hive/raw` |
+| trino staging | `trino://admin@trino:8080/hive/staging` |
+| trino final | `trino://admin@trino:8080/hive/final` |

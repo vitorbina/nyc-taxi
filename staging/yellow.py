@@ -4,6 +4,7 @@ from airflow.exceptions import AirflowSkipException
 
 from utils.s3 import file_exists
 from utils.spark import get_spark
+from utils.constants import PARTITION_COL
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ APP_NAME = "staging_yellow_taxi"
 
 
 def stage_yellow(lake_folder: str, year: str, month: str, bucket: str) -> None:
-    partition = f"partition_date={year}-{int(month):02d}-01"
+    partition = f"{PARTITION_COL}={year}-{int(month):02d}-01"
     file_name = f"yellow_tripdata_{year}-{int(month):02d}.parquet"
     raw_key = f"raw/{lake_folder}/{partition}/{file_name}"
     staging_key = f"staging/{lake_folder}/{partition}"

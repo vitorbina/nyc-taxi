@@ -41,7 +41,7 @@ services:
   # ── MinIO ──────────────────────────────────────────────────────────────────
   minio:
     image: minio/minio:latest
-    container_name: minio_lake
+    container_name: nyc_minio
     ports:
       - "9000:9000"
       - "9001:9001"

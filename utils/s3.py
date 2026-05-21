@@ -5,6 +5,8 @@ from functools import lru_cache
 import boto3
 from botocore.exceptions import ClientError
 
+from utils.constants import PARTITION_COL
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +41,7 @@ def list_partitions(bucket: str, prefix: str) -> list[str]:
     for page in paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter="/"):
         for cp in page.get("CommonPrefixes", []):
             sub = cp["Prefix"].rstrip("/").rsplit("/", 1)[-1]
-            if sub.startswith("partition_date="):
+            if sub.startswith(f"{PARTITION_COL}="):
                 partitions.append(sub.split("=", 1)[1])
     return sorted(partitions)
 

@@ -16,7 +16,8 @@ from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
 from utils.taxi import ingest_taxi_data
-from utils.hive import repair_table, RAW_DATABASE
+from utils.hive import repair_table
+from utils.constants import RAW_DATABASE
 from utils.assets import raw_taxi_assets
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ def ingestion_pipeline():
 
     @task
     def ingest_taxi_type(taxi_type: str, lake_folder: str, logical_date=None):
+        logger.info("Ingesting %s for %s", lake_folder, logical_date)
         ingest_taxi_data(
             taxi_type=taxi_type,
             lake_folder=lake_folder,

@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 
 from utils.s3 import upload_file
+from utils.constants import PARTITION_COL
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ def _write_parquet(payload: dict, local_path: str) -> None:
 
 def _upload_weather_file(local_path: str, date_str: str, bucket: str) -> None:
     file_name = os.path.basename(local_path)
-    key = f"raw/weather/partition_date={date_str}/{file_name}"
+    key = f"raw/weather/{PARTITION_COL}={date_str}/{file_name}"
     logger.info("Uploading to %s/%s", bucket, key)
     upload_file(filepath=local_path, bucket=bucket, key=key)
 

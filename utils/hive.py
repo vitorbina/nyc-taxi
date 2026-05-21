@@ -1,16 +1,10 @@
-import os
 import logging
 
 from utils.spark import get_spark
 from utils.s3 import folder_exists
+from utils.constants import PARTITION_COL, STAGING_DATABASE, RAW_DATABASE, FINAL_DATABASE, DEFAULT_BUCKET
 
 logger = logging.getLogger(__name__)
-
-STAGING_DATABASE = "staging"
-RAW_DATABASE = "raw"
-FINAL_DATABASE = "final"
-
-_DEFAULT_BUCKET = os.getenv("MINIO_BUCKET")
 
 
 def _to_hive_type(spark_type: str) -> str:
@@ -39,8 +33,8 @@ def _create_external_table(spark, table: str, database: str, location_prefix: st
     logger.info("Reading schema from %s...", location)
     fields = spark.read.parquet(location).schema.fields
 
-    partition_col = next((f for f in fields if f.name == "partition_date"), None)
-    regular_fields = [f for f in fields if f.name != "partition_date"]
+    partition_col = next((f for f in fields if f.name == PARTITION_COL), None)
+    regular_fields = [f for f in fields if f.name != PARTITION_COL]
     schema_ddl = ", ".join(
         f"`{f.name}` {_to_hive_type(f.dataType.simpleString())}"
         for f in regular_fields
@@ -49,7 +43,7 @@ def _create_external_table(spark, table: str, database: str, location_prefix: st
     if partition_col:
         create_sql = f"""
             CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
-            PARTITIONED BY (partition_date STRING)
+            PARTITIONED BY ({PARTITION_COL} STRING)
             STORED AS PARQUET
             LOCATION '{location}'
         """
@@ -64,7 +58,7 @@ def _create_external_table(spark, table: str, database: str, location_prefix: st
     spark.sql(create_sql)
 
 
-def repair_table(table: str, database: str = STAGING_DATABASE, location_prefix: str = None, bucket: str = _DEFAULT_BUCKET) -> None:
+def repair_table(table: str, database: str = STAGING_DATABASE, location_prefix: str = None, bucket: str = DEFAULT_BUCKET) -> None:
     if location_prefix is None:
         location_prefix = database
 
@@ -84,7 +78,7 @@ def repair_table(table: str, database: str = STAGING_DATABASE, location_prefix: 
         spark.stop()
 
 
-def setup_hive(tables: list, database: str, location_prefix: str, bucket: str = _DEFAULT_BUCKET) -> None:
+def setup_hive(tables: list, database: str, location_prefix: str, bucket: str = DEFAULT_BUCKET) -> None:
     spark = get_spark("hive_setup")
     try:
         logger.info("Creating database %s if not exists...", database)
