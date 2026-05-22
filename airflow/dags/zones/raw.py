@@ -32,6 +32,7 @@ REFERENCE_FILES = [
         description="One-time ingestion of NYC TLC reference files (zone lookup and shapefile)",
         schedule="@once",
         doc_md=__doc__,
+        tags=["zones", "ingestion"],
     )
 )
 def zones_ingestion_pipeline():

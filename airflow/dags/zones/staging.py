@@ -27,6 +27,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
         description="Staging pipeline for NYC taxi zone reference data, triggered by raw ingestion",
         schedule=[raw_taxi_zones],
         doc_md=__doc__,
+        tags=["zones", "staging"],
     )
 )
 def zones_staging_pipeline():

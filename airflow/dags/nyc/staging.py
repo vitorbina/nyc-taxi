@@ -50,6 +50,7 @@ STAGING_MAPPING = {
         catchup=False,
         doc_md=__doc__,
         max_active_tasks=1,
+        tags=["taxi", "staging"],
     )
 )
 def staging_pipeline():

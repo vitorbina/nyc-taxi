@@ -55,6 +55,7 @@ RAW_TABLE_CONFIG = {
         description="One-time registration of staging and raw tables in the Hive Metastore",
         schedule="@once",
         doc_md=__doc__,
+        tags=["setup"],
     )
 )
 def hive_setup_pipeline():

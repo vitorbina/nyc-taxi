@@ -36,6 +36,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
         schedule=[raw_weather],
         catchup=False,
         doc_md=__doc__,
+        tags=["weather", "staging"],
     )
 )
 def weather_staging_pipeline():

@@ -39,6 +39,7 @@ TAXI_MAPPING = {
         schedule="@monthly",
         catchup=False,
         doc_md=__doc__,
+        tags=["taxi", "ingestion"],
     )
 )
 def ingestion_pipeline():
