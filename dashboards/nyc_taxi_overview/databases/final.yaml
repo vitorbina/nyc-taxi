@@ -1,0 +1,15 @@
+database_name: final
+sqlalchemy_uri: trino://admin@trino:8080/hive/final
+cache_timeout: null
+expose_in_sqllab: true
+allow_run_async: false
+allow_ctas: false
+allow_cvas: false
+allow_dml: false
+allow_file_upload: false
+extra:
+  allows_virtual_table_explore: true
+impersonate_user: false
+configuration_method: sqlalchemy_form
+uuid: cf0964f5-c0e2-4e3e-a817-4f172144d03a
+version: 1.0.0
