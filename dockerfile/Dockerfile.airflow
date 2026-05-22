@@ -12,7 +12,9 @@ RUN mkdir -p /opt/spark-jars && \
     wget -q "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar" \
       -O /opt/spark-jars/hadoop-aws-3.3.4.jar && \
     wget -q "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar" \
-      -O /opt/spark-jars/aws-java-sdk-bundle-1.12.262.jar
+      -O /opt/spark-jars/aws-java-sdk-bundle-1.12.262.jar && \
+    wget -q "https://repo1.maven.org/maven2/org/apache/hive/hcatalog/hive-hcatalog-core/3.1.3/hive-hcatalog-core-3.1.3.jar" \
+      -O /opt/spark-jars/hive-hcatalog-core-3.1.3.jar
 
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 
@@ -22,4 +24,5 @@ RUN pip install --no-cache-dir -r /requirements.txt
 
 RUN PYSPARK_JARS=$(python3 -c "import pyspark, os; print(os.path.join(os.path.dirname(pyspark.__file__), 'jars'))") && \
     cp /opt/spark-jars/hadoop-aws-3.3.4.jar "$PYSPARK_JARS/" && \
-    cp /opt/spark-jars/aws-java-sdk-bundle-1.12.262.jar "$PYSPARK_JARS/"
+    cp /opt/spark-jars/aws-java-sdk-bundle-1.12.262.jar "$PYSPARK_JARS/" && \
+    cp /opt/spark-jars/hive-hcatalog-core-3.1.3.jar "$PYSPARK_JARS/"
