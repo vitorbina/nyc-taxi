@@ -4,14 +4,14 @@
 x-airflow-common: &airflow-common
   build:
     context: .
-    dockerfile: Dockerfile.airflow
+    dockerfile: dockerfile/Dockerfile.airflow
   user: "${AIRFLOW_UID:-50000}:0"
   volumes:
     - airflow_home:/opt/airflow
-    - ./dags:/opt/airflow/dags
-    - ./utils:/opt/airflow/utils
-    - ./staging:/opt/airflow/staging
-    - ./final:/opt/airflow/final
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/utils:/opt/airflow/utils
+    - ./airflow/staging:/opt/airflow/staging
+    - ./airflow/final:/opt/airflow/final
     - ./logs:/opt/airflow/logs
   depends_on:
     postgres:
@@ -164,7 +164,7 @@ services:
   hive-metastore:
     build:
       context: .
-      dockerfile: Dockerfile.hive
+      dockerfile: dockerfile/Dockerfile.hive
     container_name: nyc_hive_metastore
     volumes:
       - ./setup/hive-lib/postgresql.jar:/opt/hive/lib/postgresql.jar
@@ -193,7 +193,7 @@ services:
   spark-master:
     build:
       context: .
-      dockerfile: Dockerfile.spark
+      dockerfile: dockerfile/Dockerfile.spark
     container_name: nyc_spark_master
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.master.Master
@@ -215,7 +215,7 @@ services:
   spark-worker:
     build:
       context: .
-      dockerfile: Dockerfile.spark
+      dockerfile: dockerfile/Dockerfile.spark
     container_name: nyc_spark_worker
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
@@ -256,7 +256,7 @@ services:
   superset-init:
     build:
       context: .
-      dockerfile: Dockerfile.superset
+      dockerfile: dockerfile/Dockerfile.superset
     container_name: nyc_superset_init
     command: >-
       bash -c
@@ -279,7 +279,7 @@ services:
   superset:
     build:
       context: .
-      dockerfile: Dockerfile.superset
+      dockerfile: dockerfile/Dockerfile.superset
     container_name: nyc_superset
     ports:
       - "3000:8088"
