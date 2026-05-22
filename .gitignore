@@ -1,7 +1,6 @@
 .claude/
 airflow-*
 airflow.db
-airflow/
 airflow.db-shm
 airflow.db-wal
 logs/
