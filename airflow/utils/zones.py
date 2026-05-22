@@ -6,6 +6,7 @@ import tempfile
 import requests
 
 from utils.s3 import upload_file
+from utils.paths import raw_key
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def _download_zone_file(file_name: str, local_path: str) -> None:
 
 def _upload_zone_file(local_path: str, file_name: str, bucket: str) -> None:
     folder_name = os.path.splitext(file_name)[0]
-    key = f"raw/reference/{folder_name}/{file_name}"
+    key = raw_key(f"reference/{folder_name}", file_name=file_name)
     logger.info("Uploading to %s/%s", bucket, key)
     upload_file(filepath=local_path, bucket=bucket, key=key)
 

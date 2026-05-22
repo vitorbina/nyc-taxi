@@ -22,6 +22,7 @@ from staging.weather import stage_weather
 from utils.hive import repair_table
 from utils.assets import raw_weather, staging_weather
 from utils.s3 import list_partitions
+from utils.paths import raw_key, staging_key
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +42,8 @@ def weather_staging_pipeline():
 
     @task
     def stage_daily_weather():
-        raw_partitions = set(list_partitions(BUCKET, "raw/weather/"))
-        staging_partitions = set(list_partitions(BUCKET, "staging/weather/"))
+        raw_partitions = set(list_partitions(BUCKET, raw_key("weather")))
+        staging_partitions = set(list_partitions(BUCKET, staging_key("weather")))
         missing = sorted(raw_partitions - staging_partitions)
 
         if not missing:

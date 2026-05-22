@@ -4,29 +4,31 @@ from airflow.exceptions import AirflowSkipException
 
 from utils.s3 import file_exists
 from utils.spark import get_spark
-from utils.constants import PARTITION_COL
+from utils.paths import raw_key, staging_key, s3a
 
 logger = logging.getLogger(__name__)
 
 APP_NAME = "staging_high_volume_fhv"
 
 
+ZONES_KEY = staging_key("reference/taxi_zone_lookup") + "/taxi_zone_lookup.parquet"
+
+
 def stage_hvfhv(lake_folder: str, year: str, month: str, bucket: str) -> None:
-    partition = f"{PARTITION_COL}={year}-{int(month):02d}-01"
+    partition = f"{year}-{int(month):02d}-01"
     file_name = f"fhvhv_tripdata_{year}-{int(month):02d}.parquet"
-    raw_key = f"raw/{lake_folder}/{partition}/{file_name}"
-    staging_key = f"staging/{lake_folder}/{partition}"
-    zones_path = f"s3a://{bucket}/staging/reference/taxi_zone_lookup/taxi_zone_lookup.parquet"
+    rk = raw_key(lake_folder, partition, file_name)
+    sk = staging_key(lake_folder, partition)
 
-    if not file_exists(bucket=bucket, key=raw_key):
-        raise AirflowSkipException(f"Raw file not found in MinIO: {raw_key}")
+    if not file_exists(bucket=bucket, key=rk):
+        raise AirflowSkipException(f"Raw file not found in MinIO: {rk}")
 
-    logger.info("Staging %s for %s-%s — raw: s3a://%s/%s", lake_folder, year, month, bucket, raw_key)
+    logger.info("Staging %s for %s-%s — raw: %s", lake_folder, year, month, s3a(bucket, rk))
 
     spark = get_spark(APP_NAME)
     try:
-        spark.read.parquet(f"s3a://{bucket}/{raw_key}").createOrReplaceTempView("raw")
-        spark.read.parquet(zones_path).createOrReplaceTempView("zones")
+        spark.read.parquet(s3a(bucket, rk)).createOrReplaceTempView("raw")
+        spark.read.parquet(s3a(bucket, ZONES_KEY)).createOrReplaceTempView("zones")
 
         spark.sql("""
             SELECT
@@ -73,9 +75,9 @@ def stage_hvfhv(lake_folder: str, year: str, month: str, bucket: str) -> None:
               AND CAST(r.DOLocationID AS INT) IS NOT NULL
               AND CAST(r.trip_miles AS DOUBLE) > 0
               AND CAST(r.base_passenger_fare AS DOUBLE) > 0
-        """).write.mode("overwrite").parquet(f"s3a://{bucket}/{staging_key}")
+        """).write.mode("overwrite").parquet(s3a(bucket, sk))
 
-        row_count = spark.read.parquet(f"s3a://{bucket}/{staging_key}").count()
-        logger.info("Wrote %d rows to s3a://%s/%s", row_count, bucket, staging_key)
+        row_count = spark.read.parquet(s3a(bucket, sk)).count()
+        logger.info("Wrote %d rows to %s", row_count, s3a(bucket, sk))
     finally:
         spark.stop()

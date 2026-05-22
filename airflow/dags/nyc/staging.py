@@ -28,6 +28,7 @@ from staging.hvfhv import stage_hvfhv
 from utils.hive import repair_table
 from utils.assets import raw_taxi_assets, staging_taxi_assets
 from utils.s3 import list_partitions
+from utils.paths import raw_key, staging_key
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +56,8 @@ def staging_pipeline():
 
     @task
     def stage_taxi_type(lake_folder: str):
-        raw_partitions = set(list_partitions(BUCKET, f"raw/{lake_folder}/"))
-        staging_partitions = set(list_partitions(BUCKET, f"staging/{lake_folder}/"))
+        raw_partitions = set(list_partitions(BUCKET, raw_key(lake_folder)))
+        staging_partitions = set(list_partitions(BUCKET, staging_key(lake_folder)))
         missing = sorted(raw_partitions - staging_partitions)
 
         if not missing:

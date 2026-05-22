@@ -9,7 +9,7 @@ import requests
 from airflow.exceptions import AirflowSkipException
 
 from utils.s3 import upload_file
-from utils.constants import PARTITION_COL
+from utils.paths import raw_key, s3a
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def _download_taxi_file(local_path: str) -> None:
 
 def _upload_taxi_file(local_path: str, lake_folder: str, year: str, month: str, bucket: str) -> None:
     file_name = os.path.basename(local_path)
-    key = f"raw/{lake_folder}/{PARTITION_COL}={year}-{int(month):02d}-01/{file_name}"
+    key = raw_key(lake_folder, f"{year}-{int(month):02d}-01", file_name)
     logger.info("Uploading %s to %s/%s", local_path, bucket, key)
     upload_file(filepath=local_path, bucket=bucket, key=key)
 

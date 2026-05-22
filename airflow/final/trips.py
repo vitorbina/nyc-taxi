@@ -1,6 +1,7 @@
 import logging
 
 from utils.spark import get_spark
+from utils.paths import final_key, s3a
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +78,9 @@ def compute_trips(bucket: str) -> None:
                 NULL                AS passenger_count
             FROM staging.high_volume_fhv
             WHERE pickup_borough IS NOT NULL
-        """).write.mode("overwrite").parquet(f"s3a://{bucket}/final/trips")
+        """).write.mode("overwrite").parquet(s3a(bucket, final_key("trips")))
 
-        row_count = spark.read.parquet(f"s3a://{bucket}/final/trips").count()
-        logger.info("Wrote %d rows to s3a://%s/final/trips", row_count, bucket)
+        row_count = spark.read.parquet(s3a(bucket, final_key("trips"))).count()
+        logger.info("Wrote %d rows to %s", row_count, s3a(bucket, final_key("trips")))
     finally:
         spark.stop()

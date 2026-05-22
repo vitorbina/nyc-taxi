@@ -1,6 +1,7 @@
 import logging
 
 from utils.spark import get_spark
+from utils.paths import final_key, s3a
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +49,9 @@ def compute_revenue_by_zone(bucket: str) -> None:
                 base_passenger_fare + COALESCE(tip_amount, 0)       AS total_amount
             FROM staging.high_volume_fhv
             WHERE pickup_zone IS NOT NULL
-        """).write.mode("overwrite").parquet(f"s3a://{bucket}/final/revenue")
+        """).write.mode("overwrite").parquet(s3a(bucket, final_key("revenue")))
 
-        row_count = spark.read.parquet(f"s3a://{bucket}/final/revenue").count()
-        logger.info("Wrote %d rows to s3a://%s/final/revenue", row_count, bucket)
+        row_count = spark.read.parquet(s3a(bucket, final_key("revenue"))).count()
+        logger.info("Wrote %d rows to %s", row_count, s3a(bucket, final_key("revenue")))
     finally:
         spark.stop()

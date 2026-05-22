@@ -1,6 +1,7 @@
 import logging
 
 from utils.spark import get_spark
+from utils.paths import final_key, s3a
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,9 @@ def compute_weather_impact(bucket: str) -> None:
                 w.avg_wind_speed_kmh
             FROM _trips_for_weather t
             LEFT JOIN _weather_daily w ON t.date = w.date
-        """).write.mode("overwrite").parquet(f"s3a://{bucket}/final/weather_impact")
+        """).write.mode("overwrite").parquet(s3a(bucket, final_key("weather_impact")))
 
-        row_count = spark.read.parquet(f"s3a://{bucket}/final/weather_impact").count()
-        logger.info("Wrote %d rows to s3a://%s/final/weather_impact", row_count, bucket)
+        row_count = spark.read.parquet(s3a(bucket, final_key("weather_impact"))).count()
+        logger.info("Wrote %d rows to %s", row_count, s3a(bucket, final_key("weather_impact")))
     finally:
         spark.stop()
