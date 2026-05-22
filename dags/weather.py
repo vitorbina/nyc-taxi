@@ -13,7 +13,7 @@ import logging
 from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
-from utils.weather import ingest_weather_data
+from utils.weather import ingest_weather_data, WEATHER_RAW_SCHEMA
 from utils.hive import repair_table
 from utils.constants import RAW_DATABASE
 from utils.assets import raw_weather
@@ -44,7 +44,7 @@ def weather_ingestion_pipeline():
 
     @task(outlets=[raw_weather])
     def update_hive():
-        repair_table("weather", database=RAW_DATABASE)
+        repair_table("weather", database=RAW_DATABASE, file_format="json", schema_ddl=WEATHER_RAW_SCHEMA)
 
     ingest_daily_weather() >> update_hive()
 

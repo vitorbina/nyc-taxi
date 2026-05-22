@@ -16,6 +16,7 @@ from airflow.decorators import dag, task
 from utils.default import get_dag_config
 from utils.hive import setup_hive
 from utils.constants import STAGING_DATABASE, RAW_DATABASE, FINAL_DATABASE
+from utils.weather import WEATHER_RAW_SCHEMA
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,10 @@ FINAL_TABLES = [
     "weather_impact",
 ]
 
+RAW_TABLE_CONFIG = {
+    "weather": {"file_format": "json", "schema_ddl": WEATHER_RAW_SCHEMA},
+}
+
 
 @dag(
     **get_dag_config(
@@ -55,8 +60,8 @@ FINAL_TABLES = [
 def hive_setup_pipeline():
 
     @task
-    def register_table(table: str, database: str, location_prefix: str):
-        setup_hive(tables=[table], database=database, location_prefix=location_prefix, bucket=BUCKET)
+    def register_table(table: str, database: str, location_prefix: str, file_format: str = "parquet", schema_ddl: str = None):
+        setup_hive(tables=[table], database=database, location_prefix=location_prefix, bucket=BUCKET, file_format=file_format, schema_ddl=schema_ddl)
 
     for table in STAGING_TABLES:
         register_table.override(task_id=f"staging_{table}")(
@@ -64,8 +69,9 @@ def hive_setup_pipeline():
         )
 
     for table in RAW_TABLES:
+        config = RAW_TABLE_CONFIG.get(table, {})
         register_table.override(task_id=f"raw_{table}")(
-            table=table, database=RAW_DATABASE, location_prefix="raw"
+            table=table, database=RAW_DATABASE, location_prefix="raw", **config
         )
 
     for table in FINAL_TABLES:

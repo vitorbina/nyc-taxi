@@ -1,7 +1,7 @@
 import logging
 
 from utils.spark import get_spark
-from utils.s3 import folder_exists
+from utils.s3 import folder_exists, list_partitions
 from utils.constants import PARTITION_COL, STAGING_DATABASE, RAW_DATABASE, FINAL_DATABASE, DEFAULT_BUCKET
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,15 @@ def _has_partitions(spark, database: str, table: str) -> bool:
     return any(col.isPartition for col in columns)
 
 
-def _create_external_table(spark, table: str, database: str, location_prefix: str, bucket: str) -> None:
+def _create_external_table(
+    spark,
+    table: str,
+    database: str,
+    location_prefix: str,
+    bucket: str,
+    file_format: str = "parquet",
+    schema_ddl: str = None,
+) -> None:
     prefix = f"{location_prefix}/{table}/"
     location = f"s3a://{bucket}/{prefix}"
 
@@ -30,27 +38,34 @@ def _create_external_table(spark, table: str, database: str, location_prefix: st
             f"Run the ingestion DAG for '{table}' before this task."
         )
 
-    logger.info("Reading schema from %s...", location)
-    fields = spark.read.parquet(location).schema.fields
+    if file_format == "json":
+        if schema_ddl is None:
+            raise ValueError(f"schema_ddl is required when file_format='json' (table: {table})")
+        is_partitioned = bool(list_partitions(bucket, prefix))
+        storage_clause = "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE"
+    else:
+        logger.info("Reading schema from %s...", location)
+        fields = spark.read.parquet(location).schema.fields
+        partition_col = next((f for f in fields if f.name == PARTITION_COL), None)
+        regular_fields = [f for f in fields if f.name != PARTITION_COL]
+        schema_ddl = ", ".join(
+            f"`{f.name}` {_to_hive_type(f.dataType.simpleString())}"
+            for f in regular_fields
+        )
+        is_partitioned = partition_col is not None
+        storage_clause = "STORED AS PARQUET"
 
-    partition_col = next((f for f in fields if f.name == PARTITION_COL), None)
-    regular_fields = [f for f in fields if f.name != PARTITION_COL]
-    schema_ddl = ", ".join(
-        f"`{f.name}` {_to_hive_type(f.dataType.simpleString())}"
-        for f in regular_fields
-    )
-
-    if partition_col:
+    if is_partitioned:
         create_sql = f"""
             CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
             PARTITIONED BY ({PARTITION_COL} STRING)
-            STORED AS PARQUET
+            {storage_clause}
             LOCATION '{location}'
         """
     else:
         create_sql = f"""
             CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
-            STORED AS PARQUET
+            {storage_clause}
             LOCATION '{location}'
         """
 
@@ -58,7 +73,14 @@ def _create_external_table(spark, table: str, database: str, location_prefix: st
     spark.sql(create_sql)
 
 
-def repair_table(table: str, database: str = STAGING_DATABASE, location_prefix: str = None, bucket: str = DEFAULT_BUCKET) -> None:
+def repair_table(
+    table: str,
+    database: str = STAGING_DATABASE,
+    location_prefix: str = None,
+    bucket: str = DEFAULT_BUCKET,
+    file_format: str = "parquet",
+    schema_ddl: str = None,
+) -> None:
     if location_prefix is None:
         location_prefix = database
 
@@ -67,8 +89,8 @@ def repair_table(table: str, database: str = STAGING_DATABASE, location_prefix: 
         spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
 
         if not _table_exists(spark, database, table):
-            logger.info("Table %s.%s does not exist, creating from parquet schema...", database, table)
-            _create_external_table(spark, table, database, location_prefix, bucket)
+            logger.info("Table %s.%s does not exist, creating...", database, table)
+            _create_external_table(spark, table, database, location_prefix, bucket, file_format, schema_ddl)
 
         if _has_partitions(spark, database, table):
             logger.info("Repairing partitions for %s.%s...", database, table)
@@ -78,7 +100,14 @@ def repair_table(table: str, database: str = STAGING_DATABASE, location_prefix: 
         spark.stop()
 
 
-def setup_hive(tables: list, database: str, location_prefix: str, bucket: str = DEFAULT_BUCKET) -> None:
+def setup_hive(
+    tables: list,
+    database: str,
+    location_prefix: str,
+    bucket: str = DEFAULT_BUCKET,
+    file_format: str = "parquet",
+    schema_ddl: str = None,
+) -> None:
     spark = get_spark("hive_setup")
     try:
         logger.info("Creating database %s if not exists...", database)
@@ -86,7 +115,7 @@ def setup_hive(tables: list, database: str, location_prefix: str, bucket: str = 
 
         for table in tables:
             spark.sql(f"DROP TABLE IF EXISTS {database}.{table}")
-            _create_external_table(spark, table, database, location_prefix, bucket)
+            _create_external_table(spark, table, database, location_prefix, bucket, file_format, schema_ddl)
             if _has_partitions(spark, database, table):
                 logger.info("Repairing partitions for %s.%s...", database, table)
                 spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
