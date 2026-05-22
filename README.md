@@ -175,15 +175,46 @@ Re-run `./setup.sh` and the pipeline from scratch after a full reset.
 
 ## Dashboards
 
-The `dashboards/` directory contains exported Superset dashboards as ZIP files, versioned in Git.
+The `dashboards/` directory contains Superset dashboards versioned as individual YAML files, organized by dashboard name. This allows `git diff` to show exactly which charts, datasets, or queries changed between versions.
 
-To restore dashboards after a full reset or on a new machine, first create the three Trino database connections (see [Connecting Superset to Trino](#connecting-superset-to-trino)), then go to **Dashboards → Import** and upload the ZIP file.
+```
+dashboards/
+    nyc_taxi_overview/
+        metadata.yaml
+        dashboards/
+        charts/
+        datasets/
+        databases/
+```
 
-To export an updated dashboard, go to **Dashboards → ... → Export** and replace the file in `dashboards/`.
+### Importing
 
-| File | Description |
+First create the Trino database connections (see [Connecting Superset to Trino](#connecting-superset-to-trino)), then:
+
+1. Zip the dashboard folder:
+   ```bash
+   cd dashboards && zip -r nyc_taxi_overview.zip nyc_taxi_overview/
+   ```
+2. Go to **Dashboards → Import** and upload the ZIP file.
+
+### Exporting
+
+After making changes in Superset:
+
+1. Go to **Dashboards → ... → Export** and save the ZIP.
+2. Unzip it and flatten the timestamp subfolder:
+   ```bash
+   cd dashboards
+   unzip nyc_taxi_overview.zip -d nyc_taxi_overview_tmp
+   rm -rf nyc_taxi_overview
+   mv nyc_taxi_overview_tmp/dashboard_export_*/* nyc_taxi_overview_tmp/
+   mv nyc_taxi_overview_tmp nyc_taxi_overview
+   ```
+3. Commit the updated YAML files — `git diff` will show exactly what changed.
+
+| Dashboard | Description |
 |---|---|
-| `nyc_taxi_overview.zip` | Revenue, trips, and weather impact overview |
+| `nyc_taxi_overview/` | Revenue, trips, and weather impact overview |
 
 ## Connecting Superset to Trino
 
