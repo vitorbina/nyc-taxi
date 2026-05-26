@@ -122,6 +122,25 @@ After the first cycle, the pipeline runs end-to-end on its own — staging and f
 | `weather_staging` | asset-triggered | runs automatically after raw weather asset updates |
 | `taxi_final` | asset-triggered | runs automatically after all 4 staging taxi assets update |
 
+## Backfill
+
+Staging and final DAGs are asset-triggered and do not respond to Airflow's built-in backfill. To load a historical date range, backfill the ingestion DAGs first, then trigger staging and final manually — they auto-discover all missing partitions in a single run.
+
+```bash
+# 1. Backfill taxi ingestion (monthly) — example: full year 2024
+docker exec nyc_airflow_scheduler airflow backfill create --dag-id taxi_ingestion --from-date 2024-01-01 --to-date 2024-12-31
+
+# 2. Backfill weather ingestion (daily) — same range
+docker exec nyc_airflow_scheduler airflow backfill create --dag-id weather_ingestion --from-date 2024-01-01 --to-date 2024-12-31
+
+# 3. Trigger staging and final (run once — they process all missing partitions)
+docker exec nyc_airflow_scheduler airflow dags trigger taxi_staging
+docker exec nyc_airflow_scheduler airflow dags trigger weather_staging
+docker exec nyc_airflow_scheduler airflow dags trigger taxi_final
+```
+
+Wait for all runs to complete before triggering the next step.
+
 ## Project structure
 
 ```
