@@ -14,6 +14,7 @@ from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
 from staging.zones import stage_zones
+from staging.zones_geo import stage_zones_geo
 from utils.assets import raw_taxi_zones
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,12 @@ def zones_staging_pipeline():
     def stage_zone_lookup():
         stage_zones(bucket=BUCKET)
 
+    @task
+    def stage_zone_geometry():
+        stage_zones_geo(bucket=BUCKET)
+
     stage_zone_lookup()
+    stage_zone_geometry()
 
 
 pipeline = zones_staging_pipeline()
