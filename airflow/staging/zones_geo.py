@@ -1,4 +1,5 @@
 import logging
+import os
 import tempfile
 import zipfile
 
@@ -28,11 +29,16 @@ def stage_zones_geo(bucket: str) -> None:
         with zipfile.ZipFile(zip_path, "r") as zf:
             zf.extractall(tmpdir)
 
-        shp_files = [f for f in __import__("os").listdir(tmpdir) if f.endswith(".shp")]
+        shp_files = []
+        for root, _, files in os.walk(tmpdir):
+            for f in files:
+                if f.endswith(".shp"):
+                    shp_files.append(os.path.join(root, f))
+
         if not shp_files:
             raise FileNotFoundError("No .shp file found inside taxi_zones.zip")
 
-        shp_path = f"{tmpdir}/{shp_files[0]}"
+        shp_path = shp_files[0]
         logger.info("Reading shapefile: %s", shp_path)
 
         gdf = gpd.read_file(shp_path)
