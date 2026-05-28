@@ -80,5 +80,9 @@ def hive_setup_pipeline():
             table=table, database=FINAL_DATABASE, location_prefix="final"
         )
 
+    register_table.override(task_id="staging_taxi_zones_geo")(
+        table="taxi_zones_geo", database=STAGING_DATABASE, location_prefix="staging/reference"
+    )
+
 
 pipeline = hive_setup_pipeline()
