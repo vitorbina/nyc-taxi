@@ -51,7 +51,10 @@ def stage_zones_geo(bucket: str) -> None:
 
         gdf["geometry_wkt"] = gdf["geometry"].apply(lambda g: g.wkt if g else None)
         gdf["geometry_json"] = gdf["geometry"].apply(
-            lambda g: json.dumps(mapping(g)["coordinates"]) if g else None
+            lambda g: json.dumps(
+                [list(g.exterior.coords)] if g.geom_type == "Polygon"
+                else [list(p.exterior.coords) for p in g.geoms]
+            ) if g else None
         )
 
         df = gdf[["LocationID", "borough", "zone", "Shape_Area", "geometry_wkt", "geometry_json"]].copy()
