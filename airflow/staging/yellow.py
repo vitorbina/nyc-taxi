@@ -25,7 +25,7 @@ def stage_yellow(lake_folder: str, year: str, month: str, bucket: str) -> None:
 
     logger.info("Staging %s for %s-%s — raw: %s", lake_folder, year, month, s3a(bucket, rk))
 
-    spark = get_spark(APP_NAME)
+    spark = get_spark(f"{APP_NAME}_{year}-{int(month):02d}")
     try:
         spark.read.parquet(s3a(bucket, rk)).createOrReplaceTempView("raw")
         spark.read.parquet(s3a(bucket, ZONES_KEY)).createOrReplaceTempView("zones")

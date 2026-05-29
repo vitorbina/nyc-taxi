@@ -22,7 +22,7 @@ def stage_weather(date_str: str, bucket: str) -> None:
 
     logger.info("Staging weather for %s — raw: %s", date_str, raw_path)
 
-    spark = get_spark(APP_NAME)
+    spark = get_spark(f"{APP_NAME}_{date_str}")
     try:
         spark.read.json(raw_path).createOrReplaceTempView("raw")
 
