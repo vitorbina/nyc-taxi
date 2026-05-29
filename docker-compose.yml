@@ -220,14 +220,14 @@ services:
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     environment:
-      SPARK_WORKER_MEMORY: 3g
-      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: 5g
+      SPARK_WORKER_CORES: "4"
     depends_on:
       - spark-master
     deploy:
       resources:
         limits:
-          memory: 3500m
+          memory: 5500m
     networks:
       - nyc-network
 
