@@ -80,7 +80,7 @@ def final_pipeline():
     zones_geo = build_zones_geo()
     register = register_final_tables()
 
-    [trips, weather] >> revenue >> zones_geo >> register
+    trips >> weather >> revenue >> zones_geo >> register
 
 
 pipeline = final_pipeline()
