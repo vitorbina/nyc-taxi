@@ -80,6 +80,8 @@ def final_pipeline():
     zones_geo = build_zones_geo()
     register = register_final_tables()
 
+    # zones_geo depends on final.revenue existing; trips and weather are independent
+    # kept sequential to avoid Spark worker resource contention on single-worker setup
     trips >> weather >> revenue >> zones_geo >> register
 
 

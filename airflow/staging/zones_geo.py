@@ -5,7 +5,7 @@ import tempfile
 import zipfile
 
 import geopandas as gpd
-from shapely.geometry import mapping
+from airflow.exceptions import AirflowSkipException
 
 from utils.s3 import download_file, upload_file, file_exists
 from utils.paths import raw_key, staging_key
@@ -18,7 +18,7 @@ ZONES_GEO_STAGING_KEY = staging_key("reference/taxi_zones_geo") + "/taxi_zones_g
 
 def stage_zones_geo(bucket: str) -> None:
     if not file_exists(bucket=bucket, key=ZONES_ZIP_RAW_KEY):
-        raise FileNotFoundError(f"Raw file not found: {ZONES_ZIP_RAW_KEY}")
+        raise AirflowSkipException(f"Raw file not found: {ZONES_ZIP_RAW_KEY}")
 
     if file_exists(bucket=bucket, key=ZONES_GEO_STAGING_KEY):
         logger.info("Zones geometry already staged, skipping")
@@ -38,7 +38,7 @@ def stage_zones_geo(bucket: str) -> None:
                     shp_files.append(os.path.join(root, f))
 
         if not shp_files:
-            raise FileNotFoundError("No .shp file found inside taxi_zones.zip")
+            raise AirflowSkipException("No .shp file found inside taxi_zones.zip")
 
         shp_path = shp_files[0]
         logger.info("Reading shapefile: %s", shp_path)
