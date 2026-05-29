@@ -44,7 +44,10 @@ def weather_ingestion_pipeline():
         )
 
     @task(outlets=[raw_weather])
-    def update_hive():
+    def update_hive(dag_run=None):
+        if dag_run and dag_run.conf.get("skip_repair"):
+            logger.info("skip_repair=true — skipping repair_table for weather")
+            return
         repair_table("weather", database=RAW_DATABASE, file_format="json", schema_ddl=WEATHER_RAW_SCHEMA)
 
     ingest_daily_weather() >> update_hive()

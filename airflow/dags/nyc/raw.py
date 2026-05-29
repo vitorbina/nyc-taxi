@@ -55,7 +55,10 @@ def ingestion_pipeline():
         )
 
     @task
-    def update_hive(lake_folder: str):
+    def update_hive(lake_folder: str, dag_run=None):
+        if dag_run and dag_run.conf.get("skip_repair"):
+            logger.info("skip_repair=true — skipping repair_table for %s", lake_folder)
+            return
         repair_table(lake_folder, database=RAW_DATABASE)
 
     for folder_name, source_name in TAXI_MAPPING.items():
