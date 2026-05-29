@@ -11,6 +11,7 @@ import os
 import logging
 
 from airflow.decorators import dag, task
+from airflow.sdk import AssetAll
 
 from utils.default import get_dag_config
 from staging.zones import stage_zones
@@ -26,7 +27,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
     **get_dag_config(
         dag_id="zones_staging",
         description="Staging pipeline for NYC taxi zone reference data, triggered by raw ingestion",
-        schedule=[raw_taxi_zones],
+        schedule=AssetAll(raw_taxi_zones),
         doc_md=__doc__,
         tags=["zones", "staging"],
     )

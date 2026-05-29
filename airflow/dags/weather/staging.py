@@ -16,6 +16,7 @@ import logging
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowSkipException
+from airflow.sdk import AssetAll
 
 from utils.default import get_dag_config
 from staging.weather import stage_weather
@@ -33,7 +34,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
     **get_dag_config(
         dag_id="weather_staging",
         description="Staging pipeline for NYC weather data, triggered by raw ingestion",
-        schedule=[raw_weather],
+        schedule=AssetAll(raw_weather),
         catchup=False,
         doc_md=__doc__,
         tags=["weather", "staging"],
