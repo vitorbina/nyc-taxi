@@ -128,10 +128,11 @@ Staging and final DAGs are asset-triggered and do not respond to Airflow's built
 
 ```bash
 # 1. Backfill taxi ingestion (monthly) — 2020 to 2026
-docker exec nyc_airflow_scheduler airflow backfill create --dag-id taxi_ingestion --from-date 2020-01-01 --to-date 2026-12-31
+# skip_repair=true skips Hive repair on each run — run hive_setup manually after backfill completes
+docker exec nyc_airflow_scheduler airflow backfill create --dag-id taxi_ingestion --from-date 2020-01-01 --to-date 2026-12-31 --conf '{"skip_repair": true}'
 
 # 2. Backfill weather ingestion (daily) — same range
-docker exec nyc_airflow_scheduler airflow backfill create --dag-id weather_ingestion --from-date 2020-01-01 --to-date 2026-12-31
+docker exec nyc_airflow_scheduler airflow backfill create --dag-id weather_ingestion --from-date 2020-01-01 --to-date 2026-12-31 --conf '{"skip_repair": true}'
 
 # 3. Trigger staging and final (run once — they process all missing partitions)
 docker exec nyc_airflow_scheduler airflow dags trigger taxi_staging
