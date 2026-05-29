@@ -1,9 +1,11 @@
+import json
 import logging
 import os
 import tempfile
 import zipfile
 
 import geopandas as gpd
+from shapely.geometry import mapping
 
 from utils.s3 import download_file, upload_file, file_exists
 from utils.paths import raw_key, staging_key
@@ -48,9 +50,12 @@ def stage_zones_geo(bucket: str) -> None:
             gdf = gdf.to_crs(epsg=4326)
 
         gdf["geometry_wkt"] = gdf["geometry"].apply(lambda g: g.wkt if g else None)
+        gdf["geometry_json"] = gdf["geometry"].apply(
+            lambda g: json.dumps(mapping(g)["coordinates"]) if g else None
+        )
 
-        df = gdf[["LocationID", "borough", "zone", "Shape_Area", "geometry_wkt"]].copy()
-        df.columns = ["location_id", "borough", "zone", "shape_area", "geometry_wkt"]
+        df = gdf[["LocationID", "borough", "zone", "Shape_Area", "geometry_wkt", "geometry_json"]].copy()
+        df.columns = ["location_id", "borough", "zone", "shape_area", "geometry_wkt", "geometry_json"]
         df["location_id"] = df["location_id"].astype(int)
 
         parquet_path = f"{tmpdir}/taxi_zones_geo.parquet"

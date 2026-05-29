@@ -17,13 +17,13 @@ def compute_zones_geo(bucket: str) -> None:
                 z.location_id,
                 z.borough,
                 z.zone,
-                z.geometry_wkt,
+                z.geometry_json,
                 COUNT(r.pickup_zone)                    AS trip_count,
                 ROUND(SUM(r.total_amount), 2)           AS total_revenue,
                 ROUND(AVG(r.total_amount), 2)           AS avg_fare
             FROM staging.taxi_zones_geo z
             LEFT JOIN final.revenue r ON z.zone = r.pickup_zone
-            GROUP BY z.location_id, z.borough, z.zone, z.geometry_wkt
+            GROUP BY z.location_id, z.borough, z.zone, z.geometry_json
         """).write.mode("overwrite").parquet(s3a(bucket, final_key("zones_geo")))
 
         row_count = spark.read.parquet(s3a(bucket, final_key("zones_geo"))).count()
