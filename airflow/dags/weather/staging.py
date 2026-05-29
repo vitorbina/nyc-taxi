@@ -17,6 +17,7 @@ import logging
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowSkipException
 from airflow.sdk import AssetAll
+from airflow.utils.trigger_rule import TriggerRule
 
 from utils.default import get_dag_config
 from staging.weather import stage_weather
@@ -56,7 +57,7 @@ def weather_staging_pipeline():
         for date_str in missing:
             stage_weather(date_str=date_str, bucket=BUCKET)
 
-    @task(outlets=[staging_weather])
+    @task(outlets=[staging_weather], trigger_rule=TriggerRule.ALL_DONE)
     def update_hive():
         repair_table("weather")
 

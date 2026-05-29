@@ -19,6 +19,7 @@ import logging
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowSkipException
 from airflow.sdk import AssetAll
+from airflow.utils.trigger_rule import TriggerRule
 
 from utils.default import get_dag_config
 from staging.yellow import stage_yellow
@@ -80,6 +81,7 @@ def staging_pipeline():
         hive_task = update_hive.override(
             task_id=f"hive_{folder_name}",
             outlets=[staging_taxi_assets[folder_name]],
+            trigger_rule=TriggerRule.ALL_DONE,
         )(lake_folder=folder_name)
         stage_task >> hive_task
 
