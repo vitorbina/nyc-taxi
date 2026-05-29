@@ -57,7 +57,7 @@ STAGING_MAPPING = {
 )
 def staging_pipeline():
 
-    @task
+    @task(pool="spark_pool")
     def stage_taxi_type(lake_folder: str):
         raw_partitions = set(list_partitions(BUCKET, raw_key(lake_folder)))
         staging_partitions = set(list_partitions(BUCKET, staging_key(lake_folder)))
@@ -72,7 +72,7 @@ def staging_pipeline():
             year, month, _ = partition.split("-")
             stage_fn(lake_folder=lake_folder, year=year, month=month, bucket=BUCKET)
 
-    @task
+    @task(pool="spark_pool")
     def update_hive(lake_folder: str):
         repair_table(lake_folder)
 

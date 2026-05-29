@@ -49,27 +49,27 @@ FINAL_TABLES = ["trips", "revenue", "weather_impact", "zones_geo"]
 )
 def final_pipeline():
 
-    @task
+    @task(pool="spark_pool")
     def build_trips():
         logger.info("Building final.trips")
         compute_trips(bucket=BUCKET)
 
-    @task
+    @task(pool="spark_pool")
     def build_revenue_by_zone():
         logger.info("Building final.revenue")
         compute_revenue_by_zone(bucket=BUCKET)
 
-    @task
+    @task(pool="spark_pool")
     def build_weather_impact():
         logger.info("Building final.weather_impact")
         compute_weather_impact(bucket=BUCKET)
 
-    @task
+    @task(pool="spark_pool")
     def build_zones_geo():
         logger.info("Building final.zones_geo")
         compute_zones_geo(bucket=BUCKET)
 
-    @task
+    @task(pool="spark_pool")
     def register_final_tables():
         logger.info("Registering final tables: %s", FINAL_TABLES)
         setup_hive(tables=FINAL_TABLES, database=FINAL_DATABASE, location_prefix="final", bucket=BUCKET)
