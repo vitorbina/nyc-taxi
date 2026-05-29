@@ -37,6 +37,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
         schedule=AssetAll(raw_weather),
         catchup=False,
         doc_md=__doc__,
+        max_active_runs=1,
         tags=["weather", "staging"],
     )
 )

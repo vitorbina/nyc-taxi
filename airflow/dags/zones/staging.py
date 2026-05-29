@@ -29,6 +29,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
         description="Staging pipeline for NYC taxi zone reference data, triggered by raw ingestion",
         schedule=AssetAll(raw_taxi_zones),
         doc_md=__doc__,
+        max_active_runs=1,
         tags=["zones", "staging"],
     )
 )
