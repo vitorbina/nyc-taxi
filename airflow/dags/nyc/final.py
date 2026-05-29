@@ -44,7 +44,7 @@ FINAL_TABLES = ["trips", "revenue", "weather_impact", "zones_geo"]
         catchup=False,
         doc_md=__doc__,
         max_active_runs=1,
-        tags=["taxi", "final"],
+        tags=["layer:final", "domain:taxi"],
     )
 )
 def final_pipeline():

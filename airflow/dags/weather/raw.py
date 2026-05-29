@@ -30,7 +30,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
         schedule="@daily",
         catchup=False,
         doc_md=__doc__,
-        tags=["weather", "ingestion"],
+        tags=["layer:raw", "domain:weather"],
     )
 )
 def weather_ingestion_pipeline():

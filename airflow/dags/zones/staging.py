@@ -30,7 +30,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
         schedule=AssetAll(raw_taxi_zones),
         doc_md=__doc__,
         max_active_runs=1,
-        tags=["zones", "staging"],
+        tags=["layer:staging", "domain:zones"],
     )
 )
 def zones_staging_pipeline():

@@ -38,7 +38,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
         catchup=False,
         doc_md=__doc__,
         max_active_runs=1,
-        tags=["weather", "staging"],
+        tags=["layer:staging", "domain:weather"],
     )
 )
 def weather_staging_pipeline():

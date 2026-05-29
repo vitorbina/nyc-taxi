@@ -51,7 +51,7 @@ STAGING_MAPPING = {
         doc_md=__doc__,
         max_active_tasks=1,
         max_active_runs=1,
-        tags=["taxi", "staging"],
+        tags=["layer:staging", "domain:taxi"],
     )
 )
 def staging_pipeline():
