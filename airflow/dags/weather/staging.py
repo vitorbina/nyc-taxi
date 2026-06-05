@@ -44,7 +44,7 @@ BUCKET = os.getenv("MINIO_BUCKET")
 )
 def weather_staging_pipeline():
 
-    @task(pool="spark_pool")
+    @task
     def stage_daily_weather():
         raw_partitions = set(list_partitions(BUCKET, raw_key("weather")))
         staging_partitions = set(list_partitions(BUCKET, staging_key("weather")))
@@ -57,7 +57,7 @@ def weather_staging_pipeline():
         for date_str in missing:
             stage_weather(date_str=date_str, bucket=BUCKET)
 
-    @task(outlets=[staging_weather], trigger_rule=TriggerRule.ALL_DONE, pool="spark_pool")
+    @task(outlets=[staging_weather], trigger_rule=TriggerRule.ALL_DONE)
     def update_hive():
         repair_table("weather")
 

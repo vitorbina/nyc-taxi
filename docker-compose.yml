@@ -119,7 +119,11 @@ services:
   airflow-init:
     <<: *airflow-common
     container_name: nyc_airflow_init
-    command: airflow db migrate
+    command: >
+      bash -c "
+        airflow db migrate &&
+        airflow variables set skip_repair false
+      "
     restart: "no"
 
   # ── Airflow Webserver ──────────────────────────────────────────────────────
