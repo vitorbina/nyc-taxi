@@ -11,7 +11,6 @@ import os
 import logging
 
 from airflow.decorators import dag, task
-from airflow.models import Variable
 
 from utils.default import get_dag_config
 from utils.weather import ingest_weather_data, WEATHER_RAW_SCHEMA
@@ -45,8 +44,8 @@ def weather_ingestion_pipeline():
         )
 
     @task(outlets=[raw_weather])
-    def update_hive():
-        if Variable.get("skip_repair", default_var="false") == "true":
+    def update_hive(dag_run=None):
+        if dag_run and dag_run.conf.get("skip_repair"):
             logger.info("skip_repair=true — skipping repair_table for weather")
             return
         repair_table("weather", database=RAW_DATABASE, file_format="json", schema_ddl=WEATHER_RAW_SCHEMA)

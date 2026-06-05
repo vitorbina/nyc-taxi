@@ -124,20 +124,29 @@ After the first cycle, the pipeline runs end-to-end on its own — staging and f
 
 ## Backfill
 
-Staging and final DAGs are asset-triggered and do not respond to Airflow's built-in backfill. To load a historical date range, backfill the ingestion DAGs first, then trigger staging and final manually — they auto-discover all missing partitions in a single run.
+Staging and final DAGs are asset-triggered. During a large historical backfill, each ingestion run would emit assets and trigger staging dozens of times. To avoid that, pause the downstream DAGs, backfill ingestion, then run staging/final once — they auto-discover all missing partitions in a single run.
+
+The `--dag-run-conf '{"skip_repair": true}'` flag tells the ingestion's `update_hive` task to skip the per-run Hive repair (no Spark session per month). The whole catalog is repaired once at the end via `hive_setup`.
 
 ```bash
-# 1. Backfill taxi ingestion (monthly) — 2020 to 2026
-# skip_repair=true skips Hive repair on each run — run hive_setup manually after backfill completes
-docker exec nyc_airflow_scheduler airflow backfill create --dag-id taxi_ingestion --from-date 2020-01-01 --to-date 2026-12-31 --conf '{"skip_repair": true}'
+# 1. Pause downstream DAGs so they don't fire per asset event during the backfill
+docker exec nyc_airflow_scheduler airflow dags pause taxi_staging
+docker exec nyc_airflow_scheduler airflow dags pause weather_staging
 
-# 2. Backfill weather ingestion (daily) — same range
-docker exec nyc_airflow_scheduler airflow backfill create --dag-id weather_ingestion --from-date 2020-01-01 --to-date 2026-12-31 --conf '{"skip_repair": true}'
+# 2. Backfill ingestion — 2020 to 2026, skipping per-run Hive repair
+docker exec nyc_airflow_scheduler airflow backfill create --dag-id taxi_ingestion --from-date 2020-01-01 --to-date 2026-12-31 --dag-run-conf '{"skip_repair": true}'
+docker exec nyc_airflow_scheduler airflow backfill create --dag-id weather_ingestion --from-date 2020-01-01 --to-date 2026-12-31 --dag-run-conf '{"skip_repair": true}'
 
-# 3. Trigger staging and final (run once — they process all missing partitions)
+# 3. After ingestion completes, repair the whole catalog at once
+docker exec nyc_airflow_scheduler airflow dags trigger hive_setup
+
+# 4. Unpause and run staging once (auto-discovers all missing partitions)
+docker exec nyc_airflow_scheduler airflow dags unpause taxi_staging
+docker exec nyc_airflow_scheduler airflow dags unpause weather_staging
 docker exec nyc_airflow_scheduler airflow dags trigger taxi_staging
 docker exec nyc_airflow_scheduler airflow dags trigger weather_staging
-docker exec nyc_airflow_scheduler airflow dags trigger taxi_final
+
+# 5. taxi_final triggers automatically once all staging assets update
 ```
 
 Wait for all runs to complete before triggering the next step.

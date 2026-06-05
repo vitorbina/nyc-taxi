@@ -13,7 +13,6 @@ import os
 import logging
 
 from airflow.decorators import dag, task
-from airflow.models import Variable
 
 from utils.default import get_dag_config
 from utils.taxi import ingest_taxi_data
@@ -56,8 +55,8 @@ def ingestion_pipeline():
         )
 
     @task
-    def update_hive(lake_folder: str):
-        if Variable.get("skip_repair", default_var="false") == "true":
+    def update_hive(lake_folder: str, dag_run=None):
+        if dag_run and dag_run.conf.get("skip_repair"):
             logger.info("skip_repair=true — skipping repair_table for %s", lake_folder)
             return
         repair_table(lake_folder, database=RAW_DATABASE)
