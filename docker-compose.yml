@@ -49,6 +49,10 @@ services:
     volumes:
       - ./setup/lake_data:/data
     command: server /data --console-address ":9001"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     networks:
       - nyc-network
 
@@ -133,6 +137,10 @@ services:
       airflow-init:
         condition: service_completed_successfully
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
   # ── Airflow DAG Processor ─────────────────────────────────────────────────
   airflow-dag-processor:
@@ -143,6 +151,10 @@ services:
       airflow-init:
         condition: service_completed_successfully
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
   # ── Airflow Scheduler ──────────────────────────────────────────────────────
   airflow-scheduler:
@@ -156,7 +168,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6g
+          memory: 3g
 
   # ── Hive Metastore ────────────────────────────────────────────────────────
   hive-metastore:
@@ -218,13 +230,13 @@ services:
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     environment:
-      SPARK_WORKER_MEMORY: 8g
+      SPARK_WORKER_MEMORY: 5g
     depends_on:
       - spark-master
     deploy:
       resources:
         limits:
-          memory: 8500m
+          memory: 6g
     networks:
       - nyc-network
 
@@ -236,13 +248,13 @@ services:
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     environment:
-      SPARK_WORKER_MEMORY: 8g
+      SPARK_WORKER_MEMORY: 5g
     depends_on:
       - spark-master
     deploy:
       resources:
         limits:
-          memory: 8500m
+          memory: 6g
     networks:
       - nyc-network
 

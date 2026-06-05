@@ -23,7 +23,11 @@ def get_spark(app_name: str) -> SparkSession:
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
         .config("spark.sql.hive.metastore.sharedPrefixes", "org.apache.hadoop.fs.s3a,com.amazonaws,org.wildfly.openssl")
         .config("spark.driver.memory", "2g")
-        .config("spark.executor.memory", "6g")
+        .config("spark.executor.memory", "4g")
+        # Adaptive Query Execution: lets Spark resize shuffle partitions at runtime,
+        # which keeps per-task memory low and spills to disk instead of OOMing on large inputs.
+        .config("spark.sql.adaptive.enabled", "true")
+        .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
         .enableHiveSupport()
         .getOrCreate()
     )

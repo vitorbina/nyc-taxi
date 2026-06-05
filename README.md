@@ -40,6 +40,14 @@ Superset ── BI dashboards connected to Trino
 
 - Docker and Docker Compose
 - wget
+- **~24 GB of RAM available to Docker.** The full stack (Spark, Trino, Hive, Airflow, Superset, MinIO, Postgres) is memory-heavy. On **Windows + WSL2**, Docker is capped at ~50% of the machine's RAM by default — raise it by creating `C:\Users\<user>\.wslconfig`:
+
+  ```ini
+  [wsl2]
+  memory=24GB
+  ```
+
+  Then run `wsl --shutdown` in PowerShell and reopen the terminal. Without this, heavy staging jobs (especially `high_volume_fhv`) can exhaust memory.
 
 ## Getting started
 
