@@ -23,7 +23,7 @@ def get_spark(app_name: str) -> SparkSession:
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
         .config("spark.sql.hive.metastore.sharedPrefixes", "org.apache.hadoop.fs.s3a,com.amazonaws,org.wildfly.openssl")
         .config("spark.driver.memory", "2g")
-        .config("spark.executor.memory", "4g")
+        .config("spark.executor.memory", "6g")
         .enableHiveSupport()
         .getOrCreate()
     )

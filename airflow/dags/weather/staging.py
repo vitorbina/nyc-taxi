@@ -1,21 +1,20 @@
 """
 # NYC Weather Staging
 
-Reads raw weather parquet files from MinIO, applies type casting and
-weather code translation, then writes to the staging layer.
+Reads all raw weather JSON files from MinIO in a single Spark job, applies type
+casting and weather code translation, and writes the staging layer partitioned
+by partition_date.
 
 Triggered by the raw_weather asset, produced by the weather_ingestion DAG.
 
-Auto-discovers missing partitions: lists what's in raw and what's already
-in staging, then processes the difference. Idempotent and resilient to
-backfills.
+Reads the whole raw layer and overwrites staging in one pass — weather volume is
+small (hourly records), so a full rewrite is cheaper than per-day Spark sessions.
 """
 
 import os
 import logging
 
 from airflow.decorators import dag, task
-from airflow.exceptions import AirflowSkipException
 from airflow.sdk import AssetAll
 from airflow.utils.trigger_rule import TriggerRule
 
@@ -23,8 +22,6 @@ from utils.default import get_dag_config
 from staging.weather import stage_weather
 from utils.hive import repair_table
 from utils.assets import raw_weather, staging_weather
-from utils.s3 import list_partitions
-from utils.paths import raw_key, staging_key
 
 logger = logging.getLogger(__name__)
 
@@ -45,23 +42,14 @@ BUCKET = os.getenv("MINIO_BUCKET")
 def weather_staging_pipeline():
 
     @task
-    def stage_daily_weather():
-        raw_partitions = set(list_partitions(BUCKET, raw_key("weather")))
-        staging_partitions = set(list_partitions(BUCKET, staging_key("weather")))
-        missing = sorted(raw_partitions - staging_partitions)
-
-        if not missing:
-            raise AirflowSkipException("No new weather partitions to stage")
-
-        logger.info("Staging %d new weather partition(s): %s", len(missing), missing)
-        for date_str in missing:
-            stage_weather(date_str=date_str, bucket=BUCKET)
+    def stage_all_weather():
+        stage_weather(bucket=BUCKET)
 
     @task(outlets=[staging_weather], trigger_rule=TriggerRule.ALL_DONE)
     def update_hive():
         repair_table("weather")
 
-    stage_daily_weather() >> update_hive()
+    stage_all_weather() >> update_hive()
 
 
 pipeline = weather_staging_pipeline()

@@ -2,7 +2,7 @@ import logging
 
 from airflow.exceptions import AirflowSkipException
 
-from utils.s3 import file_exists
+from utils.s3 import folder_exists
 from utils.spark import get_spark
 from utils.paths import raw_key, staging_key, s3a
 
@@ -11,23 +11,21 @@ logger = logging.getLogger(__name__)
 APP_NAME = "staging_weather"
 
 
-def stage_weather(date_str: str, bucket: str) -> None:
-    file_name = f"weather_nyc_{date_str}.json"
-    rk = raw_key("weather", date_str, file_name)
-    raw_path = s3a(bucket, rk)
-    sk = staging_key("weather", date_str)
+def stage_weather(bucket: str) -> None:
+    raw_prefix = raw_key("weather")
+    raw_path = s3a(bucket, raw_prefix)
+    staging_path = s3a(bucket, staging_key("weather"))
 
-    if not file_exists(bucket=bucket, key=rk):
-        raise AirflowSkipException(f"Raw file not found in MinIO: {rk}")
+    if not folder_exists(bucket=bucket, prefix=raw_prefix):
+        raise AirflowSkipException(f"No raw weather data found in MinIO: {raw_prefix}")
 
-    logger.info("Staging weather for %s — raw: %s", date_str, raw_path)
+    logger.info("Staging weather — raw: %s", raw_path)
 
-    spark = get_spark(f"{APP_NAME}_{date_str}")
+    spark = get_spark(APP_NAME)
     try:
         spark.read.json(raw_path).createOrReplaceTempView("raw")
 
         spark.sql("""
-
             SELECT
                 CAST(time AS TIMESTAMP)                  AS datetime,
                 CAST(temperature_2m AS DOUBLE)           AS temperature_c,
@@ -62,11 +60,11 @@ def stage_weather(date_str: str, bucket: str) -> None:
                     WHEN 95 THEN 'Thunderstorm'
                     WHEN 96 THEN 'Thunderstorm with hail'
                     WHEN 99 THEN 'Thunderstorm with heavy hail'
-                END AS weather_description
+                END AS weather_description,
+                partition_date
             FROM raw
-        """).write.mode("overwrite").parquet(s3a(bucket, sk))
+        """).write.partitionBy("partition_date").mode("overwrite").parquet(staging_path)
 
-        row_count = spark.read.parquet(s3a(bucket, sk)).count()
-        logger.info("Wrote %d rows to %s", row_count, s3a(bucket, sk))
+        logger.info("Staged weather to %s", staging_path)
     finally:
         spark.stop()

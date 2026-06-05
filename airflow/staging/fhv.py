@@ -2,7 +2,7 @@ import logging
 
 from airflow.exceptions import AirflowSkipException
 
-from utils.s3 import file_exists
+from utils.s3 import folder_exists
 from utils.spark import get_spark
 from utils.paths import raw_key, staging_key, s3a
 
@@ -14,20 +14,19 @@ APP_NAME = "staging_fhv"
 ZONES_KEY = staging_key("reference/taxi_zone_lookup") + "/taxi_zone_lookup.parquet"
 
 
-def stage_fhv(lake_folder: str, year: str, month: str, bucket: str) -> None:
-    partition = f"{year}-{int(month):02d}-01"
-    file_name = f"fhv_tripdata_{year}-{int(month):02d}.parquet"
-    rk = raw_key(lake_folder, partition, file_name)
-    sk = staging_key(lake_folder, partition)
+def stage_fhv(bucket: str) -> None:
+    raw_prefix = raw_key("app_rides")
+    raw_path = s3a(bucket, raw_prefix)
+    staging_path = s3a(bucket, staging_key("app_rides"))
 
-    if not file_exists(bucket=bucket, key=rk):
-        raise AirflowSkipException(f"Raw file not found in MinIO: {rk}")
+    if not folder_exists(bucket=bucket, prefix=raw_prefix):
+        raise AirflowSkipException(f"No raw data found in MinIO: {raw_prefix}")
 
-    logger.info("Staging %s for %s-%s — raw: %s", lake_folder, year, month, s3a(bucket, rk))
+    logger.info("Staging app_rides — raw: %s", raw_path)
 
-    spark = get_spark(f"{APP_NAME}_{year}-{int(month):02d}")
+    spark = get_spark(APP_NAME)
     try:
-        spark.read.parquet(s3a(bucket, rk)).createOrReplaceTempView("raw")
+        spark.read.parquet(raw_path).createOrReplaceTempView("raw")
         spark.read.parquet(s3a(bucket, ZONES_KEY)).createOrReplaceTempView("zones")
 
         spark.sql("""
@@ -42,7 +41,8 @@ def stage_fhv(lake_folder: str, year: str, month: str, bucket: str) -> None:
                 pu.zone AS pickup_zone,
                 pu.borough AS pickup_borough,
                 do.zone AS dropoff_zone,
-                do.borough AS dropoff_borough
+                do.borough AS dropoff_borough,
+                r.partition_date
             FROM raw r
             LEFT JOIN zones pu ON CAST(r.PUlocationID AS INT) = pu.location_id
             LEFT JOIN zones do ON CAST(r.DOlocationID AS INT) = do.location_id
@@ -52,9 +52,8 @@ def stage_fhv(lake_folder: str, year: str, month: str, bucket: str) -> None:
               AND r.dispatching_base_num IS NOT NULL
               AND CAST(r.PUlocationID AS INT) IS NOT NULL
               AND CAST(r.DOlocationID AS INT) IS NOT NULL
-        """).write.mode("overwrite").parquet(s3a(bucket, sk))
+        """).repartition("partition_date").write.partitionBy("partition_date").mode("overwrite").parquet(staging_path)
 
-        row_count = spark.read.parquet(s3a(bucket, sk)).count()
-        logger.info("Wrote %d rows to %s", row_count, s3a(bucket, sk))
+        logger.info("Staged app_rides to %s", staging_path)
     finally:
         spark.stop()

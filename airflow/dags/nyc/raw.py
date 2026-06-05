@@ -39,6 +39,7 @@ TAXI_MAPPING = {
         schedule="@monthly",
         catchup=False,
         doc_md=__doc__,
+        max_active_runs=2,
         tags=["layer:raw", "domain:taxi"],
     )
 )
