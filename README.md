@@ -127,16 +127,21 @@ docker exec nyc_airflow_scheduler airflow dags unpause weather_ingestion
 docker exec nyc_airflow_scheduler airflow backfill create --dag-id taxi_ingestion --from-date 2025-04-01 --to-date 2026-04-01 --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
 docker exec nyc_airflow_scheduler airflow backfill create --dag-id weather_ingestion --from-date 2025-04-01 --to-date 2026-04-01 --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
 
-# 4. After ingestion finishes, run staging once (processes all partitions)
+# 4. After ingestion finishes, stage weather FIRST and wait for it to finish.
+#    taxi_final reads staging.weather, but it only waits on the taxi staging assets —
+#    so staging.weather must already exist before taxi_staging triggers the final.
 docker exec nyc_airflow_scheduler airflow dags unpause taxi_final
-docker exec nyc_airflow_scheduler airflow dags unpause taxi_staging
 docker exec nyc_airflow_scheduler airflow dags unpause weather_staging
-docker exec nyc_airflow_scheduler airflow dags trigger taxi_staging
 docker exec nyc_airflow_scheduler airflow dags trigger weather_staging
-# taxi_final fires automatically once all staging assets update
 
-# 5. Register the raw catalog (staging/final self-register during their runs;
-#    only raw was skipped via skip_repair, so register it now)
+# 5. Once weather_staging has finished, run taxi staging.
+#    It processes all missing partitions, then taxi_final fires automatically via assets.
+docker exec nyc_airflow_scheduler airflow dags unpause taxi_staging
+docker exec nyc_airflow_scheduler airflow dags trigger taxi_staging
+
+# 6. Register the raw catalog (staging and final self-register during their runs;
+#    only raw was skipped via skip_repair, so register it now).
+docker exec nyc_airflow_scheduler airflow dags unpause hive_setup_raw
 docker exec nyc_airflow_scheduler airflow dags trigger hive_setup_raw
 ```
 
