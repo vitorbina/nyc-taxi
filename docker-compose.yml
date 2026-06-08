@@ -73,7 +73,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 1500m
     networks:
       - nyc-network
 
@@ -168,7 +168,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3g
+          memory: 4g
 
   # ── Hive Metastore ────────────────────────────────────────────────────────
   hive-metastore:
@@ -195,7 +195,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 2500m
     networks:
       - nyc-network
 
@@ -230,13 +230,13 @@ services:
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     environment:
-      SPARK_WORKER_MEMORY: 5g
+      SPARK_WORKER_MEMORY: 4g
     depends_on:
       - spark-master
     deploy:
       resources:
         limits:
-          memory: 6g
+          memory: 4.5g
     networks:
       - nyc-network
 
@@ -248,13 +248,13 @@ services:
     entrypoint: /opt/spark/bin/spark-class
     command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     environment:
-      SPARK_WORKER_MEMORY: 5g
+      SPARK_WORKER_MEMORY: 4g
     depends_on:
       - spark-master
     deploy:
       resources:
         limits:
-          memory: 6g
+          memory: 4.5g
     networks:
       - nyc-network
 

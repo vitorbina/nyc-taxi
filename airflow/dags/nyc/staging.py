@@ -8,8 +8,8 @@ the result to the staging layer.
 Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 Triggered when all four raw taxi assets have been updated by the taxi_ingestion DAG.
 
-Each task reads the whole raw layer for its taxi type in a single Spark job and
-overwrites staging partitioned by partition_date.
+Each task auto-discovers the partitions missing from staging and processes them
+one at a time within a single Spark session, writing partitioned by partition_date.
 """
 
 import os

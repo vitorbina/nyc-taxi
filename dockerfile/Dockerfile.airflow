@@ -4,8 +4,10 @@ USER root
 # Java is required because Spark jobs run in client mode:
 # the Spark driver executes inside the Airflow worker process.
 # The S3A jars allow the driver to read/write MinIO (s3a://).
+# procps provides `ps`, which Spark's load-spark-env.sh calls on startup
+# (without it the logs show a harmless "ps: command not found" error).
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends default-jre-headless wget && \
+    apt-get install -y --no-install-recommends default-jre-headless wget procps && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/spark-jars && \

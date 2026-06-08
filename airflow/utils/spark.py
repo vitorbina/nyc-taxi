@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def get_spark(app_name: str) -> SparkSession:
     logger.info("Creating Spark session: %s", app_name)
-    return (
+    spark = (
         SparkSession.builder
         .appName(app_name)
         .master(os.getenv("SPARK_MASTER_URL", "local[*]"))
@@ -23,11 +23,17 @@ def get_spark(app_name: str) -> SparkSession:
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
         .config("spark.sql.hive.metastore.sharedPrefixes", "org.apache.hadoop.fs.s3a,com.amazonaws,org.wildfly.openssl")
         .config("spark.driver.memory", "2g")
-        .config("spark.executor.memory", "4g")
+        .config("spark.executor.memory", "3g")
         # Adaptive Query Execution: lets Spark resize shuffle partitions at runtime,
         # which keeps per-task memory low and spills to disk instead of OOMing on large inputs.
         .config("spark.sql.adaptive.enabled", "true")
         .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
+        # Silence benign INFO/WARN that Airflow captures from stderr and flags as ERROR
+        .config("spark.sql.debug.maxToStringFields", "100")
         .enableHiveSupport()
         .getOrCreate()
     )
+    # Spark writes logs to stderr, which Airflow marks as ERROR regardless of level.
+    # Setting the level to ERROR keeps only real errors in the task logs.
+    spark.sparkContext.setLogLevel("ERROR")
+    return spark
