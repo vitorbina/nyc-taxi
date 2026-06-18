@@ -103,49 +103,26 @@ Password persists across restarts. Only changes if you tear down volumes (`docke
 
 The first load is a **backfill**: you pick the date range and load the whole history in one go. After that, the pipeline runs on its own via schedule and assets (see [Recurring runs](#recurring-runs)).
 
-Everything is driven from the command line — no need to open the UI. DAGs are created paused, and **a paused DAG won't run even when its asset fires**, so each one is unpaused before use.
-
-A few things about the backfill:
-- `--dag-run-conf '{"skip_repair": true}'` tells the ingestion's `update_hive` task to skip the per-run Hive repair (no Spark session per month). Staging reads raw files straight from their MinIO path (not from the Hive `raw.*` tables), so it works even though raw isn't registered yet. The raw catalog is registered once at the end via `hive_setup_raw`.
-- Backfills have their own concurrency control, separate from the DAG's `max_active_runs`. Without `--max-active-runs`, all runs fire at once and the source CDNs return HTTP 403 (rate limiting). Always pass `--max-active-runs 2` to throttle it.
-- Staging is paused during the backfill so it doesn't fire once per asset event; it's run once at the end and auto-discovers all missing partitions in a single pass.
+Once the stack is up, run the backfill with a date range (`FROM_DATE TO_DATE`, first day of each month):
 
 ```bash
-# 1. Reference data (zones) — needed by staging for zone enrichment.
-#    zones_ingestion is @once, so it auto-runs when unpaused (no trigger needed).
-#    Unpause staging first so it's ready to react to the asset.
-docker exec nyc_airflow_scheduler airflow dags unpause zones_staging
-docker exec nyc_airflow_scheduler airflow dags unpause zones_ingestion
-
-# 2. Pause taxi/weather staging so the backfill doesn't trigger them per asset
-docker exec nyc_airflow_scheduler airflow dags pause taxi_staging
-docker exec nyc_airflow_scheduler airflow dags pause weather_staging
-
-# 3. Backfill ingestion for your date range (example: Apr/2025 to Apr/2026)
-docker exec nyc_airflow_scheduler airflow dags unpause taxi_ingestion
-docker exec nyc_airflow_scheduler airflow dags unpause weather_ingestion
-docker exec nyc_airflow_scheduler airflow backfill create --dag-id taxi_ingestion --from-date 2025-04-01 --to-date 2026-04-01 --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
-docker exec nyc_airflow_scheduler airflow backfill create --dag-id weather_ingestion --from-date 2025-04-01 --to-date 2026-04-01 --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
-
-# 4. After ingestion finishes, stage weather FIRST and wait for it to finish.
-#    taxi_final reads staging.weather, but it only waits on the taxi staging assets —
-#    so staging.weather must already exist before taxi_staging triggers the final.
-docker exec nyc_airflow_scheduler airflow dags unpause taxi_final
-docker exec nyc_airflow_scheduler airflow dags unpause weather_staging
-docker exec nyc_airflow_scheduler airflow dags trigger weather_staging
-
-# 5. Once weather_staging has finished, run taxi staging.
-#    It processes all missing partitions, then taxi_final fires automatically via assets.
-docker exec nyc_airflow_scheduler airflow dags unpause taxi_staging
-docker exec nyc_airflow_scheduler airflow dags trigger taxi_staging
-
-# 6. Register the raw catalog (staging and final self-register during their runs;
-#    only raw was skipped via skip_repair, so register it now).
-docker exec nyc_airflow_scheduler airflow dags unpause hive_setup_raw
-docker exec nyc_airflow_scheduler airflow dags trigger hive_setup_raw
+./scripts/backfill.sh 2025-04-01 2026-04-01
 ```
 
-Wait for each step to complete before starting the next.
+The script drives the whole load from the command line — no need to open the UI — waiting for each stage to finish before starting the next, and aborting if any DAG run fails:
+
+1. **Reference data (zones)** — zone lookup and shapefile, needed by staging for enrichment.
+2. **Pause taxi/weather staging** so the backfill doesn't trigger them once per asset event.
+3. **Backfill ingestion** for the date range (taxi + weather).
+4. **Stage weather** — must run before taxi staging, since `taxi_final` reads `staging.weather` but only waits on the taxi assets.
+5. **Stage taxi** — auto-discovers all missing partitions in one pass; `taxi_final` then fires automatically via assets.
+6. **Register the raw catalog** (`hive_setup_raw`).
+
+A few things about how it works:
+- DAGs are created paused, and **a paused DAG won't run even when its asset fires** — the script unpauses each one before use.
+- `--dag-run-conf '{"skip_repair": true}'` tells the ingestion's `update_hive` task to skip the per-run Hive repair (no Spark session per month). Staging reads raw files straight from their MinIO path (not from the Hive `raw.*` tables), so it works even though raw isn't registered yet. The raw catalog is registered once at the end.
+- Backfills have their own concurrency control, separate from the DAG's `max_active_runs`. Without `--max-active-runs`, all runs fire at once and the source CDNs return HTTP 403 (rate limiting); the script passes `--max-active-runs 2` to throttle it.
+- Staging is paused during ingestion so it doesn't fire once per asset event; it runs once at the end and auto-discovers all missing partitions in a single pass.
 
 The `hive_setup_raw`, `hive_setup_staging` and `hive_setup_final` DAGs are also available on their own as operational tools to recreate the tables of a given layer when the schema changes.
 
@@ -184,6 +161,7 @@ trino/
 superset/
   superset_config.py     Superset Python config (DB URI, secret key)
 scripts/
+  backfill.sh            runs the full historical backfill for a date range
   export_dashboards.sh   zips dashboard YAMLs into dashboards/exports/
 dashboards/
   nyc_taxi_overview/     dashboard YAML files (versioned)
