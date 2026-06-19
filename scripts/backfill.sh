@@ -32,6 +32,13 @@ af() {
         "$SCHEDULER" airflow "$@"
 }
 
+# Run an admin command (pause/unpause/trigger/backfill) without its table output,
+# which just clutters the progress log. Errors still print (stderr) and a non-zero
+# exit still aborts via set -e.
+afq() {
+    af "$@" >/dev/null
+}
+
 # Print a timestamped progress line so the current stage is visible in tail -f.
 log() {
     echo ">>> [$(date +%H:%M:%S)] $*"
@@ -85,25 +92,25 @@ log "=== Backfill $FROM_DATE -> $TO_DATE ==="
 
 # 1. Reference data (zones) — staging needs it for zone enrichment.
 log "[1/6] Reference data (zones)"
-af dags unpause zones_staging
-af dags unpause zones_ingestion          # @once: auto-runs when unpaused
+afq dags unpause zones_staging
+afq dags unpause zones_ingestion          # @once: auto-runs when unpaused
 wait_for_dag zones_ingestion
 wait_for_dag zones_staging               # triggered by the zones asset
 
 # 2. Pause taxi/weather staging so the backfill doesn't fire them per asset event.
 log "[2/6] Pausing staging during ingestion"
-af dags pause taxi_staging
-af dags pause weather_staging
+afq dags pause taxi_staging
+afq dags pause weather_staging
 
 # 3. Backfill ingestion. skip_repair avoids a Spark session per month; the raw
 #    catalog is registered once at the end. --max-active-runs 2 throttles the
 #    source CDN to avoid HTTP 403 rate limiting.
 log "[3/6] Backfilling ingestion"
-af dags unpause taxi_ingestion
-af dags unpause weather_ingestion
-af backfill create --dag-id taxi_ingestion --from-date "$FROM_DATE" --to-date "$TO_DATE" \
+afq dags unpause taxi_ingestion
+afq dags unpause weather_ingestion
+afq backfill create --dag-id taxi_ingestion --from-date "$FROM_DATE" --to-date "$TO_DATE" \
     --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
-af backfill create --dag-id weather_ingestion --from-date "$FROM_DATE" --to-date "$TO_DATE" \
+afq backfill create --dag-id weather_ingestion --from-date "$FROM_DATE" --to-date "$TO_DATE" \
     --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
 wait_for_dag taxi_ingestion
 wait_for_dag weather_ingestion
@@ -111,23 +118,23 @@ wait_for_dag weather_ingestion
 # 4. Stage weather FIRST. taxi_final reads staging.weather but only waits on the
 #    taxi staging assets, so staging.weather must exist before taxi_staging runs.
 log "[4/6] Staging weather"
-af dags unpause taxi_final
-af dags unpause weather_staging
-af dags trigger weather_staging
+afq dags unpause taxi_final
+afq dags unpause weather_staging
+afq dags trigger weather_staging
 wait_for_dag weather_staging
 
 # 5. Stage taxi. Auto-discovers all missing partitions in one pass, then
 #    taxi_final fires automatically via the staging assets.
 log "[5/6] Staging taxi"
-af dags unpause taxi_staging
-af dags trigger taxi_staging
+afq dags unpause taxi_staging
+afq dags trigger taxi_staging
 wait_for_dag taxi_staging
 wait_for_dag taxi_final
 
 # 6. Register the raw catalog (skipped during ingestion via skip_repair).
 log "[6/6] Registering raw catalog"
-af dags unpause hive_setup_raw
-af dags trigger hive_setup_raw
+afq dags unpause hive_setup_raw
+afq dags trigger hive_setup_raw
 wait_for_dag hive_setup_raw
 
 log "=== Backfill complete ==="
