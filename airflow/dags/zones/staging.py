@@ -16,6 +16,8 @@ from airflow.sdk import AssetAll
 from utils.default import get_dag_config
 from staging.zones import stage_zones
 from staging.zones_geo import stage_zones_geo
+from utils.hive import setup_hive
+from utils.constants import STAGING_DATABASE
 from utils.assets import raw_taxi_zones
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,14 @@ def zones_staging_pipeline():
     @task
     def stage_zone_geometry():
         stage_zones_geo(bucket=BUCKET)
+        # Register staging.taxi_zones_geo so the final layer (build_zones_geo)
+        # can read it from the catalog. Atomic publish: write then register.
+        setup_hive(
+            tables=["taxi_zones_geo"],
+            database=STAGING_DATABASE,
+            location_prefix="staging/reference",
+            bucket=BUCKET,
+        )
 
     stage_zone_lookup()
     stage_zone_geometry()
