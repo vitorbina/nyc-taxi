@@ -206,3 +206,5 @@ pyrightconfig.json
 simple_auth_manager_passwords.json.generated
 
 airflow.cfg
+
+dashboards/exports/

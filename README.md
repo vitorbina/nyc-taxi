@@ -233,7 +233,17 @@ First create the Trino database connections (see [Connecting Superset to Trino](
    ```bash
    ./scripts/export_dashboards.sh
    ```
-2. Go to **Dashboards → Import** and upload `dashboards/exports/nyc_taxi_overview.zip`.
+2. Import it, either:
+   - **UI:** go to **Dashboards → Import** and upload `dashboards/exports/nyc_taxi_overview.zip`, or
+   - **CLI:**
+     ```bash
+     docker cp dashboards/exports/nyc_taxi_overview.zip nyc_superset:/tmp/dashboard.zip
+     docker exec nyc_superset superset import-dashboards -p /tmp/dashboard.zip -u admin
+     ```
+
+> **Re-importing:** if the dashboard already exists, the import fails with a
+> `duplicate key value violates unique constraint` error. Delete the existing
+> dashboard (and its charts) in Superset first, then import again.
 
 ### Exporting
 
