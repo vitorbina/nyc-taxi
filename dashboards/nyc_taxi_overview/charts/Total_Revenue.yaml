@@ -1,0 +1,29 @@
+slice_name: Total Revenue
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 14__table
+  viz_type: big_number_total
+  metric: total_revenue
+  adhoc_filters:
+  - clause: WHERE
+    subject: pickup_datetime
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    expressionType: SIMPLE
+  subheader: ''
+  y_axis_format: $,.0f
+  time_format: smart_date
+  header_font_size: 0.4
+  subheader_font_size: 0.15
+  extra_form_data: {}
+  dashboards: []
+query_context: '{"datasource":{"id":14,"type":"table"},"force":false,"queries":[{"filters":[{"col":"pickup_datetime","op":"TEMPORAL_RANGE","val":"No
+  filter"}],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":[],"metrics":["total_revenue"],"annotation_layers":[],"row_limit":0,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"14__table","viz_type":"big_number_total","metric":"total_revenue","adhoc_filters":[{"clause":"WHERE","subject":"pickup_datetime","operator":"TEMPORAL_RANGE","comparator":"No
+  filter","expressionType":"SIMPLE"}],"subheader":"","y_axis_format":"$,.0f","time_format":"smart_date","header_font_size":0.4,"subheader_font_size":0.15,"extra_form_data":{},"dashboards":[],"force":false,"result_format":"json","result_type":"full"}}'
+cache_timeout: null
+uuid: e68f855e-4aba-4d2b-b4e3-f6093ae2d30a
+version: 1.0.0
+dataset_uuid: 881e69f0-7247-4cd7-bbff-220e7e0fd1ff

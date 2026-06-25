@@ -12,7 +12,8 @@ params:
   x_axis_sort_asc: true
   metrics:
   - count
-  groupby: []
+  groupby:
+  - taxi_type
   adhoc_filters:
   - expressionType: SIMPLE
     subject: dropoff_datetime
@@ -45,7 +46,7 @@ params:
   color_scheme: supersetColors
   time_shift_color: true
   show_value: false
-  only_total: true
+  only_total: false
   percentage_threshold: 0
   area: false
   opacity: 0.2
@@ -79,15 +80,15 @@ query_context: '{"datasource": {"id": 1, "type": "table"}, "force": false, "quer
   "extras": {"time_grain_sqla": "P1M", "having": "", "where": ""}, "applied_time_extras":
   {}, "columns": [{"timeGrain": "P1M", "columnType": "BASE_AXIS", "sqlExpression":
   "pickup_datetime", "label": "pickup_datetime", "expressionType": "SQL", "isColumnReference":
-  true}], "metrics": ["count"], "orderby": [["count", false]], "annotation_layers":
-  [], "row_limit": 10000, "series_columns": [], "series_limit": 0, "group_others_when_limit_reached":
+  true}, "taxi_type"], "metrics": ["count"], "orderby": [["count", false]], "annotation_layers":
+  [], "row_limit": 10000, "series_columns": ["taxi_type"], "series_limit": 0, "group_others_when_limit_reached":
   false, "order_desc": true, "url_params": {}, "custom_params": {}, "custom_form_data":
   {}, "time_offsets": [], "post_processing": [{"operation": "pivot", "options": {"index":
-  ["pickup_datetime"], "columns": [], "aggregates": {"count": {"operator": "mean"}},
+  ["pickup_datetime"], "columns": ["taxi_type"], "aggregates": {"count": {"operator": "mean"}},
   "drop_missing_columns": false}}, {"operation": "flatten"}]}], "form_data": {"datasource":
   "1__table", "viz_type": "echarts_timeseries_line", "x_axis": "pickup_datetime",
   "time_grain_sqla": "P1M", "xAxisForceCategorical": false, "x_axis_sort_asc": true,
-  "metrics": ["count"], "groupby": [], "adhoc_filters": [{"expressionType": "SIMPLE",
+  "metrics": ["count"], "groupby": ["taxi_type"], "adhoc_filters": [{"expressionType": "SIMPLE",
   "subject": "dropoff_datetime", "operator": "TEMPORAL_RANGE", "operatorId": "TEMPORAL_RANGE",
   "comparator": "No filter", "clause": "WHERE", "sqlExpression": null, "isExtra":
   false, "isNew": false, "datasourceWarning": false, "filterOptionName": "filter_reac3gkoknb_xt5g8w6dxpq"}],
@@ -97,7 +98,7 @@ query_context: '{"datasource": {"id": 1, "type": "table"}, "force": false, "quer
   0.8, "x_axis_title": "", "x_axis_title_margin": 15, "y_axis_title": "", "y_axis_title_margin":
   30, "y_axis_title_position": "Left", "sort_series_type": "sum", "sort_series_ascending":
   false, "color_scheme": "supersetColors", "time_shift_color": true, "show_value":
-  false, "only_total": true, "percentage_threshold": 0, "area": false, "opacity":
+  false, "only_total": false, "percentage_threshold": 0, "area": false, "opacity":
   0.2, "markerEnabled": false, "markerSize": 6, "zoomable": false, "minorTicks": false,
   "show_legend": true, "legendType": "scroll", "legendOrientation": "top", "x_axis_time_format":
   "smart_date", "xAxisLabelRotation": 0, "xAxisLabelInterval": "auto", "rich_tooltip":

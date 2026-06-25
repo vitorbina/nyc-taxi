@@ -74,7 +74,7 @@ params:
   forecastEnabled: false
   forecastPeriods: 10
   forecastInterval: 0.8
-  orientation: vertical
+  orientation: horizontal
   x_axis_title: ''
   x_axis_title_margin: 15
   y_axis_title: ''
@@ -160,7 +160,7 @@ query_context: '{"datasource": {"id": 2, "type": "table"}, "force": false, "quer
   false, "label": "SUM(total_amount)", "optionName": "metric_uckegl0g8u_rkizo7bky3p"},
   "order_desc": true, "row_limit": 10, "truncate_metric": true, "show_empty_columns":
   true, "comparison_type": "values", "annotation_layers": [], "forecastEnabled": false,
-  "forecastPeriods": 10, "forecastInterval": 0.8, "orientation": "vertical", "x_axis_title":
+  "forecastPeriods": 10, "forecastInterval": 0.8, "orientation": "horizontal", "x_axis_title":
   "", "x_axis_title_margin": 15, "y_axis_title": "", "y_axis_title_margin": 30, "y_axis_title_position":
   "Left", "sort_series_type": "sum", "sort_series_ascending": false, "color_scheme":
   "supersetColors", "time_shift_color": true, "show_value": false, "only_total": true,

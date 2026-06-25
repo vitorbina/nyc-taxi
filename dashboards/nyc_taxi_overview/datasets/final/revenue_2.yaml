@@ -18,11 +18,29 @@ folders: null
 uuid: 881e69f0-7247-4cd7-bbff-220e7e0fd1ff
 metrics:
 - metric_name: count
-  verbose_name: COUNT(*)
+  verbose_name: Trips
   metric_type: count
   expression: COUNT(*)
   description: null
   d3format: null
+  currency: null
+  extra: null
+  warning_text: null
+- metric_name: total_revenue
+  verbose_name: Total revenue
+  metric_type: null
+  expression: SUM(total_amount)
+  description: null
+  d3format: $,.0f
+  currency: null
+  extra: null
+  warning_text: null
+- metric_name: avg_fare
+  verbose_name: Average fare
+  metric_type: null
+  expression: AVG(fare_amount)
+  description: null
+  d3format: $,.2f
   currency: null
   extra: null
   warning_text: null

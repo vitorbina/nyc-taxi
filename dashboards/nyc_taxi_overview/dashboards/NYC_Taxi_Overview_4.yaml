@@ -108,13 +108,93 @@ position:
   DASHBOARD_VERSION_KEY: v2
   GRID_ID:
     children:
+    - ROW-KPIRow
     - ROW-KZ-i5qd6LKbePRGSAKq_Y
     - ROW-DAGQg-hmAlt4jmunCjrpO
+    - ROW-HeatmapRow
     - ROW-lCQFz25H_lIIdlbDq4wpp
     id: GRID_ID
     parents:
     - ROOT_ID
     type: GRID
+  ROW-HeatmapRow:
+    children:
+    - CHART-heatmap-hourday
+    id: ROW-HeatmapRow
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  CHART-heatmap-hourday:
+    children: []
+    id: CHART-heatmap-hourday
+    meta:
+      chartId: 104
+      height: 50
+      sliceName: Trips by Hour and Weekday
+      uuid: 545b0cc8-e286-4677-9861-64bcabdf718e
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-HeatmapRow
+    type: CHART
+  ROW-KPIRow:
+    children:
+    - CHART-bignum-revenue
+    - CHART-bignum-trips
+    - CHART-bignum-fare
+    id: ROW-KPIRow
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  CHART-bignum-revenue:
+    children: []
+    id: CHART-bignum-revenue
+    meta:
+      chartId: 101
+      height: 40
+      sliceName: Total Revenue
+      uuid: e68f855e-4aba-4d2b-b4e3-f6093ae2d30a
+      width: 4
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-KPIRow
+    type: CHART
+  CHART-bignum-trips:
+    children: []
+    id: CHART-bignum-trips
+    meta:
+      chartId: 102
+      height: 40
+      sliceName: Total Trips
+      uuid: 9d1908bc-c15d-4d9e-8516-2dd2fffe5e26
+      width: 4
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-KPIRow
+    type: CHART
+  CHART-bignum-fare:
+    children: []
+    id: CHART-bignum-fare
+    meta:
+      chartId: 103
+      height: 40
+      sliceName: Average Fare
+      uuid: d86f8cae-09c0-418f-9da4-d4a6d0c1b300
+      width: 4
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-KPIRow
+    type: CHART
   HEADER_ID:
     id: HEADER_ID
     meta:
@@ -253,23 +333,94 @@ metadata:
     - 6
     - 8
   map_label_colors:
-    high_volume_fhv: '#1FA8C9'
-    yellow_taxi: '#454E7C'
-    green_taxi: '#5AC189'
-    SUM(total_amount): '#1FA8C9'
-    count: '#1FA8C9'
-    AVG(fare_amount): '#1FA8C9'
-  shared_label_colors:
-  - SUM(total_amount)
-  - count
+    yellow_taxi: '#F2C200'
+    green_taxi: '#2E7D32'
+    high_volume_fhv: '#5E35B1'
+    app_rides: '#424242'
+  shared_label_colors: []
   color_scheme: ''
   refresh_frequency: 0
   color_scheme_domain: []
   expanded_slices: {}
-  label_colors: {}
+  label_colors:
+    yellow_taxi: '#F2C200'
+    green_taxi: '#2E7D32'
+    high_volume_fhv: '#5E35B1'
+    app_rides: '#424242'
   timed_refresh_immune_slices: []
   cross_filters_enabled: true
-  native_filter_configuration: []
+  native_filter_configuration:
+  - id: NATIVE_FILTER-period
+    name: Period
+    filterType: filter_time
+    targets:
+    - {}
+    defaultDataMask:
+      extraFormData: {}
+      filterState: {}
+      ownState: {}
+    cascadeParentIds: []
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    controlValues: {}
+    type: NATIVE_FILTER
+    description: ''
+    chartsInScope: []
+    tabsInScope: []
+  - id: NATIVE_FILTER-taxitype
+    name: Taxi Type
+    filterType: filter_select
+    targets:
+    - column:
+        name: taxi_type
+      datasetUuid: 881e69f0-7247-4cd7-bbff-220e7e0fd1ff
+    defaultDataMask:
+      extraFormData: {}
+      filterState: {}
+      ownState: {}
+    cascadeParentIds: []
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    controlValues:
+      enableEmptyFilter: false
+      defaultToFirstItem: false
+      multiSelect: true
+      searchAllOptions: false
+      inverseSelection: false
+    type: NATIVE_FILTER
+    description: ''
+    chartsInScope: []
+    tabsInScope: []
+  - id: NATIVE_FILTER-borough
+    name: Pickup Borough
+    filterType: filter_select
+    targets:
+    - column:
+        name: pickup_borough
+      datasetUuid: 881e69f0-7247-4cd7-bbff-220e7e0fd1ff
+    defaultDataMask:
+      extraFormData: {}
+      filterState: {}
+      ownState: {}
+    cascadeParentIds: []
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    controlValues:
+      enableEmptyFilter: false
+      defaultToFirstItem: false
+      multiSelect: true
+      searchAllOptions: false
+      inverseSelection: false
+    type: NATIVE_FILTER
+    description: ''
+    chartsInScope: []
+    tabsInScope: []
   default_filters: '{}'
 theme_uuid: null
 version: 1.0.0

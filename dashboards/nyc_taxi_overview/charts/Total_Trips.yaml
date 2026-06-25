@@ -1,0 +1,29 @@
+slice_name: Total Trips
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 13__table
+  viz_type: big_number_total
+  metric: count
+  adhoc_filters:
+  - clause: WHERE
+    subject: pickup_datetime
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    expressionType: SIMPLE
+  subheader: ''
+  y_axis_format: SMART_NUMBER
+  time_format: smart_date
+  header_font_size: 0.4
+  subheader_font_size: 0.15
+  extra_form_data: {}
+  dashboards: []
+query_context: '{"datasource":{"id":13,"type":"table"},"force":false,"queries":[{"filters":[{"col":"pickup_datetime","op":"TEMPORAL_RANGE","val":"No
+  filter"}],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":[],"metrics":["count"],"annotation_layers":[],"row_limit":0,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"13__table","viz_type":"big_number_total","metric":"count","adhoc_filters":[{"clause":"WHERE","subject":"pickup_datetime","operator":"TEMPORAL_RANGE","comparator":"No
+  filter","expressionType":"SIMPLE"}],"subheader":"","y_axis_format":"SMART_NUMBER","time_format":"smart_date","header_font_size":0.4,"subheader_font_size":0.15,"extra_form_data":{},"dashboards":[],"force":false,"result_format":"json","result_type":"full"}}'
+cache_timeout: null
+uuid: 9d1908bc-c15d-4d9e-8516-2dd2fffe5e26
+version: 1.0.0
+dataset_uuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
