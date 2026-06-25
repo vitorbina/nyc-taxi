@@ -26,6 +26,16 @@ metrics:
   currency: null
   extra: null
   warning_text: null
+- metric_name: trips_per_day
+  verbose_name: Avg trips per day
+  metric_type: null
+  expression: COUNT(*) * 1.0 / NULLIF(COUNT(DISTINCT date), 0)
+  description: Average trips per day for the condition (normalizes for how often
+    each condition occurs)
+  d3format: SMART_NUMBER
+  currency: null
+  extra: null
+  warning_text: null
 columns:
 - column_name: weather_description
   verbose_name: null

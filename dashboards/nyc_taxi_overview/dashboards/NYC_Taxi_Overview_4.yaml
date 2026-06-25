@@ -7,19 +7,19 @@ certification_details: ''
 published: false
 uuid: 73e245d0-91b4-4669-a4c4-85cb23011de4
 position:
-  CHART-0PhUBVudTy26uISlxZQzg:
+  CHART-taxitable:
     children: []
-    id: CHART-0PhUBVudTy26uISlxZQzg
+    id: CHART-taxitable
     meta:
-      chartId: 6
+      chartId: 105
       height: 50
-      sliceName: Average Fare by Taxi Type
-      uuid: 14faa9c2-c480-4443-b6b2-ea8f17d279d9
-      width: 4
+      sliceName: Taxi Type Breakdown
+      uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
+      width: 5
     parents:
     - ROOT_ID
     - GRID_ID
-    - ROW-uhPtnAixZ4Juy4ZCeisat
+    - ROW-DAGQg-hmAlt4jmunCjrpO
     type: CHART
   CHART-9c78SwczQhdo0iwQhDbpA:
     children: []
@@ -29,7 +29,7 @@ position:
       height: 50
       sliceName: Trips by Month
       uuid: 2b5b50fd-a3f7-4a6b-aa28-0e445efe718e
-      width: 4
+      width: 7
     parents:
     - ROOT_ID
     - GRID_ID
@@ -90,20 +90,6 @@ position:
     - ROOT_ID
     - GRID_ID
     - ROW-DAGQg-hmAlt4jmunCjrpO
-    type: CHART
-  CHART-fo7pdSLrzQ4n3fdCezjFt:
-    children: []
-    id: CHART-fo7pdSLrzQ4n3fdCezjFt
-    meta:
-      chartId: 1
-      height: 50
-      sliceName: Revenue by Taxi Type
-      uuid: 6e80d3af-d792-4bfe-bb7c-30747bd7bcb1
-      width: 4
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-KZ-i5qd6LKbePRGSAKq_Y
     type: CHART
   DASHBOARD_VERSION_KEY: v2
   GRID_ID:
@@ -207,8 +193,7 @@ position:
     type: ROOT
   ROW-DAGQg-hmAlt4jmunCjrpO:
     children:
-    - CHART-fo7pdSLrzQ4n3fdCezjFt
-    - CHART-0PhUBVudTy26uISlxZQzg
+    - CHART-taxitable
     - CHART-9c78SwczQhdo0iwQhDbpA
     id: ROW-DAGQg-hmAlt4jmunCjrpO
     meta:

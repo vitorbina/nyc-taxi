@@ -7,7 +7,7 @@ params:
   datasource: 1__table
   viz_type: heatmap
   all_columns_x: hour_of_day
-  all_columns_y: day_of_week
+  all_columns_y: weekday
   metric: count
   adhoc_filters: []
   row_limit: 10000
@@ -30,7 +30,7 @@ params:
   show_values: false
   extra_form_data: {}
   dashboards: []
-query_context: '{"datasource":{"id":1,"type":"table"},"force":false,"queries":[{"filters":[],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":["hour_of_day","day_of_week"],"metrics":["count"],"annotation_layers":[],"row_limit":10000,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"1__table","viz_type":"heatmap","all_columns_x":"hour_of_day","all_columns_y":"day_of_week","metric":"count","adhoc_filters":[],"row_limit":10000,"sort_x_axis":"alpha_asc","sort_y_axis":"alpha_asc","linear_color_scheme":"blue_white_yellow","xscale_interval":1,"yscale_interval":1,"canvas_image_rendering":"pixelated","normalize_across":"heatmap","left_margin":"auto","bottom_margin":"auto","y_axis_format":"SMART_NUMBER","x_axis_time_format":"smart_date","show_legend":true,"show_perc":true,"show_values":false,"extra_form_data":{},"dashboards":[],"force":false,"result_format":"json","result_type":"full"}}'
+query_context: '{"datasource":{"id":1,"type":"table"},"force":false,"queries":[{"filters":[],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":["hour_of_day","weekday"],"metrics":["count"],"annotation_layers":[],"row_limit":10000,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"1__table","viz_type":"heatmap","all_columns_x":"hour_of_day","all_columns_y":"weekday","metric":"count","adhoc_filters":[],"row_limit":10000,"sort_x_axis":"alpha_asc","sort_y_axis":"alpha_asc","linear_color_scheme":"blue_white_yellow","xscale_interval":1,"yscale_interval":1,"canvas_image_rendering":"pixelated","normalize_across":"heatmap","left_margin":"auto","bottom_margin":"auto","y_axis_format":"SMART_NUMBER","x_axis_time_format":"smart_date","show_legend":true,"show_perc":true,"show_values":false,"extra_form_data":{},"dashboards":[],"force":false,"result_format":"json","result_type":"full"}}'
 cache_timeout: null
 uuid: 545b0cc8-e286-4677-9861-64bcabdf718e
 version: 1.0.0
