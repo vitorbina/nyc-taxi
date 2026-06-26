@@ -24,12 +24,11 @@ params:
   order_desc: true
   table_timestamp_format: smart_date
   show_metric_name: false
-  show_cell_bars: true
-  color_pn: true
-  comparison_color_scheme: Green
+  show_cell_bars: false
+  color_pn: false
   extra_form_data: {}
   dashboards: []
-query_context: '{"datasource":{"id":1,"type":"table"},"force":false,"queries":[{"filters":[],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":["taxi_type_label"],"metrics":["count","total_fare","avg_fare","revenue_per_mile"],"orderby":[["total_fare",false]],"annotation_layers":[],"row_limit":100,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{},"post_processing":[]}],"form_data":{"datasource":"1__table","viz_type":"table","query_mode":"aggregate","groupby":["taxi_type_label"],"time_grain_sqla":"P1D","metrics":["count","total_fare","avg_fare","revenue_per_mile"],"all_columns":[],"percent_metrics":[],"adhoc_filters":[],"order_by_cols":[],"row_limit":100,"server_page_length":10,"order_desc":true,"table_timestamp_format":"smart_date","show_metric_name":false,"show_cell_bars":true,"color_pn":true,"comparison_color_scheme":"Green","extra_form_data":{},"dashboards":[],"force":false,"result_format":"json","result_type":"full"}}'
+query_context: '{"datasource":{"id":1,"type":"table"},"force":false,"queries":[{"filters":[],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":["taxi_type_label"],"metrics":["count","total_fare","avg_fare","revenue_per_mile"],"orderby":[["total_fare",false]],"annotation_layers":[],"row_limit":100,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{},"post_processing":[]}],"form_data":{"datasource":"1__table","viz_type":"table","query_mode":"aggregate","groupby":["taxi_type_label"],"time_grain_sqla":"P1D","metrics":["count","total_fare","avg_fare","revenue_per_mile"],"all_columns":[],"percent_metrics":[],"adhoc_filters":[],"order_by_cols":[],"row_limit":100,"server_page_length":10,"order_desc":true,"table_timestamp_format":"smart_date","show_metric_name":false,"show_cell_bars":false,"color_pn":false,"extra_form_data":{},"dashboards":[],"force":false,"result_format":"json","result_type":"full"}}'
 cache_timeout: null
 uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
 version: 1.0.0
