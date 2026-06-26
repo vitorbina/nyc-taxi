@@ -262,7 +262,7 @@ After making changes in Superset:
 
 | Dashboard | Description |
 |---|---|
-| `nyc_taxi_overview/` | Revenue, trips, weather impact, and zone map overview |
+| `nyc_taxi_overview/` | Fleet-operator overview with a guided narrative: headline KPIs (revenue, trips, avg fare), top revenue zones + zone map, taxi-type breakdown (revenue, avg fare, revenue per mile), monthly trend by type, an hour×weekday demand heatmap, and weather impact. Native filters for period, taxi type and pickup borough. |
 
 ## Connecting Superset to Trino
 

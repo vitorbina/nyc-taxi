@@ -129,5 +129,18 @@ columns:
   description: null
   python_date_format: null
   extra: null
+- column_name: taxi_type_label
+  verbose_name: Taxi type
+  is_dttm: false
+  is_active: true
+  type: VARCHAR
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: CASE taxi_type WHEN 'yellow_taxi' THEN 'Yellow' WHEN 'green_taxi' THEN
+    'Green' WHEN 'high_volume_fhv' THEN 'FHV' WHEN 'app_rides' THEN 'Apps' END
+  description: null
+  python_date_format: null
+  extra: null
 version: 1.0.0
 database_uuid: cf0964f5-c0e2-4e3e-a817-4f172144d03a

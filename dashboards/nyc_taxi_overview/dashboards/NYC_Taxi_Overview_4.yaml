@@ -43,25 +43,11 @@ position:
       height: 50
       sliceName: Daily Trips by Weather Condition
       uuid: 0ddcba10-12de-40be-8e1c-f1c9ea22137f
-      width: 4
+      width: 12
     parents:
     - ROOT_ID
     - GRID_ID
     - ROW-uhPtnAixZ4Juy4ZCeisat
-    type: CHART
-  CHART-KZzAJJhkVvEVh_OlNSe92:
-    children: []
-    id: CHART-KZzAJJhkVvEVh_OlNSe92
-    meta:
-      chartId: 4
-      height: 50
-      sliceName: Revenue by Borough
-      uuid: bff49d82-0b12-4bd9-b3af-0aa1c468dd01
-      width: 4
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-KZ-i5qd6LKbePRGSAKq_Y
     type: CHART
   CHART-_ljyChw1ScjcEopbPdbVZ:
     children: []
@@ -95,14 +81,113 @@ position:
   GRID_ID:
     children:
     - ROW-KPIRow
+    - ROW-md-where
     - ROW-KZ-i5qd6LKbePRGSAKq_Y
+    - ROW-md-service
     - ROW-DAGQg-hmAlt4jmunCjrpO
+    - ROW-md-when
     - ROW-HeatmapRow
+    - ROW-md-weather
     - ROW-lCQFz25H_lIIdlbDq4wpp
     id: GRID_ID
     parents:
     - ROOT_ID
     type: GRID
+  ROW-md-where:
+    children:
+    - MARKDOWN-where
+    id: ROW-md-where
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-where:
+    children: []
+    id: MARKDOWN-where
+    meta:
+      code: "### Where the money is\nManhattan and the airports (JFK, LaGuardia) concentrate\
+        \ revenue."
+      height: 10
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-md-where
+    type: MARKDOWN
+  ROW-md-service:
+    children:
+    - MARKDOWN-service
+    id: ROW-md-service
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-service:
+    children: []
+    id: MARKDOWN-service
+    meta:
+      code: |
+        ### Which service wins
+        FHV dominates - 83% of trips and the best revenue per mile ($5.30). But traditional cabs (Yellow/Green) earn far more in tips: ~11% vs ~4%.
+      height: 10
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-md-service
+    type: MARKDOWN
+  ROW-md-when:
+    children:
+    - MARKDOWN-when
+    id: ROW-md-when
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-when:
+    children: []
+    id: MARKDOWN-when
+    meta:
+      code: |
+        ### When demand peaks
+        Evenings and weekend late nights. In the heatmap below, color = number of trips (light to dark = more); X = hour of day (0-23), Y = weekday.
+      height: 10
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-md-when
+    type: MARKDOWN
+  ROW-md-weather:
+    children:
+    - MARKDOWN-weather
+    id: ROW-md-weather
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-weather:
+    children: []
+    id: MARKDOWN-weather
+    meta:
+      code: |
+        ### Does weather matter?
+        Barely - daily demand stays around 800k trips in any condition. Only snow cuts it (~20%).
+      height: 10
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-md-weather
+    type: MARKDOWN
   ROW-HeatmapRow:
     children:
     - CHART-heatmap-hourday
@@ -217,7 +302,6 @@ position:
   ROW-lCQFz25H_lIIdlbDq4wpp:
     children:
     - CHART-AaZ3GVQijMfJF6_dJ0-se
-    - CHART-KZzAJJhkVvEVh_OlNSe92
     id: ROW-lCQFz25H_lIIdlbDq4wpp
     meta:
       background: BACKGROUND_TRANSPARENT
@@ -318,6 +402,10 @@ metadata:
     - 6
     - 8
   map_label_colors:
+    Yellow: '#F2C200'
+    Green: '#2E7D32'
+    FHV: '#5E35B1'
+    Apps: '#424242'
     yellow_taxi: '#F2C200'
     green_taxi: '#2E7D32'
     high_volume_fhv: '#5E35B1'
@@ -328,6 +416,10 @@ metadata:
   color_scheme_domain: []
   expanded_slices: {}
   label_colors:
+    Yellow: '#F2C200'
+    Green: '#2E7D32'
+    FHV: '#5E35B1'
+    Apps: '#424242'
     yellow_taxi: '#F2C200'
     green_taxi: '#2E7D32'
     high_volume_fhv: '#5E35B1'
@@ -359,8 +451,8 @@ metadata:
     filterType: filter_select
     targets:
     - column:
-        name: taxi_type
-      datasetUuid: 881e69f0-7247-4cd7-bbff-220e7e0fd1ff
+        name: taxi_type_label
+      datasetUuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
     defaultDataMask:
       extraFormData: {}
       filterState: {}
