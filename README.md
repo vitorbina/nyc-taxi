@@ -163,6 +163,7 @@ trino/
 superset/
   superset_config.py     Superset Python config (DB URI, secret key)
 scripts/
+  setup.sh               symlink to the root setup.sh (one-time env prep)
   backfill.sh            runs the full historical backfill for a date range
   seed.sh                loads a fixed 3-month window for quick demo/dev data
   export_dashboards.sh   zips dashboard YAMLs into dashboards/exports/
