@@ -109,6 +109,8 @@ Once the stack is up, run the backfill with a date range (`FROM_DATE TO_DATE`, f
 ./scripts/backfill.sh 2025-04-01 2026-04-01
 ```
 
+> **Just want sample data?** Run `./scripts/seed.sh` — it loads a fixed 3-month window (Jan–Mar 2025) so you can explore the dashboards without picking a range.
+
 The script drives the whole load from the command line — no need to open the UI — waiting for each stage to finish before starting the next, and aborting if any DAG run fails:
 
 1. **Reference data (zones)** — zone lookup and shapefile, needed by staging for enrichment.
@@ -162,6 +164,7 @@ superset/
   superset_config.py     Superset Python config (DB URI, secret key)
 scripts/
   backfill.sh            runs the full historical backfill for a date range
+  seed.sh                loads a fixed 3-month window for quick demo/dev data
   export_dashboards.sh   zips dashboard YAMLs into dashboards/exports/
 dashboards/
   nyc_taxi_overview/     dashboard YAML files (versioned)
