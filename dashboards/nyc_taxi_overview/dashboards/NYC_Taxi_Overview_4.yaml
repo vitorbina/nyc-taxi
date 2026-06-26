@@ -107,8 +107,9 @@ position:
     children: []
     id: MARKDOWN-where
     meta:
-      code: "### Where the money is\nManhattan and the airports (JFK, LaGuardia) concentrate\
-        \ revenue."
+      code: |
+        ### Where the money is
+        The airports and Midtown Manhattan concentrate most of the revenue.
       height: 10
       width: 12
     parents:
@@ -132,7 +133,7 @@ position:
     meta:
       code: |
         ### Which service wins
-        FHV dominates - 83% of trips and the best revenue per mile ($5.30). But traditional cabs (Yellow/Green) earn far more in tips: ~11% vs ~4%.
+        FHV (high-volume apps) drives the most volume and the best revenue per mile. Traditional cabs (Yellow/Green) earn more in tips.
       height: 10
       width: 12
     parents:
@@ -156,7 +157,7 @@ position:
     meta:
       code: |
         ### When demand peaks
-        Evenings and weekend late nights. In the heatmap below, color = number of trips (light to dark = more); X = hour of day (0-23), Y = weekday.
+        Evenings and weekend late nights are busiest. In the heatmap, color shows trip volume (darker = more); X = hour of day, Y = weekday.
       height: 10
       width: 12
     parents:
@@ -180,7 +181,7 @@ position:
     meta:
       code: |
         ### Does weather matter?
-        Barely - daily demand stays around 800k trips in any condition. Only snow cuts it (~20%).
+        Barely - daily demand stays roughly flat across weather conditions. Only snow brings a clear drop.
       height: 10
       width: 12
     parents:
