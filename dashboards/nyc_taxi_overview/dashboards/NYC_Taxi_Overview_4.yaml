@@ -109,7 +109,7 @@ position:
     meta:
       code: |
         ### Where the money is
-        Top 10 pickup zones by revenue — explore which parts of the city capture the most value.
+        Trip records × pickup zones — metric: total revenue per zone (Yellow, Green & FHV).
       height: 10
       width: 12
     parents:
@@ -133,7 +133,7 @@ position:
     meta:
       code: |
         ### Which service wins
-        FHV (high-volume apps) drives the most volume and the best revenue per mile. Traditional cabs (Yellow/Green) earn more in tips.
+        Trips × taxi type — metrics: trip count, revenue, avg fare and revenue per mile per service.
       height: 10
       width: 12
     parents:
@@ -157,7 +157,7 @@ position:
     meta:
       code: |
         ### When demand peaks
-        Evenings and weekend late nights are busiest. In the heatmap, color shows trip volume (darker = more); X = hour of day, Y = weekday.
+        Trips × time — metric: trip count by hour of day and day of week.
       height: 10
       width: 12
     parents:
@@ -181,7 +181,7 @@ position:
     meta:
       code: |
         ### Weather impact on taxi trips
-        Average daily trips by weather condition — does the forecast actually change demand?
+        Weather conditions × trips — metric: average daily trips per weather condition.
       height: 10
       width: 12
     parents:
