@@ -109,7 +109,7 @@ position:
     meta:
       code: |
         ### Where the money is
-        The airports and Midtown Manhattan concentrate most of the revenue.
+        Top 10 pickup zones by revenue — explore which parts of the city capture the most value.
       height: 10
       width: 12
     parents:
@@ -180,8 +180,8 @@ position:
     id: MARKDOWN-weather
     meta:
       code: |
-        ### Does weather matter?
-        Barely - daily demand stays roughly flat across weather conditions. Only snow brings a clear drop.
+        ### Weather impact on taxi trips
+        Average daily trips by weather condition — does the forecast actually change demand?
       height: 10
       width: 12
     parents:
