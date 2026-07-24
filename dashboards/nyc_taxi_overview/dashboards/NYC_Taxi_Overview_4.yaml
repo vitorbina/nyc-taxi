@@ -1,6 +1,12 @@
 dashboard_title: NYC Taxi Overview
 description: null
-css: ''
+css: |
+  .header-line,
+  .subheader-line {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
 slug: null
 certified_by: ''
 certification_details: ''
@@ -15,25 +21,11 @@ position:
       height: 50
       sliceName: Taxi Type Breakdown
       uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
-      width: 5
+      width: 12
     parents:
     - ROOT_ID
     - GRID_ID
     - ROW-DAGQg-hmAlt4jmunCjrpO
-    type: CHART
-  CHART-9c78SwczQhdo0iwQhDbpA:
-    children: []
-    id: CHART-9c78SwczQhdo0iwQhDbpA
-    meta:
-      chartId: 3
-      height: 50
-      sliceName: Trips by Month
-      uuid: 2b5b50fd-a3f7-4a6b-aa28-0e445efe718e
-      width: 7
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-uhPtnAixZ4Juy4ZCeisat
     type: CHART
   CHART-AaZ3GVQijMfJF6_dJ0-se:
     children: []
@@ -41,7 +33,7 @@ position:
     meta:
       chartId: 5
       height: 50
-      sliceName: Daily Trips by Weather Condition
+      sliceName: Weather Impact on Taxi Trips
       uuid: 0ddcba10-12de-40be-8e1c-f1c9ea22137f
       width: 12
     parents:
@@ -108,7 +100,6 @@ position:
     id: MARKDOWN-where
     meta:
       code: |
-        ### Where the money is
         Trip records × pickup zones — metric: total revenue per zone (Yellow, Green & FHV).
       height: 10
       width: 12
@@ -132,7 +123,6 @@ position:
     id: MARKDOWN-service
     meta:
       code: |
-        ### Which service wins
         Trips × taxi type — metrics: trip count, revenue, avg fare and revenue per mile per service.
       height: 10
       width: 12
@@ -156,7 +146,6 @@ position:
     id: MARKDOWN-when
     meta:
       code: |
-        ### When demand peaks
         Trips × time — metric: trip count by hour of day and day of week.
       height: 10
       width: 12
@@ -180,7 +169,6 @@ position:
     id: MARKDOWN-weather
     meta:
       code: |
-        ### Weather impact on taxi trips
         Weather conditions × trips — metric: average daily trips per weather condition.
       height: 10
       width: 12
@@ -280,7 +268,6 @@ position:
   ROW-DAGQg-hmAlt4jmunCjrpO:
     children:
     - CHART-taxitable
-    - CHART-9c78SwczQhdo0iwQhDbpA
     id: ROW-DAGQg-hmAlt4jmunCjrpO
     meta:
       '0': ROOT_ID
@@ -425,6 +412,9 @@ metadata:
     green_taxi: '#2E7D32'
     high_volume_fhv: '#5E35B1'
     app_rides: '#424242'
+    Revenue: '#B0BEC5'
+    trips_per_day: '#B0BEC5'
+    SUM(total_amount): '#B0BEC5'
   timed_refresh_immune_slices: []
   cross_filters_enabled: true
   native_filter_configuration:

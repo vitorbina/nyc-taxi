@@ -1,4 +1,4 @@
-slice_name: Daily Trips by Weather Condition
+slice_name: Weather Impact on Taxi Trips
 description: null
 certified_by: null
 certification_details: null
@@ -48,7 +48,7 @@ params:
   orientation: vertical
   x_axis_title: ''
   x_axis_title_margin: 15
-  y_axis_title: ''
+  y_axis_title: Avg trips / day
   y_axis_title_margin: 30
   y_axis_title_position: Left
   sort_series_type: sum
@@ -106,7 +106,7 @@ query_context: '{"datasource": {"id": 3, "type": "table"}, "force": false, "quer
   "truncate_metric": true, "show_empty_columns": true, "comparison_type": "values",
   "annotation_layers": [], "forecastEnabled": false, "forecastPeriods": 10, "forecastInterval":
   0.8, "orientation": "vertical", "x_axis_title": "", "x_axis_title_margin": 15, "y_axis_title":
-  "", "y_axis_title_margin": 30, "y_axis_title_position": "Left", "sort_series_type":
+  "Avg trips / day", "y_axis_title_margin": 30, "y_axis_title_position": "Left", "sort_series_type":
   "sum", "sort_series_ascending": false, "color_scheme": "supersetColors", "time_shift_color":
   true, "show_value": false, "only_total": true, "percentage_threshold": 0, "minorTicks":
   false, "zoomable": false, "show_legend": true, "legendType": "scroll", "legendOrientation":

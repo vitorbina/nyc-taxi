@@ -31,7 +31,7 @@ metrics:
   metric_type: null
   expression: SUM(total_amount)
   description: null
-  d3format: $,.0f
+  d3format: SMART_NUMBER
   currency: null
   extra: null
   warning_text: null

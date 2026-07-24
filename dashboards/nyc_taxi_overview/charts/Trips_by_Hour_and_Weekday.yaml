@@ -1,5 +1,5 @@
 slice_name: Trips by Hour and Weekday
-description: null
+description: 'Trips per hour-of-day / weekday slot. Range across cells: ~158k (off-peak) to ~1.6M (peak).'
 certified_by: null
 certification_details: null
 viz_type: heatmap_v2
@@ -13,7 +13,7 @@ params:
   row_limit: 10000
   sort_x_axis: alpha_asc
   sort_y_axis: alpha_asc
-  linear_color_scheme: oranges
+  linear_color_scheme: black_white
   xscale_interval: 1
   yscale_interval: 1
   normalize_across: heatmap
@@ -31,7 +31,7 @@ params:
   extra_form_data: {}
   dashboards: []
   annotation_layers: []
-query_context: '{"datasource":{"id":1,"type":"table"},"force":false,"queries":[{"filters":[],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":["hour_of_day","weekday"],"metrics":["count"],"annotation_layers":[],"row_limit":10000,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"1__table","viz_type":"heatmap_v2","x_axis":"hour_of_day","groupby":"weekday","metric":"count","adhoc_filters":[],"row_limit":10000,"sort_x_axis":"alpha_asc","sort_y_axis":"alpha_asc","linear_color_scheme":"oranges","xscale_interval":1,"yscale_interval":1,"normalize_across":"heatmap","left_margin":"auto","bottom_margin":"auto","value_bounds":[null,null],"y_axis_format":"SMART_NUMBER","x_axis_time_format":"smart_date","show_legend":true,"show_percentage":true,"show_values":true,"legend_type":"continuous","extra_form_data":{},"dashboards":[],"annotation_layers":[],"force":false,"result_format":"json","result_type":"full"}}'
+query_context: '{"datasource":{"id":1,"type":"table"},"force":false,"queries":[{"filters":[],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":["hour_of_day","weekday"],"metrics":["count"],"annotation_layers":[],"row_limit":10000,"series_limit":0,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"1__table","viz_type":"heatmap_v2","x_axis":"hour_of_day","groupby":"weekday","metric":"count","adhoc_filters":[],"row_limit":10000,"sort_x_axis":"alpha_asc","sort_y_axis":"alpha_asc","linear_color_scheme":"black_white","xscale_interval":1,"yscale_interval":1,"normalize_across":"heatmap","left_margin":"auto","bottom_margin":"auto","value_bounds":[null,null],"y_axis_format":"SMART_NUMBER","x_axis_time_format":"smart_date","show_legend":true,"show_percentage":true,"show_values":true,"legend_type":"continuous","extra_form_data":{},"dashboards":[],"annotation_layers":[],"force":false,"result_format":"json","result_type":"full"}}'
 cache_timeout: null
 uuid: 545b0cc8-e286-4677-9861-64bcabdf718e
 version: 1.0.0
