@@ -73,14 +73,110 @@ position:
   GRID_ID:
     children:
     - ROW-KPIRow
+    - ROW-cap-where
     - ROW-KZ-i5qd6LKbePRGSAKq_Y
+    - ROW-cap-service
     - ROW-DAGQg-hmAlt4jmunCjrpO
+    - ROW-cap-when
     - ROW-HeatmapRow
+    - ROW-cap-weather
     - ROW-lCQFz25H_lIIdlbDq4wpp
     id: GRID_ID
     parents:
     - ROOT_ID
     type: GRID
+  ROW-cap-where:
+    children:
+    - MARKDOWN-cap-where
+    id: ROW-cap-where
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-cap-where:
+    children: []
+    id: MARKDOWN-cap-where
+    meta:
+      code: '<div style="font-size:12px;color:#898781;font-style:italic;">Trip records
+        × pickup zones — total revenue per zone (Yellow, Green &amp; FHV).</div>'
+      height: 4
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-cap-where
+    type: MARKDOWN
+  ROW-cap-service:
+    children:
+    - MARKDOWN-cap-service
+    id: ROW-cap-service
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-cap-service:
+    children: []
+    id: MARKDOWN-cap-service
+    meta:
+      code: '<div style="font-size:12px;color:#898781;font-style:italic;">Trips ×
+        taxi type — trip count, revenue, avg fare and revenue per mile per service.</div>'
+      height: 4
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-cap-service
+    type: MARKDOWN
+  ROW-cap-when:
+    children:
+    - MARKDOWN-cap-when
+    id: ROW-cap-when
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-cap-when:
+    children: []
+    id: MARKDOWN-cap-when
+    meta:
+      code: '<div style="font-size:12px;color:#898781;font-style:italic;">Trips ×
+        time — trip count by hour of day and day of week.</div>'
+      height: 4
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-cap-when
+    type: MARKDOWN
+  ROW-cap-weather:
+    children:
+    - MARKDOWN-cap-weather
+    id: ROW-cap-weather
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  MARKDOWN-cap-weather:
+    children: []
+    id: MARKDOWN-cap-weather
+    meta:
+      code: '<div style="font-size:12px;color:#898781;font-style:italic;">Weather
+        conditions × trips — average daily trips per weather condition.</div>'
+      height: 4
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-cap-weather
+    type: MARKDOWN
   ROW-HeatmapRow:
     children:
     - CHART-heatmap-hourday

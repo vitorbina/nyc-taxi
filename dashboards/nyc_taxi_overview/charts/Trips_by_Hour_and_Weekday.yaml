@@ -8,7 +8,11 @@ params:
   viz_type: heatmap_v2
   x_axis: hour_of_day
   groupby: weekday
-  metric: count
+  metric:
+    expressionType: SQL
+    sqlExpression: COUNT(*)
+    hasCustomLabel: true
+    label: 'Trips: '
   adhoc_filters: []
   row_limit: 10000
   sort_x_axis: alpha_asc
@@ -25,8 +29,8 @@ params:
   y_axis_format: SMART_NUMBER
   x_axis_time_format: smart_date
   show_legend: true
-  show_percentage: true
-  show_values: true
+  show_percentage: false
+  show_values: false
   legend_type: continuous
   extra_form_data: {}
   dashboards: []
