@@ -1,6 +1,6 @@
 FROM apache/hive:4.0.0
 USER root
-RUN apt-get update && \
+RUN apt-get -o Acquire::Check-Valid-Until=false update && \
     apt-get install -y --no-install-recommends wget && \
     rm -rf /var/lib/apt/lists/*
 
