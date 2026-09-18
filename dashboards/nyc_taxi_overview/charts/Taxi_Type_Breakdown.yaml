@@ -1,5 +1,5 @@
 slice_name: Taxi Type Breakdown
-description: null
+description: Trip count, revenue, average fare and revenue per mile by taxi type.
 certified_by: null
 certification_details: null
 viz_type: table

@@ -14,7 +14,6 @@ fetch_values_predicate: null
 extra: null
 normalize_columns: false
 always_filter_main_dttm: false
-folders: null
 uuid: 2b7ce485-0178-44e9-abdb-adb7dfb22657
 metrics:
 - metric_name: count

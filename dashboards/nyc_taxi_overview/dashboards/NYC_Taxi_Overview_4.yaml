@@ -10,7 +10,7 @@ css: |
 slug: null
 certified_by: ''
 certification_details: ''
-published: false
+published: true
 uuid: 73e245d0-91b4-4669-a4c4-85cb23011de4
 position:
   CHART-taxitable:
@@ -49,7 +49,7 @@ position:
       height: 50
       sliceName: Top 10 Pickup Zones by Revenue
       uuid: 563cb1d7-5344-4c21-935a-0a91822a43e2
-      width: 4
+      width: 5
     parents:
     - ROOT_ID
     - GRID_ID
@@ -63,7 +63,7 @@ position:
       height: 51
       sliceName: Revenue by Zone Map
       uuid: 1e030f1c-1a3b-467c-9398-c99ee605ed12
-      width: 8
+      width: 7
     parents:
     - ROOT_ID
     - GRID_ID
@@ -73,110 +73,14 @@ position:
   GRID_ID:
     children:
     - ROW-KPIRow
-    - ROW-md-where
     - ROW-KZ-i5qd6LKbePRGSAKq_Y
-    - ROW-md-service
     - ROW-DAGQg-hmAlt4jmunCjrpO
-    - ROW-md-when
     - ROW-HeatmapRow
-    - ROW-md-weather
     - ROW-lCQFz25H_lIIdlbDq4wpp
     id: GRID_ID
     parents:
     - ROOT_ID
     type: GRID
-  ROW-md-where:
-    children:
-    - MARKDOWN-where
-    id: ROW-md-where
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  MARKDOWN-where:
-    children: []
-    id: MARKDOWN-where
-    meta:
-      code: |
-        Trip records × pickup zones — metric: total revenue per zone (Yellow, Green & FHV).
-      height: 10
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-md-where
-    type: MARKDOWN
-  ROW-md-service:
-    children:
-    - MARKDOWN-service
-    id: ROW-md-service
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  MARKDOWN-service:
-    children: []
-    id: MARKDOWN-service
-    meta:
-      code: |
-        Trips × taxi type — metrics: trip count, revenue, avg fare and revenue per mile per service.
-      height: 10
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-md-service
-    type: MARKDOWN
-  ROW-md-when:
-    children:
-    - MARKDOWN-when
-    id: ROW-md-when
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  MARKDOWN-when:
-    children: []
-    id: MARKDOWN-when
-    meta:
-      code: |
-        Trips × time — metric: trip count by hour of day and day of week.
-      height: 10
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-md-when
-    type: MARKDOWN
-  ROW-md-weather:
-    children:
-    - MARKDOWN-weather
-    id: ROW-md-weather
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  MARKDOWN-weather:
-    children: []
-    id: MARKDOWN-weather
-    meta:
-      code: |
-        Weather conditions × trips — metric: average daily trips per weather condition.
-      height: 10
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-md-weather
-    type: MARKDOWN
   ROW-HeatmapRow:
     children:
     - CHART-heatmap-hourday
@@ -390,28 +294,28 @@ metadata:
     - 6
     - 8
   map_label_colors:
-    Yellow: '#F2C200'
+    Yellow: '#eda100'
     Green: '#2E7D32'
     FHV: '#5E35B1'
-    Apps: '#424242'
-    yellow_taxi: '#F2C200'
+    Apps: '#e87ba4'
+    yellow_taxi: '#eda100'
     green_taxi: '#2E7D32'
     high_volume_fhv: '#5E35B1'
-    app_rides: '#424242'
+    app_rides: '#e87ba4'
   shared_label_colors: []
   color_scheme: ''
   refresh_frequency: 0
   color_scheme_domain: []
   expanded_slices: {}
   label_colors:
-    Yellow: '#F2C200'
+    Yellow: '#eda100'
     Green: '#2E7D32'
     FHV: '#5E35B1'
-    Apps: '#424242'
-    yellow_taxi: '#F2C200'
+    Apps: '#e87ba4'
+    yellow_taxi: '#eda100'
     green_taxi: '#2E7D32'
     high_volume_fhv: '#5E35B1'
-    app_rides: '#424242'
+    app_rides: '#e87ba4'
     Revenue: '#B0BEC5'
     trips_per_day: '#B0BEC5'
     SUM(total_amount): '#B0BEC5'
@@ -490,5 +394,4 @@ metadata:
     chartsInScope: []
     tabsInScope: []
   default_filters: '{}'
-theme_uuid: null
 version: 1.0.0

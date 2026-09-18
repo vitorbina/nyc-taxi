@@ -1,5 +1,5 @@
 slice_name: Trips by Hour and Weekday
-description: 'Trips per hour-of-day / weekday slot. Range across cells: ~158k (off-peak) to ~1.6M (peak).'
+description: 'Trip count by hour of day and day of week. Range across cells: ~158k (off-peak) to ~1.6M (peak).'
 certified_by: null
 certification_details: null
 viz_type: heatmap_v2

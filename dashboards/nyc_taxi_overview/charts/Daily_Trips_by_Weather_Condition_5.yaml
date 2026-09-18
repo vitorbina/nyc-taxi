@@ -1,5 +1,5 @@
 slice_name: Weather Impact on Taxi Trips
-description: null
+description: Average daily trip count by weather condition.
 certified_by: null
 certification_details: null
 viz_type: echarts_timeseries_bar

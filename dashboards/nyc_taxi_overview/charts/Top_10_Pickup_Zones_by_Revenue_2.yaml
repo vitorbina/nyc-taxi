@@ -1,5 +1,5 @@
 slice_name: Top 10 Pickup Zones by Revenue
-description: null
+description: Top 10 pickup zones ranked by total revenue.
 certified_by: null
 certification_details: null
 viz_type: echarts_timeseries_bar
@@ -9,7 +9,7 @@ params:
   x_axis: pickup_zone
   time_grain_sqla: P1D
   xAxisForceCategorical: false
-  x_axis_sort: SUM(total_amount)
+  x_axis_sort: Revenue
   x_axis_sort_asc: true
   metrics:
   - expressionType: SIMPLE
