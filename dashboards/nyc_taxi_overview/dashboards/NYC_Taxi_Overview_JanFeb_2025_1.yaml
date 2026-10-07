@@ -22,7 +22,38 @@ css: '/* Top 10 is limited to 10 rows on purpose; Superset 6 flags any chart tha
   .superset-legacy-chart-big-number .header-line,
 
   .superset-legacy-chart-big-number .subheader-line { justify-content: center !important;
-  text-align: center !important; width: 100% !important; }'
+  text-align: center !important; width: 100% !important; }
+
+  /* KPI cards: title centered over the card (menu floats right), subheader in muted
+  gray. */
+
+  .dashboard-chart-id-8 .chart-slice > div:first-child,
+
+  .dashboard-chart-id-3 .chart-slice > div:first-child,
+
+  .dashboard-chart-id-5 .chart-slice > div:first-child,
+
+  .dashboard-chart-id-10 .chart-slice > div:first-child { position: relative; }
+
+  .dashboard-chart-id-8 .header-title,
+
+  .dashboard-chart-id-3 .header-title,
+
+  .dashboard-chart-id-5 .header-title,
+
+  .dashboard-chart-id-10 .header-title { width: 100%; text-align: center; padding-left:
+  16px; }
+
+  .dashboard-chart-id-8 .header-controls,
+
+  .dashboard-chart-id-3 .header-controls,
+
+  .dashboard-chart-id-5 .header-controls,
+
+  .dashboard-chart-id-10 .header-controls { position: absolute; right: 0; top: 0;
+  }
+
+  .superset-legacy-chart-big-number .subheader-line { color: #5f6368 !important; }'
 slug: null
 certified_by: ''
 certification_details: ''
