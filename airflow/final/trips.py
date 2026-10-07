@@ -77,7 +77,8 @@ def compute_trips(bucket: str) -> None:
                 dropoff_zone,
                 dropoff_borough,
                 trip_distance_miles,
-                base_passenger_fare AS fare_amount,
+                -- total_amount for yellow/green already includes tips; add them for FHV too
+                base_passenger_fare + COALESCE(tip_amount, 0) AS fare_amount,
                 NULL                AS passenger_count
             FROM high_volume_fhv
             WHERE pickup_borough IS NOT NULL

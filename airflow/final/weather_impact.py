@@ -36,7 +36,7 @@ def compute_weather_impact(bucket: str) -> None:
             SELECT TO_DATE(pickup_datetime) AS date, NULL AS fare_amount, 'app_rides' AS taxi_type
             FROM app_rides
             UNION ALL
-            SELECT TO_DATE(pickup_datetime) AS date, base_passenger_fare AS fare_amount, 'high_volume_fhv' AS taxi_type
+            SELECT TO_DATE(pickup_datetime) AS date, base_passenger_fare + COALESCE(tip_amount, 0) AS fare_amount, 'high_volume_fhv' AS taxi_type
             FROM high_volume_fhv
         """).createOrReplaceTempView("_trips_for_weather")
 
