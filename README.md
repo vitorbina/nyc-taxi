@@ -266,7 +266,7 @@ After making changes in Superset:
 
 | Dashboard | Description |
 |---|---|
-| `nyc_taxi_overview/` | Overview of Jan–Feb 2025. KPIs: trips, revenue, average fare, revenue per mile. Charts: average trip speed by hour, hour × weekday demand heatmap, top 10 pickup zones by revenue, revenue choropleth by zone, trips/revenue/fare by service, and daily precipitation vs trips. Each chart's subtitle states its composition (metric × dimension). Native filters for period, service and pickup borough. |
+| `nyc_taxi_overview/` | Overview of Jan–Feb 2025. KPIs: trips, revenue, average fare, revenue per mile. Charts: average trip speed by hour, hour × weekday demand heatmap, top 10 pickup zones by revenue, revenue choropleth by zone, share of trips by service, and the rain effect on daily trips (wet vs dry days, weekday/weekend). Each chart's subtitle states its composition (metric × dimension). Native filters for period, service and pickup borough. |
 
 **Conventions used in the dashboard**
 
@@ -274,7 +274,7 @@ After making changes in Superset:
 - **Services:** "Uber/Lyft" is the TLC high-volume FHV file (`fhvhv`); "Other for-hire" is the regular `fhv` file.
 - **Times** are NYC local (Trino reads Parquet timestamps in `America/New_York`, matching Spark).
 - **Data quality:** `airflow/utils/quality.py` drops trips outside their file's month, shorter than 1 min or longer than 4 h, longer than 100 mi, or with fares above 1,000 USD (~0.1% of records).
-- **Colors:** one hue for the whole dashboard — blue (`#2a78d6`) for volume and revenue, a light-to-dark blue scale for the heatmap and map (darker = more), and gray (`#8A8F98`) as the neutral and comparison color (e.g. weekday gray vs weekend blue). Contrast and color-blind separation were checked for every pair.
+- **Colors:** one hue for the whole dashboard — blue (`#2a78d6`) for volume and revenue, a light-to-dark blue scale for the heatmap and map (darker = more), and gray (`#8A8F98`) as the neutral and comparison color (e.g. axes, grid lines and secondary text). Contrast and color-blind separation were checked for every pair.
 - **Map basemap:** Stadia Maps "Alidade Smooth" tiles (light gray, with street and neighborhood names; © Stadia Maps © OpenMapTiles © OpenStreetMap). Stadia serves `localhost` without an API key — a deployment on a real domain needs a free Stadia key. Hover a zone for its name, borough and revenue.
 - **Theme:** Superset 6 follows the OS dark mode by default; `superset_config.py` pins the light theme because the palette was validated on a light surface.
 - Chart results are cached for 24 h (`DATA_CACHE_CONFIG` in `superset/superset_config.py`); use **Force refresh** after re-running the pipeline.
