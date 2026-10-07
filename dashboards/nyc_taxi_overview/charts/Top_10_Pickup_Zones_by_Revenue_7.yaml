@@ -1,6 +1,6 @@
 slice_name: Top 10 Pickup Zones by Revenue
-description: "JFK and LaGuardia alone bring in ~10% of all NYC trip revenue \u2014\
-  \ each earns 2\u20132.5\xD7 more than the busiest Manhattan zone."
+description: "JFK and LaGuardia lead every other zone \u2014 each earns 2\u20132.5\xD7\
+  \ the busiest Manhattan zone, together ~10% of all revenue."
 certified_by: null
 certification_details: null
 viz_type: echarts_timeseries_bar

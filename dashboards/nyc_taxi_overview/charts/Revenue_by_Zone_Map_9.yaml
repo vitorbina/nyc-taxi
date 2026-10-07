@@ -1,6 +1,6 @@
 slice_name: Revenue by Zone Map
-description: Revenue by pickup zone (Yellow, Green, Uber/Lyft). Buckets follow the
-  distribution of the 260 zones; hover a zone for its name and revenue.
+description: Revenue concentrates in Manhattan and at the airports. Darker = more
+  revenue; hover a zone for its name, borough and revenue.
 certified_by: null
 certification_details: null
 viz_type: deck_polygon

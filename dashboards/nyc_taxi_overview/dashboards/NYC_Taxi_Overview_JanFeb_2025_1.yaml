@@ -1,4 +1,4 @@
-dashboard_title: NYC Taxi Overview
+dashboard_title: "NYC Taxi Overview \xB7 Jan\u2013Feb 2025"
 description: null
 css: '/* Top 10 is limited to 10 rows on purpose; Superset 6 flags any chart that
   hits its row limit. */
@@ -19,7 +19,7 @@ position:
     id: CHART-1
     meta:
       chartId: 1
-      height: 45
+      height: 49
       sliceName: Daily Trips
       uuid: 2b5b50fd-a3f7-4a6b-aa28-0e445efe718e
       width: 12
@@ -47,7 +47,7 @@ position:
     id: CHART-11
     meta:
       chartId: 11
-      height: 50
+      height: 54
       sliceName: Daily Trips vs Precipitation
       uuid: c73ff4e0-b725-4b07-ba9e-ac107e68d5ee
       width: 12
@@ -75,7 +75,7 @@ position:
     id: CHART-4
     meta:
       chartId: 4
-      height: 30
+      height: 34
       sliceName: Trips & Revenue by Service
       uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
       width: 12
@@ -103,7 +103,7 @@ position:
     id: CHART-6
     meta:
       chartId: 6
-      height: 50
+      height: 54
       sliceName: Trips by Hour and Weekday
       uuid: 545b0cc8-e286-4677-9861-64bcabdf718e
       width: 12
@@ -117,7 +117,7 @@ position:
     id: CHART-7
     meta:
       chartId: 7
-      height: 60
+      height: 64
       sliceName: Top 10 Pickup Zones by Revenue
       uuid: 563cb1d7-5344-4c21-935a-0a91822a43e2
       width: 5
@@ -145,7 +145,7 @@ position:
     id: CHART-9
     meta:
       chartId: 9
-      height: 60
+      height: 64
       sliceName: Revenue by Zone Map
       uuid: 1e030f1c-1a3b-467c-9398-c99ee605ed12
       width: 7
@@ -157,16 +157,11 @@ position:
   DASHBOARD_VERSION_KEY: v2
   GRID_ID:
     children:
-    - ROW-intro
     - ROW-kpi
-    - ROW-sec-when
     - ROW-daily
     - ROW-heat
-    - ROW-sec-where
     - ROW-where
-    - ROW-sec-who
     - ROW-who
-    - ROW-sec-weather
     - ROW-weather
     id: GRID_ID
     parents:
@@ -175,80 +170,8 @@ position:
   HEADER_ID:
     id: HEADER_ID
     meta:
-      text: NYC Taxi Overview
+      text: "NYC Taxi Overview \xB7 Jan\u2013Feb 2025"
     type: HEADER
-  MARKDOWN-intro:
-    children: []
-    id: MARKDOWN-intro
-    meta:
-      code: "**46.9M trips \xB7 Jan 1 \u2013 Feb 28, 2025.** NYC TLC trip records\
-        \ for Yellow, Green, Uber/Lyft (high-volume for-hire) and other for-hire vehicles,\
-        \ joined with daily weather from Open-Meteo. Times are NYC local. Records\
-        \ with impossible fares, distances or durations (~0.1%) are excluded. *Revenue\
-        \ = fares incl. tips; other for-hire trips don't report fares.*"
-      height: 11
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-intro
-    type: MARKDOWN
-  MARKDOWN-sec-weather:
-    children: []
-    id: MARKDOWN-sec-weather
-    meta:
-      code: '### Does the weather matter?
-
-        Not much: rainy days did not reduce demand. Day of week explains far more
-        of the variation than precipitation.'
-      height: 12
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-sec-weather
-    type: MARKDOWN
-  MARKDOWN-sec-when:
-    children: []
-    id: MARKDOWN-sec-when
-    meta:
-      code: "### When do New Yorkers ride?\nDemand builds through the week \u2014\
-        \ Saturdays average 33% more trips than Mondays \u2014 with 8 am and 5\u2013\
-        7 pm commute peaks on weekdays and late nights on Fri/Sat."
-      height: 12
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-sec-when
-    type: MARKDOWN
-  MARKDOWN-sec-where:
-    children: []
-    id: MARKDOWN-sec-where
-    meta:
-      code: "### Where is the money?\nRevenue concentrates in Manhattan and at the\
-        \ airports \u2014 JFK and LaGuardia lead every other zone in the city."
-      height: 12
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-sec-where
-    type: MARKDOWN
-  MARKDOWN-sec-who:
-    children: []
-    id: MARKDOWN-sec-who
-    meta:
-      code: '### Who carries the city?
-
-        Uber/Lyft carry 85% of trips; yellow cabs still earn the most per mile.'
-      height: 12
-      width: 12
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    - ROW-sec-who
-    type: MARKDOWN
   ROOT_ID:
     children:
     - GRID_ID
@@ -274,16 +197,6 @@ position:
     - ROOT_ID
     - GRID_ID
     type: ROW
-  ROW-intro:
-    children:
-    - MARKDOWN-intro
-    id: ROW-intro
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
   ROW-kpi:
     children:
     - CHART-8
@@ -291,46 +204,6 @@ position:
     - CHART-5
     - CHART-10
     id: ROW-kpi
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  ROW-sec-weather:
-    children:
-    - MARKDOWN-sec-weather
-    id: ROW-sec-weather
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  ROW-sec-when:
-    children:
-    - MARKDOWN-sec-when
-    id: ROW-sec-when
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  ROW-sec-where:
-    children:
-    - MARKDOWN-sec-where
-    id: ROW-sec-where
-    meta:
-      background: BACKGROUND_TRANSPARENT
-    parents:
-    - ROOT_ID
-    - GRID_ID
-    type: ROW
-  ROW-sec-who:
-    children:
-    - MARKDOWN-sec-who
-    id: ROW-sec-who
     meta:
       background: BACKGROUND_TRANSPARENT
     parents:
@@ -419,7 +292,13 @@ metadata:
   color_scheme: ''
   refresh_frequency: 0
   color_scheme_domain: []
-  expanded_slices: {}
+  expanded_slices:
+    '1': true
+    '4': true
+    '6': true
+    '7': true
+    '9': true
+    '11': true
   label_colors:
     Trips: '#2a78d6'
     count: '#2a78d6'

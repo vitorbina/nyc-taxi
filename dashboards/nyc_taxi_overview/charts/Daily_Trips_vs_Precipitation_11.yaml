@@ -1,7 +1,6 @@
 slice_name: Daily Trips vs Precipitation
-description: "One dot per day. Rainy days did not reduce demand \u2014 wet weekdays\
-  \ averaged slightly more trips than dry ones; the day of week matters far more than\
-  \ the weather."
+description: "One dot per day. Rainy days did not reduce demand \u2014 the day of\
+  \ the week explains far more of the variation than precipitation."
 certified_by: null
 certification_details: null
 viz_type: bubble_v2
