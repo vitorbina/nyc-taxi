@@ -5,9 +5,12 @@ css: '/* Top 10 is limited to 10 rows on purpose; Superset 6 flags any chart tha
 
   .dashboard-chart-id-7 .header-controls > .anticon-warning { display: none; }
 
-  /* Section headers (### in markdown) */
+  /* Chart descriptions read as a subtitle aligned with the title text (the title
+  link has 2px padding + 2px margin). */
 
-  .dashboard-markdown h3 { font-weight: 600; margin-bottom: 4px; }'
+  .slice_description { padding-left: 4px; margin-bottom: 4px; }
+
+  .slice_description p { font-size: 13px; color: #5f6368; margin: 0; }'
 slug: null
 certified_by: ''
 certification_details: ''
