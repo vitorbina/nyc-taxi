@@ -12,6 +12,7 @@ for dashboard in "$DASHBOARDS_DIR"/*/; do
 
     zip_path="$EXPORTS_DIR/${name}.zip"
     rm -f "$zip_path"
-    (cd "$DASHBOARDS_DIR" && zip -r "$zip_path" "$name/")
+    # python3 is already required by import_dashboards.sh; `zip` often isn't installed (e.g. stock WSL Ubuntu)
+    (cd "$DASHBOARDS_DIR" && python3 -m zipfile -c "$zip_path" "$name/")
     echo "Exported: $zip_path"
 done
