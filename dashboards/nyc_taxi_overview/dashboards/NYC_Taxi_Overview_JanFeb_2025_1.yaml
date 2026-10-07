@@ -10,7 +10,19 @@ css: '/* Top 10 is limited to 10 rows on purpose; Superset 6 flags any chart tha
 
   .slice_description { padding-left: 4px; margin-bottom: 4px; }
 
-  .slice_description p { font-size: 13px; color: #5f6368; margin: 0; }'
+  .slice_description p { font-size: 13px; color: #5f6368; margin: 0; }
+
+  /* KPI cards (Big Number): center the value and its subheader in the card. */
+
+  .superset-legacy-chart-big-number { align-items: center !important; }
+
+  .superset-legacy-chart-big-number .text-container { width: 100% !important; align-items:
+  center !important; justify-content: center !important; }
+
+  .superset-legacy-chart-big-number .header-line,
+
+  .superset-legacy-chart-big-number .subheader-line { justify-content: center !important;
+  text-align: center !important; width: 100% !important; }'
 slug: null
 certified_by: ''
 certification_details: ''
@@ -106,7 +118,7 @@ position:
     id: CHART-6
     meta:
       chartId: 6
-      height: 54
+      height: 56
       sliceName: Trips by Hour and Weekday
       uuid: 545b0cc8-e286-4677-9861-64bcabdf718e
       width: 12
@@ -246,6 +258,20 @@ position:
     type: ROW
 metadata:
   chart_configuration:
+    '1':
+      id: 1
+      crossFilters:
+        scope: global
+        chartsInScope:
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+        - 11
     '4':
       id: 4
       crossFilters:
@@ -272,6 +298,20 @@ metadata:
         - 6
         - 8
         - 9
+        - 10
+        - 11
+    '9':
+      id: 9
+      crossFilters:
+        scope: global
+        chartsInScope:
+        - 1
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
         - 10
         - 11
   global_chart_configuration:
