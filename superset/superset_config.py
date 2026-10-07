@@ -27,16 +27,18 @@ DATA_CACHE_CONFIG = {
     "CACHE_KEY_PREFIX": "superset_data_",
 }
 
-# The zone map draws OpenStreetMap raster tiles (street and neighborhood names
-# under the zones) via Superset 6's `tile://` styles - no token needed. CartoDB
-# basemaps now answer keyless requests with an "API KEY REQUIRED" watermark, and
-# Mapbox styles need a token. Superset's default CSP doesn't list the OSM tile
-# host, so the browser would block it (blank map): extend img-src/connect-src,
-# keeping the rest of the policy (including the script-src nonce) intact.
+# The zone map draws Stadia Maps "Alidade Smooth" raster tiles (light gray, with
+# street and neighborhood names) via Superset 6's `tile://` styles. Stadia serves
+# localhost without an API key; a deployment on a real domain needs a free Stadia
+# key. (CartoDB now answers keyless requests with an "API KEY REQUIRED" watermark;
+# OSM's default tiles have light-blue water that blends with a blue choropleth.)
+# Superset's default CSP doesn't list these tile hosts, so the browser would block
+# them (blank map): extend img-src/connect-src, keeping the rest of the policy
+# (including the script-src nonce) intact.
 try:
     from superset.config import TALISMAN_CONFIG
 
-    _TILE_HOSTS = ["https://tile.openstreetmap.org"]
+    _TILE_HOSTS = ["https://tiles.stadiamaps.com", "https://tile.openstreetmap.org"]
     _csp = TALISMAN_CONFIG.get("content_security_policy") or {}
     for _directive in ("img-src", "connect-src"):
         _values = _csp.get(_directive)

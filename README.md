@@ -274,8 +274,8 @@ After making changes in Superset:
 - **Services:** "Uber/Lyft" is the TLC high-volume FHV file (`fhvhv`); "Other for-hire" is the regular `fhv` file.
 - **Times** are NYC local (Trino reads Parquet timestamps in `America/New_York`, matching Spark).
 - **Data quality:** `airflow/utils/quality.py` drops trips outside their file's month, shorter than 1 min or longer than 4 h, longer than 100 mi, or with fares above 1,000 USD (~0.1% of records).
-- **Colors:** each service keeps one fixed color across charts (Yellow, Green, Uber/Lyft purple, Other pink); magnitudes (heatmap, map) use a single-hue orange scale, darker = more.
-- **Map basemap:** OpenStreetMap tiles (no API key) show street and neighborhood names under the zones; hover a zone for its name, borough and revenue. CartoDB basemaps now require a key and Mapbox needs a token, so `superset_config.py` whitelists the OSM tile host in the CSP instead.
+- **Colors:** one hue for the whole dashboard — blue (`#2a78d6`) for volume and revenue, a light-to-dark blue scale for the heatmap and map (darker = more), and gray (`#8A8F98`) as the neutral and comparison color (e.g. weekday gray vs weekend blue). Contrast and color-blind separation were checked for every pair.
+- **Map basemap:** Stadia Maps "Alidade Smooth" tiles (light gray, with street and neighborhood names; © Stadia Maps © OpenMapTiles © OpenStreetMap). Stadia serves `localhost` without an API key — a deployment on a real domain needs a free Stadia key. Hover a zone for its name, borough and revenue.
 - **Theme:** Superset 6 follows the OS dark mode by default; `superset_config.py` pins the light theme because the palette was validated on a light surface.
 - Chart results are cached for 24 h (`DATA_CACHE_CONFIG` in `superset/superset_config.py`); use **Force refresh** after re-running the pipeline.
 
