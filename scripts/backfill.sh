@@ -15,6 +15,10 @@ set -euo pipefail
 
 FROM_DATE="${1:?Usage: backfill.sh <FROM_DATE> <TO_DATE> (e.g. 2025-04-01 2026-04-01)}"
 TO_DATE="${2:?Usage: backfill.sh <FROM_DATE> <TO_DATE> (e.g. 2025-04-01 2026-04-01)}"
+# Taxi is monthly, so TO_DATE=2025-02-01 means "the whole of February". Weather is
+# daily: the same TO_DATE would load only Feb 1st, leaving the rest of the last
+# month without weather. Extend the weather range to the last day of that month.
+WEATHER_TO_DATE=$(date -d "$TO_DATE +1 month -1 day" +%Y-%m-%d)
 
 SCHEDULER="nyc_airflow_scheduler"
 POLL_INTERVAL=15
@@ -110,7 +114,7 @@ afq dags unpause taxi_ingestion
 afq dags unpause weather_ingestion
 afq backfill create --dag-id taxi_ingestion --from-date "$FROM_DATE" --to-date "$TO_DATE" \
     --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
-afq backfill create --dag-id weather_ingestion --from-date "$FROM_DATE" --to-date "$TO_DATE" \
+afq backfill create --dag-id weather_ingestion --from-date "$FROM_DATE" --to-date "$WEATHER_TO_DATE" \
     --max-active-runs 2 --dag-run-conf '{"skip_repair": true}'
 wait_for_dag taxi_ingestion
 wait_for_dag weather_ingestion
