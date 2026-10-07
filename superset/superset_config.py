@@ -17,20 +17,16 @@ SQLALCHEMY_ENGINE_OPTIONS = {
     "pool_pre_ping": True,
 }
 
-# The Revenue by Zone map uses the CartoDB Positron (grayscale) basemap so it
-# stays monochrome and readable. Superset's default CSP only whitelists the OSM
-# tile hosts, so the browser blocks any other tile provider (blank/black map).
-# We extend img-src and connect-src with the CartoDB hosts, preserving the rest
-# of the policy (including the script-src nonce) instead of replacing it.
-try:
-    from superset.config import TALISMAN_CONFIG
+# Cache chart results. Without it every dashboard load re-scans ~47M trips in
+# Trino and each chart takes 30-40s. The final layer only changes when taxi_final
+# runs, so a day-long cache is safe; "Force refresh" on a chart bypasses it.
+DATA_CACHE_CONFIG = {
+    "CACHE_TYPE": "FileSystemCache",
+    "CACHE_DIR": "/app/superset_home/cache/data",
+    "CACHE_DEFAULT_TIMEOUT": 60 * 60 * 24,
+    "CACHE_KEY_PREFIX": "superset_data_",
+}
 
-    _CARTO_HOSTS = ["https://basemaps.cartocdn.com", "https://*.basemaps.cartocdn.com"]
-    _csp = TALISMAN_CONFIG.get("content_security_policy") or {}
-    for _directive in ("img-src", "connect-src"):
-        _values = _csp.get(_directive)
-        if isinstance(_values, list):
-            _csp[_directive] = _values + _CARTO_HOSTS
-    TALISMAN_CONFIG["content_security_policy"] = _csp
-except Exception:
-    pass
+# The zone map's basemap is a Mapbox style: Superset 5 cannot render other tile
+# providers. Superset reads MAPBOX_API_KEY from the environment (see .env.example);
+# its default CSP already allows api.mapbox.com.

@@ -315,6 +315,8 @@ services:
     environment:
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       SUPERSET_DB_URI: postgresql+psycopg2://${POSTGRES_SUPERSET_USER}:${POSTGRES_SUPERSET_PASSWORD}@postgres-superset:5432/${POSTGRES_SUPERSET_DB}
+      # Optional: public Mapbox token (pk.…) to draw the basemap under the zone map
+      MAPBOX_API_KEY: ${MAPBOX_API_KEY:-}
     depends_on:
       superset-init:
         condition: service_completed_successfully

@@ -266,7 +266,17 @@ After making changes in Superset:
 
 | Dashboard | Description |
 |---|---|
-| `nyc_taxi_overview/` | Fleet-operator overview with a guided narrative: headline KPIs (revenue, trips, avg fare), top revenue zones + zone map, taxi-type breakdown (revenue, avg fare, revenue per mile), monthly trend by type, an hour×weekday demand heatmap, and weather impact. Native filters for period, taxi type and pickup borough. |
+| `nyc_taxi_overview/` | Overview of Jan–Feb 2025 told in four questions, each with a one-line finding: **When** (daily trips + hour×weekday heatmap), **Where** (top 10 pickup zones + revenue choropleth), **Who** (trips, revenue, avg fare and revenue per mile by service) and **Weather** (one dot per day, precipitation vs trips, weekday vs weekend). Headline KPIs: trips, revenue, average fare, revenue per mile. Native filters for period, service and pickup borough. |
+
+**Conventions used in the dashboard**
+
+- **Revenue** = what the passenger paid incl. tips: `total_amount` for Yellow/Green, `base_passenger_fare + tips` for Uber/Lyft. "Other for-hire" (black cars, liveries — the TLC `fhv` file) publishes no fares or distances, so its revenue columns are N/A.
+- **Services:** "Uber/Lyft" is the TLC high-volume FHV file (`fhvhv`); "Other for-hire" is the regular `fhv` file.
+- **Times** are NYC local (Trino reads Parquet timestamps in `America/New_York`, matching Spark).
+- **Data quality:** `airflow/utils/quality.py` drops trips outside their file's month, shorter than 1 min or longer than 4 h, longer than 100 mi, or with fares above 1,000 USD (~0.1% of records).
+- **Colors:** each service keeps one fixed color across charts (Yellow, Green, Uber/Lyft purple, Other pink); magnitudes (heatmap, map) use a single-hue orange scale, darker = more.
+- **Map basemap:** Superset 5 only renders Mapbox basemaps. Set `MAPBOX_API_KEY` on the Superset service to show streets and neighborhood labels under the zones; without it the zones render on a blank background.
+- Chart results are cached for 24 h (`DATA_CACHE_CONFIG` in `superset/superset_config.py`); use **Force refresh** after re-running the pipeline.
 
 ## Connecting Superset to Trino
 

@@ -1,0 +1,502 @@
+dashboard_title: NYC Taxi Overview
+description: null
+css: ''
+slug: null
+certified_by: ''
+certification_details: ''
+published: true
+uuid: 73e245d0-91b4-4669-a4c4-85cb23011de4
+position:
+  CHART-1:
+    children: []
+    id: CHART-1
+    meta:
+      chartId: 1
+      height: 45
+      sliceName: Daily Trips
+      uuid: 2b5b50fd-a3f7-4a6b-aa28-0e445efe718e
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-daily
+    type: CHART
+  CHART-10:
+    children: []
+    id: CHART-10
+    meta:
+      chartId: 10
+      height: 22
+      sliceName: Revenue per Mile
+      uuid: 06a61455-241f-484d-97d3-b1bae375920c
+      width: 3
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-kpi
+    type: CHART
+  CHART-11:
+    children: []
+    id: CHART-11
+    meta:
+      chartId: 11
+      height: 50
+      sliceName: Daily Trips vs Precipitation
+      uuid: c73ff4e0-b725-4b07-ba9e-ac107e68d5ee
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-weather
+    type: CHART
+  CHART-3:
+    children: []
+    id: CHART-3
+    meta:
+      chartId: 3
+      height: 22
+      sliceName: Revenue
+      uuid: e68f855e-4aba-4d2b-b4e3-f6093ae2d30a
+      width: 3
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-kpi
+    type: CHART
+  CHART-4:
+    children: []
+    id: CHART-4
+    meta:
+      chartId: 4
+      height: 30
+      sliceName: Trips & Revenue by Service
+      uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-who
+    type: CHART
+  CHART-5:
+    children: []
+    id: CHART-5
+    meta:
+      chartId: 5
+      height: 22
+      sliceName: Average Fare
+      uuid: d86f8cae-09c0-418f-9da4-d4a6d0c1b300
+      width: 3
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-kpi
+    type: CHART
+  CHART-6:
+    children: []
+    id: CHART-6
+    meta:
+      chartId: 6
+      height: 50
+      sliceName: Trips by Hour and Weekday
+      uuid: 545b0cc8-e286-4677-9861-64bcabdf718e
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-heat
+    type: CHART
+  CHART-7:
+    children: []
+    id: CHART-7
+    meta:
+      chartId: 7
+      height: 60
+      sliceName: Top 10 Pickup Zones by Revenue
+      uuid: 563cb1d7-5344-4c21-935a-0a91822a43e2
+      width: 5
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-where
+    type: CHART
+  CHART-8:
+    children: []
+    id: CHART-8
+    meta:
+      chartId: 8
+      height: 22
+      sliceName: Total Trips
+      uuid: 9d1908bc-c15d-4d9e-8516-2dd2fffe5e26
+      width: 3
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-kpi
+    type: CHART
+  CHART-9:
+    children: []
+    id: CHART-9
+    meta:
+      chartId: 9
+      height: 60
+      sliceName: Revenue by Zone Map
+      uuid: 1e030f1c-1a3b-467c-9398-c99ee605ed12
+      width: 7
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-where
+    type: CHART
+  DASHBOARD_VERSION_KEY: v2
+  GRID_ID:
+    children:
+    - ROW-intro
+    - ROW-kpi
+    - ROW-sec-when
+    - ROW-daily
+    - ROW-heat
+    - ROW-sec-where
+    - ROW-where
+    - ROW-sec-who
+    - ROW-who
+    - ROW-sec-weather
+    - ROW-weather
+    id: GRID_ID
+    parents:
+    - ROOT_ID
+    type: GRID
+  HEADER_ID:
+    id: HEADER_ID
+    meta:
+      text: NYC Taxi Overview
+    type: HEADER
+  MARKDOWN-intro:
+    children: []
+    id: MARKDOWN-intro
+    meta:
+      code: "**46.9M trips \xB7 Jan 1 \u2013 Feb 28, 2025.** NYC TLC trip records\
+        \ for Yellow, Green, Uber/Lyft (high-volume for-hire) and other for-hire vehicles,\
+        \ joined with daily weather from Open-Meteo. Times are NYC local. Records\
+        \ with impossible fares, distances or durations (~0.1%) are excluded. *Revenue\
+        \ = fares incl. tips; other for-hire trips don't report fares.*"
+      height: 11
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-intro
+    type: MARKDOWN
+  MARKDOWN-sec-weather:
+    children: []
+    id: MARKDOWN-sec-weather
+    meta:
+      code: '### Does the weather matter?
+
+        Not much: rainy days did not reduce demand. Day of week explains far more
+        of the variation than precipitation.'
+      height: 12
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-sec-weather
+    type: MARKDOWN
+  MARKDOWN-sec-when:
+    children: []
+    id: MARKDOWN-sec-when
+    meta:
+      code: "### When do New Yorkers ride?\nDemand builds through the week \u2014\
+        \ Saturdays average 33% more trips than Mondays \u2014 with 8 am and 5\u2013\
+        7 pm commute peaks on weekdays and late nights on Fri/Sat."
+      height: 12
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-sec-when
+    type: MARKDOWN
+  MARKDOWN-sec-where:
+    children: []
+    id: MARKDOWN-sec-where
+    meta:
+      code: "### Where is the money?\nRevenue concentrates in Manhattan and at the\
+        \ airports \u2014 JFK and LaGuardia lead every other zone in the city."
+      height: 12
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-sec-where
+    type: MARKDOWN
+  MARKDOWN-sec-who:
+    children: []
+    id: MARKDOWN-sec-who
+    meta:
+      code: '### Who carries the city?
+
+        Uber/Lyft carry 85% of trips; yellow cabs still earn the most per mile.'
+      height: 12
+      width: 12
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-sec-who
+    type: MARKDOWN
+  ROOT_ID:
+    children:
+    - GRID_ID
+    id: ROOT_ID
+    type: ROOT
+  ROW-daily:
+    children:
+    - CHART-1
+    id: ROW-daily
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-heat:
+    children:
+    - CHART-6
+    id: ROW-heat
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-intro:
+    children:
+    - MARKDOWN-intro
+    id: ROW-intro
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-kpi:
+    children:
+    - CHART-8
+    - CHART-3
+    - CHART-5
+    - CHART-10
+    id: ROW-kpi
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-sec-weather:
+    children:
+    - MARKDOWN-sec-weather
+    id: ROW-sec-weather
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-sec-when:
+    children:
+    - MARKDOWN-sec-when
+    id: ROW-sec-when
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-sec-where:
+    children:
+    - MARKDOWN-sec-where
+    id: ROW-sec-where
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-sec-who:
+    children:
+    - MARKDOWN-sec-who
+    id: ROW-sec-who
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-weather:
+    children:
+    - CHART-11
+    id: ROW-weather
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-where:
+    children:
+    - CHART-7
+    - CHART-9
+    id: ROW-where
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+  ROW-who:
+    children:
+    - CHART-4
+    id: ROW-who
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    type: ROW
+metadata:
+  chart_configuration:
+    '4':
+      id: 4
+      crossFilters:
+        scope: global
+        chartsInScope:
+        - 1
+        - 3
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+        - 11
+    '7':
+      id: 7
+      crossFilters:
+        scope: global
+        chartsInScope:
+        - 1
+        - 3
+        - 4
+        - 5
+        - 6
+        - 8
+        - 9
+        - 10
+        - 11
+  global_chart_configuration:
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    chartsInScope:
+    - 1
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+  map_label_colors: {}
+  shared_label_colors: []
+  color_scheme: ''
+  refresh_frequency: 0
+  color_scheme_domain: []
+  expanded_slices: {}
+  label_colors:
+    Yellow: '#eda100'
+    Green: '#2E7D32'
+    Uber/Lyft: '#5E35B1'
+    Other for-hire: '#e87ba4'
+    Weekday: '#2a78d6'
+    Weekend: '#eb6834'
+    Revenue: '#2a78d6'
+    Trips: '#2a78d6'
+    COUNT(*): '#2a78d6'
+    count: '#2a78d6'
+  timed_refresh_immune_slices: []
+  cross_filters_enabled: true
+  native_filter_configuration:
+  - id: NATIVE_FILTER-period
+    name: Period
+    filterType: filter_time
+    targets:
+    - {}
+    defaultDataMask:
+      extraFormData: {}
+      filterState: {}
+      ownState: {}
+    cascadeParentIds: []
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    controlValues: {}
+    type: NATIVE_FILTER
+    description: ''
+    chartsInScope: []
+    tabsInScope: []
+  - id: NATIVE_FILTER-taxitype
+    name: Taxi Type
+    filterType: filter_select
+    targets:
+    - column:
+        name: taxi_type_label
+      datasetUuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
+    defaultDataMask:
+      extraFormData: {}
+      filterState: {}
+      ownState: {}
+    cascadeParentIds: []
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    controlValues:
+      enableEmptyFilter: false
+      defaultToFirstItem: false
+      multiSelect: true
+      searchAllOptions: false
+      inverseSelection: false
+    type: NATIVE_FILTER
+    description: ''
+    chartsInScope: []
+    tabsInScope: []
+  - id: NATIVE_FILTER-borough
+    name: Pickup Borough
+    filterType: filter_select
+    targets:
+    - column:
+        name: pickup_borough
+      datasetUuid: 881e69f0-7247-4cd7-bbff-220e7e0fd1ff
+    defaultDataMask:
+      extraFormData: {}
+      filterState: {}
+      ownState: {}
+    cascadeParentIds: []
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    controlValues:
+      enableEmptyFilter: false
+      defaultToFirstItem: false
+      multiSelect: true
+      searchAllOptions: false
+      inverseSelection: false
+    type: NATIVE_FILTER
+    description: ''
+    chartsInScope: []
+    tabsInScope: []
+  default_filters: '{}'
+version: 1.0.0

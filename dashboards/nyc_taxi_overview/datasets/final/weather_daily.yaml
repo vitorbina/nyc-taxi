@@ -1,4 +1,4 @@
-table_name: weather_impact
+table_name: weather_daily
 main_dttm_col: date
 description: null
 default_endpoint: null
@@ -6,7 +6,11 @@ offset: 0
 cache_timeout: null
 catalog: hive
 schema: final
-sql: null
+sql: "SELECT\n  date,\n  CASE WHEN day_of_week(date) IN (6, 7) THEN 'Weekend' ELSE\
+  \ 'Weekday' END AS day_type,\n  max(weather_description)      AS weather_description,\n\
+  \  max(avg_temperature_c)        AS avg_temperature_c,\n  max(total_precipitation_mm)\
+  \   AS total_precipitation_mm,\n  count(*)                      AS trips\nFROM final.weather_impact\n\
+  GROUP BY 1, 2"
 params: null
 template_params: null
 filter_select_enabled: true
@@ -14,7 +18,7 @@ fetch_values_predicate: null
 extra: null
 normalize_columns: false
 always_filter_main_dttm: false
-uuid: 2b7ce485-0178-44e9-abdb-adb7dfb22657
+uuid: 8b002c9e-221f-49b2-86d7-4c902037468f
 metrics:
 - metric_name: count
   verbose_name: COUNT(*)
@@ -25,22 +29,12 @@ metrics:
   currency: null
   extra: null
   warning_text: null
-- metric_name: trips_per_day
-  verbose_name: Avg trips per day
-  metric_type: null
-  expression: COUNT(*) * 1.0 / NULLIF(COUNT(DISTINCT date), 0)
-  description: Average trips per day for the condition (normalizes for how often
-    each condition occurs)
-  d3format: SMART_NUMBER
-  currency: null
-  extra: null
-  warning_text: null
 columns:
-- column_name: weather_description
+- column_name: day_type
   verbose_name: null
   is_dttm: false
   is_active: true
-  type: VARCHAR
+  type: VARCHAR(7)
   advanced_data_type: null
   groupby: true
   filterable: true
@@ -48,7 +42,7 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: taxi_type
+- column_name: weather_description
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -65,18 +59,6 @@ columns:
   is_dttm: true
   is_active: true
   type: DATE
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: null
-  description: null
-  python_date_format: null
-  extra: null
-- column_name: avg_wind_speed_kmh
-  verbose_name: null
-  is_dttm: false
-  is_active: true
-  type: DOUBLE
   advanced_data_type: null
   groupby: true
   filterable: true
@@ -108,11 +90,11 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: fare_amount
+- column_name: trips
   verbose_name: null
   is_dttm: false
   is_active: true
-  type: DOUBLE
+  type: BIGINT
   advanced_data_type: null
   groupby: true
   filterable: true

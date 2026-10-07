@@ -16,6 +16,24 @@ normalize_columns: false
 always_filter_main_dttm: false
 uuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
 metrics:
+- metric_name: revenue_per_mile
+  verbose_name: Revenue per mile
+  metric_type: null
+  expression: SUM(fare_amount) / NULLIF(SUM(trip_distance_miles), 0)
+  description: null
+  d3format: $,.2f
+  currency: null
+  extra: null
+  warning_text: null
+- metric_name: avg_fare
+  verbose_name: Avg fare
+  metric_type: null
+  expression: AVG(fare_amount)
+  description: null
+  d3format: $,.2f
+  currency: null
+  extra: null
+  warning_text: null
 - metric_name: count
   verbose_name: Trips
   metric_type: count
@@ -30,29 +48,63 @@ metrics:
   metric_type: null
   expression: SUM(fare_amount)
   description: null
-  d3format: $,.0f
-  currency: null
-  extra: null
-  warning_text: null
-- metric_name: avg_fare
-  verbose_name: Avg fare
-  metric_type: null
-  expression: AVG(fare_amount)
-  description: null
-  d3format: $,.2f
-  currency: null
-  extra: null
-  warning_text: null
-- metric_name: revenue_per_mile
-  verbose_name: Revenue per mile
-  metric_type: null
-  expression: SUM(fare_amount) / NULLIF(SUM(trip_distance_miles), 0)
-  description: null
-  d3format: $,.2f
+  d3format: SMART_NUMBER
   currency: null
   extra: null
   warning_text: null
 columns:
+- column_name: weekday
+  verbose_name: Weekday
+  is_dttm: false
+  is_active: true
+  type: VARCHAR
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: CASE day_of_week(pickup_datetime) WHEN 1 THEN '1 Mon' WHEN 2 THEN '2
+    Tue' WHEN 3 THEN '3 Wed' WHEN 4 THEN '4 Thu' WHEN 5 THEN '5 Fri' WHEN 6 THEN '6
+    Sat' WHEN 7 THEN '7 Sun' END
+  description: null
+  python_date_format: null
+  extra: null
+- column_name: taxi_type_label
+  verbose_name: Service
+  is_dttm: false
+  is_active: true
+  type: VARCHAR
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: CASE taxi_type WHEN 'yellow_taxi' THEN 'Yellow' WHEN 'green_taxi' THEN
+    'Green' WHEN 'high_volume_fhv' THEN 'Uber/Lyft' WHEN 'app_rides' THEN 'Other for-hire'
+    END
+  description: null
+  python_date_format: null
+  extra: null
+- column_name: day_of_week
+  verbose_name: Day of week
+  is_dttm: false
+  is_active: true
+  type: INTEGER
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: day_of_week(pickup_datetime)
+  description: null
+  python_date_format: null
+  extra: null
+- column_name: hour_of_day
+  verbose_name: Hour of day
+  is_dttm: false
+  is_active: true
+  type: INTEGER
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: hour(pickup_datetime)
+  description: null
+  python_date_format: null
+  extra: null
 - column_name: pickup_datetime
   verbose_name: null
   is_dttm: true
@@ -182,57 +234,6 @@ columns:
   groupby: true
   filterable: true
   expression: null
-  description: null
-  python_date_format: null
-  extra: null
-- column_name: hour_of_day
-  verbose_name: Hour of day
-  is_dttm: false
-  is_active: true
-  type: INTEGER
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: hour(pickup_datetime)
-  description: null
-  python_date_format: null
-  extra: null
-- column_name: day_of_week
-  verbose_name: Day of week
-  is_dttm: false
-  is_active: true
-  type: INTEGER
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: day_of_week(pickup_datetime)
-  description: null
-  python_date_format: null
-  extra: null
-- column_name: weekday
-  verbose_name: Weekday
-  is_dttm: false
-  is_active: true
-  type: VARCHAR
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: CASE day_of_week(pickup_datetime) WHEN 1 THEN '1 Mon' WHEN 2 THEN '2
-    Tue' WHEN 3 THEN '3 Wed' WHEN 4 THEN '4 Thu' WHEN 5 THEN '5 Fri' WHEN 6 THEN '6
-    Sat' WHEN 7 THEN '7 Sun' END
-  description: null
-  python_date_format: null
-  extra: null
-- column_name: taxi_type_label
-  verbose_name: Taxi type
-  is_dttm: false
-  is_active: true
-  type: VARCHAR
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: CASE taxi_type WHEN 'yellow_taxi' THEN 'Yellow' WHEN 'green_taxi' THEN
-    'Green' WHEN 'high_volume_fhv' THEN 'FHV' WHEN 'app_rides' THEN 'Apps' END
   description: null
   python_date_format: null
   extra: null
