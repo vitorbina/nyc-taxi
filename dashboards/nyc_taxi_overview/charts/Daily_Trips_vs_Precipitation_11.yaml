@@ -1,6 +1,6 @@
 slice_name: Daily Trips vs Precipitation
-description: "One dot per day. Rainy days did not reduce demand \u2014 the day of\
-  \ the week explains far more of the variation than precipitation."
+description: "Daily precipitation \xD7 trips per day \u2014 one dot per day, gray\
+  \ for weekdays and blue for weekends."
 certified_by: null
 certification_details: null
 viz_type: bubble_v2

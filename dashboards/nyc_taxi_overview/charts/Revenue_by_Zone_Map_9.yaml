@@ -1,6 +1,6 @@
 slice_name: Revenue by Zone Map
-description: Revenue concentrates in Manhattan and at the airports. Darker = more
-  revenue; hover a zone for its name, borough and revenue.
+description: "Revenue \xD7 pickup zone, on the map \u2014 each zone is colored by\
+  \ its total revenue; darker = more. Hover a zone for its name, borough and revenue."
 certified_by: null
 certification_details: null
 viz_type: deck_polygon

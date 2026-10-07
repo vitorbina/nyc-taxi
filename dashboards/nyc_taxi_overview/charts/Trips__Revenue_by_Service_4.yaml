@@ -1,7 +1,7 @@
 slice_name: Trips & Revenue by Service
-description: "Uber/Lyft carry 85% of trips; yellow cabs earn the most per mile ($8.46).\
-  \ Other for-hire (black cars, liveries) don\u2019t report fares or distances, hence\
-  \ N/A."
+description: "Service \xD7 trips, revenue, average fare and revenue per mile \u2014\
+  \ one row per service; % Trips is its share of all trips. N/A: other for-hire vehicles\
+  \ do not report fares or distances."
 certified_by: null
 certification_details: null
 viz_type: table

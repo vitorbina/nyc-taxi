@@ -1,6 +1,6 @@
 slice_name: Trips by Hour and Weekday
-description: "Pickup hour in NYC local time; darker = more trips. Weekdays peak at\
-  \ 8 am and 5\u20137 pm; Friday and Saturday stay busy past midnight."
+description: "Trips \xD7 hour of day \xD7 day of week \u2014 each cell is the number\
+  \ of trips picked up in that hour (NYC local time); darker = more trips."
 certified_by: null
 certification_details: null
 viz_type: heatmap_v2
