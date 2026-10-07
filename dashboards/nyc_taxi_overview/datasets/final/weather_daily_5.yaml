@@ -31,6 +31,19 @@ metrics:
   extra: null
   warning_text: null
 columns:
+- column_name: precipitation_label
+  verbose_name: Precipitation
+  is_dttm: false
+  is_active: true
+  type: VARCHAR
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: "CASE WHEN total_precipitation_mm >= 1 THEN 'Wet day (\u2265 1 mm)'\
+    \ ELSE 'Dry day' END"
+  description: Wet = at least 1 mm of rain or snow that day (WMO rain-day threshold).
+  python_date_format: null
+  extra: null
 - column_name: day_type
   verbose_name: null
   is_dttm: false

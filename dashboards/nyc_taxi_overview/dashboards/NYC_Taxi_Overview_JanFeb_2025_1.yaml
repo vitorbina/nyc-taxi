@@ -93,8 +93,8 @@ position:
     id: CHART-11
     meta:
       chartId: 11
-      height: 54
-      sliceName: Daily Trips vs Precipitation
+      height: 30
+      sliceName: Rain Effect on Daily Trips
       uuid: c73ff4e0-b725-4b07-ba9e-ac107e68d5ee
       width: 12
     parents:
@@ -121,8 +121,8 @@ position:
     id: CHART-4
     meta:
       chartId: 4
-      height: 34
-      sliceName: Trips & Revenue by Service
+      height: 40
+      sliceName: Share of Trips by Service
       uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
       width: 12
     parents:
@@ -383,6 +383,11 @@ metadata:
     Weekday: '#8A8F98'
     Weekend: '#2a78d6'
     Avg speed (mph): '#2a78d6'
+    Share of trips: '#2a78d6'
+    Avg trips per day: '#2a78d6'
+    Dry day: '#8A8F98'
+    "Wet day (\u2265 1 mm)": '#2a78d6'
+    Change in daily trips on wet days: '#2a78d6'
   timed_refresh_immune_slices: []
   cross_filters_enabled: true
   native_filter_configuration:

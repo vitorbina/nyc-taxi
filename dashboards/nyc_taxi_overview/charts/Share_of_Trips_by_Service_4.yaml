@@ -1,0 +1,47 @@
+slice_name: Share of Trips by Service
+description: "Share of trips \xD7 service"
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 2__table
+  viz_type: echarts_timeseries_bar
+  x_axis: taxi_type_label
+  xAxisForceCategorical: true
+  x_axis_sort: Share of trips
+  x_axis_sort_asc: true
+  metrics:
+  - expressionType: SQL
+    sqlExpression: COUNT(*)
+    label: Share of trips
+    hasCustomLabel: true
+    optionName: metric_share_trips
+  groupby: []
+  adhoc_filters: []
+  row_limit: 100
+  order_desc: true
+  truncate_metric: true
+  contributionMode: column
+  orientation: horizontal
+  show_value: true
+  show_legend: false
+  rich_tooltip: true
+  showTooltipTotal: false
+  y_axis_format: .1%
+  y_axis_bounds:
+  - 0
+  - 1
+  truncateYAxis: false
+  x_axis_title: ''
+  y_axis_title: ''
+  minorSplitLine: false
+  color_scheme: supersetColors
+  extra_form_data: {}
+  annotation_layers: []
+  dashboards:
+  - 1
+query_context: null
+cache_timeout: null
+uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
+version: 1.0.0
+dataset_uuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc

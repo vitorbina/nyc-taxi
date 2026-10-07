@@ -1,0 +1,47 @@
+slice_name: Rain Effect on Daily Trips
+description: "% change in avg daily trips, wet vs dry days \xD7 day type"
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 5__table
+  viz_type: echarts_timeseries_bar
+  x_axis: day_type
+  xAxisForceCategorical: true
+  x_axis_sort: day_type
+  x_axis_sort_asc: false
+  metrics:
+  - expressionType: SQL
+    sqlExpression: AVG(CASE WHEN total_precipitation_mm >= 1 THEN trips END) / AVG(CASE
+      WHEN total_precipitation_mm < 1 THEN trips END) - 1
+    label: Change in daily trips on wet days
+    hasCustomLabel: true
+    optionName: metric_rain_effect
+  groupby: []
+  adhoc_filters: []
+  row_limit: 100
+  order_desc: true
+  truncate_metric: true
+  orientation: horizontal
+  show_value: true
+  show_legend: false
+  rich_tooltip: true
+  showTooltipTotal: false
+  y_axis_format: +.1%
+  y_axis_bounds:
+  - 0
+  - null
+  truncateYAxis: false
+  x_axis_title: ''
+  y_axis_title: ''
+  minorSplitLine: false
+  color_scheme: supersetColors
+  extra_form_data: {}
+  annotation_layers: []
+  dashboards:
+  - 1
+query_context: null
+cache_timeout: null
+uuid: c73ff4e0-b725-4b07-ba9e-ac107e68d5ee
+version: 1.0.0
+dataset_uuid: 8b002c9e-221f-49b2-86d7-4c902037468f
