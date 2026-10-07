@@ -2,6 +2,7 @@ import logging
 
 from utils.spark import get_spark
 from utils.paths import final_key, s3a
+from utils.quality import register_clean_trip_views
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,8 @@ def compute_trips(bucket: str) -> None:
     logger.info("Computing trips from staging tables...")
     spark = get_spark(APP_NAME)
     try:
+        register_clean_trip_views(spark)
+
         spark.sql("""
             SELECT
                 pickup_datetime,
@@ -25,7 +28,7 @@ def compute_trips(bucket: str) -> None:
                 trip_distance_miles,
                 total_amount        AS fare_amount,
                 passenger_count
-            FROM staging.yellow_taxi
+            FROM yellow_taxi
             WHERE pickup_borough IS NOT NULL
 
             UNION ALL
@@ -42,7 +45,7 @@ def compute_trips(bucket: str) -> None:
                 trip_distance_miles,
                 total_amount        AS fare_amount,
                 passenger_count
-            FROM staging.green_taxi
+            FROM green_taxi
             WHERE pickup_borough IS NOT NULL
 
             UNION ALL
@@ -59,7 +62,7 @@ def compute_trips(bucket: str) -> None:
                 NULL                AS trip_distance_miles,
                 NULL                AS fare_amount,
                 NULL                AS passenger_count
-            FROM staging.app_rides
+            FROM app_rides
             WHERE pickup_borough IS NOT NULL
 
             UNION ALL
@@ -76,7 +79,7 @@ def compute_trips(bucket: str) -> None:
                 trip_distance_miles,
                 base_passenger_fare AS fare_amount,
                 NULL                AS passenger_count
-            FROM staging.high_volume_fhv
+            FROM high_volume_fhv
             WHERE pickup_borough IS NOT NULL
         """).write.mode("overwrite").parquet(s3a(bucket, final_key("trips")))
 

@@ -2,6 +2,7 @@ import logging
 
 from utils.spark import get_spark
 from utils.paths import final_key, s3a
+from utils.quality import register_clean_trip_views
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,8 @@ def compute_weather_impact(bucket: str) -> None:
     logger.info("Computing weather_impact from staging tables...")
     spark = get_spark(APP_NAME)
     try:
+        register_clean_trip_views(spark)
+
         spark.sql("""
             SELECT
                 TO_DATE(datetime)                    AS date,
@@ -25,16 +28,16 @@ def compute_weather_impact(bucket: str) -> None:
 
         spark.sql("""
             SELECT TO_DATE(pickup_datetime) AS date, total_amount AS fare_amount, 'yellow_taxi' AS taxi_type
-            FROM staging.yellow_taxi
+            FROM yellow_taxi
             UNION ALL
             SELECT TO_DATE(pickup_datetime) AS date, total_amount AS fare_amount, 'green_taxi' AS taxi_type
-            FROM staging.green_taxi
+            FROM green_taxi
             UNION ALL
             SELECT TO_DATE(pickup_datetime) AS date, NULL AS fare_amount, 'app_rides' AS taxi_type
-            FROM staging.app_rides
+            FROM app_rides
             UNION ALL
             SELECT TO_DATE(pickup_datetime) AS date, base_passenger_fare AS fare_amount, 'high_volume_fhv' AS taxi_type
-            FROM staging.high_volume_fhv
+            FROM high_volume_fhv
         """).createOrReplaceTempView("_trips_for_weather")
 
         spark.sql("""
