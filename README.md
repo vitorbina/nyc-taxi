@@ -30,7 +30,7 @@ Superset ── BI dashboards connected to Trino
 | Spark | 3.5.3 |
 | Hive Metastore | 4.0.0 |
 | Trino | latest |
-| Superset | latest |
+| Superset | 6.0.0 |
 | MinIO | latest |
 | PostgreSQL | latest |
 | Docker | 29.2.1 |
@@ -275,7 +275,8 @@ After making changes in Superset:
 - **Times** are NYC local (Trino reads Parquet timestamps in `America/New_York`, matching Spark).
 - **Data quality:** `airflow/utils/quality.py` drops trips outside their file's month, shorter than 1 min or longer than 4 h, longer than 100 mi, or with fares above 1,000 USD (~0.1% of records).
 - **Colors:** each service keeps one fixed color across charts (Yellow, Green, Uber/Lyft purple, Other pink); magnitudes (heatmap, map) use a single-hue orange scale, darker = more.
-- **Map basemap:** Superset 5 only renders Mapbox basemaps. Set `MAPBOX_API_KEY` on the Superset service to show streets and neighborhood labels under the zones; without it the zones render on a blank background.
+- **Map basemap:** OpenStreetMap tiles (no API key) show street and neighborhood names under the zones; hover a zone for its name, borough and revenue. CartoDB basemaps now require a key and Mapbox needs a token, so `superset_config.py` whitelists the OSM tile host in the CSP instead.
+- **Theme:** Superset 6 follows the OS dark mode by default; `superset_config.py` pins the light theme because the palette was validated on a light surface.
 - Chart results are cached for 24 h (`DATA_CACHE_CONFIG` in `superset/superset_config.py`); use **Force refresh** after re-running the pipeline.
 
 ## Connecting Superset to Trino

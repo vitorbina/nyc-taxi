@@ -1,6 +1,13 @@
 dashboard_title: NYC Taxi Overview
 description: null
-css: ''
+css: '/* Top 10 is limited to 10 rows on purpose; Superset 6 flags any chart that
+  hits its row limit. */
+
+  .dashboard-chart-id-7 .header-controls > .anticon-warning { display: none; }
+
+  /* Section headers (### in markdown) */
+
+  .dashboard-markdown h3 { font-weight: 600; margin-bottom: 4px; }'
 slug: null
 certified_by: ''
 certification_details: ''
@@ -499,4 +506,5 @@ metadata:
     chartsInScope: []
     tabsInScope: []
   default_filters: '{}'
+theme_uuid: null
 version: 1.0.0

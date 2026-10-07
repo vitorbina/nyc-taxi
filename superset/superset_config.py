@@ -27,6 +27,28 @@ DATA_CACHE_CONFIG = {
     "CACHE_KEY_PREFIX": "superset_data_",
 }
 
-# The zone map's basemap is a Mapbox style: Superset 5 cannot render other tile
-# providers. Superset reads MAPBOX_API_KEY from the environment (see .env.example);
-# its default CSP already allows api.mapbox.com.
+# The zone map draws OpenStreetMap raster tiles (street and neighborhood names
+# under the zones) via Superset 6's `tile://` styles - no token needed. CartoDB
+# basemaps now answer keyless requests with an "API KEY REQUIRED" watermark, and
+# Mapbox styles need a token. Superset's default CSP doesn't list the OSM tile
+# host, so the browser would block it (blank map): extend img-src/connect-src,
+# keeping the rest of the policy (including the script-src nonce) intact.
+try:
+    from superset.config import TALISMAN_CONFIG
+
+    _TILE_HOSTS = ["https://tile.openstreetmap.org"]
+    _csp = TALISMAN_CONFIG.get("content_security_policy") or {}
+    for _directive in ("img-src", "connect-src"):
+        _values = _csp.get(_directive)
+        if isinstance(_values, list):
+            _csp[_directive] = _values + _TILE_HOSTS
+    TALISMAN_CONFIG["content_security_policy"] = _csp
+except Exception:
+    pass
+
+# Light theme only. Superset 6 otherwise follows the OS dark mode, and the
+# dashboard's palette and markdown text were validated against a light surface.
+# UI theme administration is off so the themes stored in the metadata DB (which
+# include a dark one) don't override this config.
+THEME_DARK = None
+ENABLE_UI_THEME_ADMINISTRATION = False

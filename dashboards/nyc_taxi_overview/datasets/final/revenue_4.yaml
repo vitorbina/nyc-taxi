@@ -1,5 +1,5 @@
-table_name: zones_geo
-main_dttm_col: null
+table_name: revenue
+main_dttm_col: pickup_datetime
 description: null
 default_endpoint: null
 offset: 0
@@ -14,10 +14,29 @@ fetch_values_predicate: null
 extra: null
 normalize_columns: false
 always_filter_main_dttm: false
-uuid: cb4d31a2-9871-43d8-96c2-529785afebd2
+folders: null
+uuid: 881e69f0-7247-4cd7-bbff-220e7e0fd1ff
 metrics:
+- metric_name: avg_fare
+  verbose_name: Average fare
+  metric_type: null
+  expression: AVG(fare_amount)
+  description: null
+  d3format: $,.2f
+  currency: null
+  extra: null
+  warning_text: null
+- metric_name: total_revenue
+  verbose_name: Total revenue
+  metric_type: null
+  expression: SUM(total_amount)
+  description: null
+  d3format: SMART_NUMBER
+  currency: null
+  extra: null
+  warning_text: null
 - metric_name: count
-  verbose_name: COUNT(*)
+  verbose_name: Trips
   metric_type: count
   expression: COUNT(*)
   description: null
@@ -26,7 +45,33 @@ metrics:
   extra: null
   warning_text: null
 columns:
-- column_name: geometry_json
+- column_name: taxi_type_label
+  verbose_name: Service
+  is_dttm: false
+  is_active: true
+  type: VARCHAR
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: CASE taxi_type WHEN 'yellow_taxi' THEN 'Yellow' WHEN 'green_taxi' THEN
+    'Green' WHEN 'high_volume_fhv' THEN 'Uber/Lyft' WHEN 'app_rides' THEN 'Other for-hire'
+    END
+  description: null
+  python_date_format: null
+  extra: null
+- column_name: pickup_datetime
+  verbose_name: null
+  is_dttm: true
+  is_active: true
+  type: TIMESTAMP(3)
+  advanced_data_type: null
+  groupby: true
+  filterable: true
+  expression: null
+  description: null
+  python_date_format: null
+  extra: null
+- column_name: taxi_type
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -38,7 +83,7 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: borough
+- column_name: pickup_borough
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -50,7 +95,7 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: zone
+- column_name: pickup_zone
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -62,7 +107,7 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: avg_fare
+- column_name: fare_amount
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -74,7 +119,7 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: total_revenue
+- column_name: total_amount
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -86,23 +131,11 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: location_id
+- column_name: tip_amount
   verbose_name: null
   is_dttm: false
   is_active: true
-  type: BIGINT
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: null
-  description: null
-  python_date_format: null
-  extra: null
-- column_name: trip_count
-  verbose_name: null
-  is_dttm: false
-  is_active: true
-  type: BIGINT
+  type: DOUBLE
   advanced_data_type: null
   groupby: true
   filterable: true
