@@ -1,7 +1,5 @@
 slice_name: Trips & Revenue by Service
-description: "Service \xD7 trips, revenue, average fare and revenue per mile \u2014\
-  \ one row per service; % Trips is its share of all trips. N/A: other for-hire vehicles\
-  \ do not report fares or distances."
+description: "Service \xD7 trips, revenue, average fare and revenue per mile"
 certified_by: null
 certification_details: null
 viz_type: table

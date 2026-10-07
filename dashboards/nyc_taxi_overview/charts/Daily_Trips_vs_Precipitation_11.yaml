@@ -1,6 +1,5 @@
 slice_name: Daily Trips vs Precipitation
-description: "Daily precipitation \xD7 trips per day \u2014 one dot per day, gray\
-  \ for weekdays and blue for weekends."
+description: "Daily precipitation \xD7 trips per day"
 certified_by: null
 certification_details: null
 viz_type: bubble_v2

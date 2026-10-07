@@ -1,6 +1,5 @@
 slice_name: Top 10 Pickup Zones by Revenue
-description: "Revenue \xD7 pickup zone \u2014 the 10 zones with the highest total\
-  \ revenue (fares + tips)."
+description: "Revenue \xD7 pickup zone"
 certified_by: null
 certification_details: null
 viz_type: echarts_timeseries_bar

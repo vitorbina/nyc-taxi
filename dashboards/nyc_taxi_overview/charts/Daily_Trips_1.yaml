@@ -1,6 +1,5 @@
 slice_name: Daily Trips
-description: "Trips \xD7 day \u2014 total trips per day across all services (NYC local\
-  \ date)."
+description: "Trips \xD7 day"
 certified_by: null
 certification_details: null
 viz_type: echarts_timeseries_line
