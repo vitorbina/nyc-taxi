@@ -447,7 +447,7 @@ metadata:
     chartsInScope: []
     tabsInScope: []
   - id: NATIVE_FILTER-taxitype
-    name: Taxi Type
+    name: Service
     filterType: filter_select
     targets:
     - column:
