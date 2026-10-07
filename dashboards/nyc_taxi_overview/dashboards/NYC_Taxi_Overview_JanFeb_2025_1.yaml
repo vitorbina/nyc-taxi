@@ -66,7 +66,7 @@ position:
     meta:
       chartId: 1
       height: 49
-      sliceName: Daily Trips
+      sliceName: Average Trip Speed by Hour
       uuid: 2b5b50fd-a3f7-4a6b-aa28-0e445efe718e
       width: 12
     parents:
@@ -382,6 +382,7 @@ metadata:
     SUM(total_amount): '#2a78d6'
     Weekday: '#8A8F98'
     Weekend: '#2a78d6'
+    Avg speed (mph): '#2a78d6'
   timed_refresh_immune_slices: []
   cross_filters_enabled: true
   native_filter_configuration:

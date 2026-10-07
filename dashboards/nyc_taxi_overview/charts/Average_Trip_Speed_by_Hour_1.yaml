@@ -1,0 +1,61 @@
+slice_name: Average Trip Speed by Hour
+description: "Avg speed (mph) \xD7 hour of day"
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 2__table
+  viz_type: echarts_timeseries_bar
+  x_axis: hour_label
+  xAxisForceCategorical: true
+  x_axis_sort: hour_label
+  x_axis_sort_asc: true
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(trip_distance_miles) / (SUM(CASE WHEN trip_distance_miles IS
+      NOT NULL THEN trip_duration_minutes END) / 60)
+    label: Avg speed (mph)
+    hasCustomLabel: true
+    optionName: metric_avg_speed
+  groupby: []
+  adhoc_filters:
+  - expressionType: SIMPLE
+    subject: pickup_datetime
+    operator: TEMPORAL_RANGE
+    operatorId: TEMPORAL_RANGE
+    comparator: '2025-01-01 : 2025-08-01'
+    clause: WHERE
+    sqlExpression: null
+    isExtra: false
+    isNew: false
+    datasourceWarning: false
+    filterOptionName: filter_reac3gkoknb_xt5g8w6dxpq
+  row_limit: 100
+  order_desc: true
+  truncate_metric: true
+  orientation: vertical
+  show_value: false
+  show_legend: false
+  rich_tooltip: true
+  showTooltipTotal: false
+  y_axis_format: ',.1f'
+  y_axis_bounds:
+  - 0
+  - null
+  truncateYAxis: false
+  y_axis_title: ''
+  x_axis_title: ''
+  xAxisLabelRotation: 0
+  xAxisLabelInterval: auto
+  minorTicks: false
+  zoomable: false
+  color_scheme: supersetColors
+  extra_form_data: {}
+  annotation_layers: []
+  dashboards:
+  - 1
+query_context: null
+cache_timeout: null
+uuid: 2b5b50fd-a3f7-4a6b-aa28-0e445efe718e
+version: 1.0.0
+dataset_uuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
