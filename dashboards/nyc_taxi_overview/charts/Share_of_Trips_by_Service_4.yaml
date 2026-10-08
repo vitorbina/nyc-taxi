@@ -4,7 +4,7 @@ certified_by: null
 certification_details: null
 viz_type: echarts_timeseries_bar
 params:
-  datasource: 2__table
+  datasource: 6__table
   viz_type: echarts_timeseries_bar
   x_axis: taxi_type_label
   xAxisForceCategorical: true
@@ -12,7 +12,7 @@ params:
   x_axis_sort_asc: true
   metrics:
   - expressionType: SQL
-    sqlExpression: COUNT(*)
+    sqlExpression: SUM(trips)
     label: Share of trips
     hasCustomLabel: true
     optionName: metric_share_trips
@@ -44,4 +44,4 @@ query_context: null
 cache_timeout: null
 uuid: c6f4f0e5-9707-4bb7-b829-d7a5250b11a1
 version: 1.0.0
-dataset_uuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
+dataset_uuid: 492b58bd-d445-4df5-8289-e7b9d68a2642

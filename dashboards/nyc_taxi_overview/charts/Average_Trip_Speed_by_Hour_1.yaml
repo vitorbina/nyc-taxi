@@ -4,7 +4,7 @@ certified_by: null
 certification_details: null
 viz_type: echarts_timeseries_bar
 params:
-  datasource: 2__table
+  datasource: 6__table
   viz_type: echarts_timeseries_bar
   x_axis: hour_label
   xAxisForceCategorical: true
@@ -12,8 +12,8 @@ params:
   x_axis_sort_asc: true
   metrics:
   - expressionType: SQL
-    sqlExpression: SUM(trip_distance_miles) / (SUM(CASE WHEN trip_distance_miles IS
-      NOT NULL THEN trip_duration_minutes END) / 60)
+    sqlExpression: SUM(distance_miles) / NULLIF(SUM(duration_minutes_with_distance)
+      / 60, 0)
     label: Avg speed (mph)
     hasCustomLabel: true
     optionName: metric_avg_speed
@@ -58,4 +58,4 @@ query_context: null
 cache_timeout: null
 uuid: 2b5b50fd-a3f7-4a6b-aa28-0e445efe718e
 version: 1.0.0
-dataset_uuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
+dataset_uuid: 492b58bd-d445-4df5-8289-e7b9d68a2642

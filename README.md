@@ -277,6 +277,7 @@ After making changes in Superset:
 - **Colors:** one hue for the whole dashboard — blue (`#2a78d6`) for volume and revenue, a light-to-dark blue scale for the heatmap and map (darker = more), and gray (`#8A8F98`) as the neutral and comparison color (e.g. axes, grid lines and secondary text). Contrast and color-blind separation were checked for every pair.
 - **Map basemap:** Stadia Maps "Alidade Smooth" tiles (light gray, with street and neighborhood names; © Stadia Maps © OpenMapTiles © OpenStreetMap). Stadia serves `localhost` without an API key — a deployment on a real domain needs a free Stadia key. Hover a zone for its name, borough and revenue.
 - **Theme:** Superset 6 follows the OS dark mode by default; `superset_config.py` pins the light theme because the palette was validated on a light surface.
+- **Speed:** charts read two pre-aggregated mart tables built at the end of `taxi_final` (`airflow/final/marts.py`): `final.trips_hourly` (trips, revenue, distance and duration summed per hour × service × pickup zone — ~5M rows instead of ~290M) and `final.weather_daily` (one row per day). Ratios such as average fare or speed are computed in Superset from those sums, so they stay exact under any filter. The whole dashboard loads in ~6 s without cache (60–90 s per chart on the raw table).
 - Chart results are cached for 24 h (`DATA_CACHE_CONFIG` in `superset/superset_config.py`); use **Force refresh** after re-running the pipeline.
 
 ## Connecting Superset to Trino

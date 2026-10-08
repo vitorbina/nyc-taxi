@@ -4,7 +4,7 @@ certified_by: null
 certification_details: null
 viz_type: big_number_total
 params:
-  datasource: 2__table
+  datasource: 6__table
   viz_type: big_number_total
   metric: total_fare
   adhoc_filters:
@@ -24,21 +24,8 @@ params:
   currency_format:
     symbol: USD
     symbolPosition: prefix
-query_context: "{\"datasource\":{\"id\":2,\"type\":\"table\"},\"force\":false,\"queries\"\
-  :[{\"filters\":[{\"col\":\"pickup_datetime\",\"op\":\"TEMPORAL_RANGE\",\"val\":\"\
-  No filter\"}],\"extras\":{\"having\":\"\",\"where\":\"\"},\"applied_time_extras\"\
-  :{},\"columns\":[],\"metrics\":[\"total_fare\"],\"annotation_layers\":[],\"row_limit\"\
-  :0,\"series_limit\":0,\"order_desc\":true,\"url_params\":{},\"custom_params\":{},\"\
-  custom_form_data\":{}}],\"form_data\":{\"datasource\":\"2__table\",\"viz_type\"\
-  :\"big_number_total\",\"metric\":\"total_fare\",\"adhoc_filters\":[{\"clause\":\"\
-  WHERE\",\"subject\":\"pickup_datetime\",\"operator\":\"TEMPORAL_RANGE\",\"comparator\"\
-  :\"No filter\",\"expressionType\":\"SIMPLE\"}],\"subheader\":\"fares + tips \xB7\
-  \ Yellow, Green & Uber/Lyft\",\"y_axis_format\":\"$.3~s\",\"time_format\":\"smart_date\"\
-  ,\"header_font_size\":0.3,\"subheader_font_size\":0.125,\"extra_form_data\":{},\"\
-  dashboards\":[],\"force\":false,\"result_format\":\"json\",\"result_type\":\"full\"\
-  ,\"annotation_layers\":[],\"currency_format\":{\"symbol\":\"USD\",\"symbolPosition\"\
-  :\"prefix\"}}}"
+query_context: null
 cache_timeout: null
 uuid: e68f855e-4aba-4d2b-b4e3-f6093ae2d30a
 version: 1.0.0
-dataset_uuid: 97e7026d-8f81-49a9-8e07-1b6d9a077cbc
+dataset_uuid: 492b58bd-d445-4df5-8289-e7b9d68a2642

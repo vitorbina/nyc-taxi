@@ -1,4 +1,4 @@
-dashboard_title: "NYC Taxi Overview \xB7 2025"
+dashboard_title: NYC Taxi
 description: null
 css: '/* Top 10 is limited to 10 rows on purpose; Superset 6 flags any chart that
   hits its row limit. */
@@ -216,7 +216,7 @@ position:
   HEADER_ID:
     id: HEADER_ID
     meta:
-      text: "NYC Taxi Overview \xB7 2025"
+      text: NYC Taxi
     type: HEADER
   ROOT_ID:
     children:
@@ -345,6 +345,20 @@ metadata:
         - 8
         - 10
         - 11
+    '11':
+      id: 11
+      crossFilters:
+        scope: global
+        chartsInScope:
+        - 1
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
   global_chart_configuration:
     scope:
       rootPath:
