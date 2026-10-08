@@ -266,7 +266,7 @@ After making changes in Superset:
 
 | Dashboard | Description |
 |---|---|
-| `nyc_taxi_overview/` | Overview of Jan–Feb 2025. KPIs: trips, revenue, average fare, revenue per mile. Charts: average trip speed by hour, hour × weekday demand heatmap, top 10 pickup zones by revenue, revenue choropleth by zone, share of trips by service, and the rain effect on daily trips (wet vs dry days, weekday/weekend). Each chart's subtitle states its composition (metric × dimension). Native filters for period, service and pickup borough. |
+| `nyc_taxi_overview/` | Overview of 2025 (Jan–Dec, ~292M trips). KPIs: trips, revenue, average fare, revenue per mile. Charts: average trip speed by hour, hour × weekday demand heatmap, top 10 pickup zones by revenue, revenue choropleth by zone, share of trips by service, and the rain effect on daily trips (wet vs dry days, weekday/weekend). Each chart's subtitle states its composition (metric × dimension). Native filters for period, service and pickup borough. |
 
 **Conventions used in the dashboard**
 

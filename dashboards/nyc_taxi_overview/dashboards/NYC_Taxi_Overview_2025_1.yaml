@@ -1,4 +1,4 @@
-dashboard_title: "NYC Taxi Overview \xB7 Jan\u2013Feb 2025"
+dashboard_title: "NYC Taxi Overview \xB7 2025"
 description: null
 css: '/* Top 10 is limited to 10 rows on purpose; Superset 6 flags any chart that
   hits its row limit. */
@@ -216,7 +216,7 @@ position:
   HEADER_ID:
     id: HEADER_ID
     meta:
-      text: "NYC Taxi Overview \xB7 Jan\u2013Feb 2025"
+      text: "NYC Taxi Overview \xB7 2025"
     type: HEADER
   ROOT_ID:
     children:
