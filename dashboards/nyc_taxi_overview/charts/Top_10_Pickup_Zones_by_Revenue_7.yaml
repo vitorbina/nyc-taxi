@@ -62,7 +62,7 @@ params:
   truncateYAxis: false
   y_axis_bounds:
   - 0
-  - 80000000
+  - null
   truncateXAxis: true
   rich_tooltip: true
   showTooltipTotal: true
