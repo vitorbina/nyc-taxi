@@ -149,7 +149,7 @@ position:
     id: CHART-6
     meta:
       chartId: 6
-      height: 56
+      height: 60
       sliceName: Trips by Hour and Weekday
       uuid: 545b0cc8-e286-4677-9861-64bcabdf718e
       width: 12
