@@ -38,7 +38,7 @@ params:
   show_legend: false
   rich_tooltip: true
   showTooltipTotal: false
-  y_axis_format: ',.1f'
+  y_axis_format: ',.0f'
   y_axis_bounds:
   - 0
   - null

@@ -23,7 +23,7 @@ params:
   yscale_interval: 1
   normalize_across: heatmap
   left_margin: 70
-  bottom_margin: auto
+  bottom_margin: 40
   value_bounds:
   - null
   - null
@@ -36,6 +36,12 @@ params:
   extra_form_data: {}
   dashboards: []
   annotation_layers: []
+  border_color:
+    r: 255
+    g: 255
+    b: 255
+    a: 1
+  border_width: 2
 query_context: null
 cache_timeout: null
 uuid: 545b0cc8-e286-4677-9861-64bcabdf718e

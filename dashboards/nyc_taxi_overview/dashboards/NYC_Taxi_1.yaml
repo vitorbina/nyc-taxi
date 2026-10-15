@@ -402,6 +402,8 @@ metadata:
     Dry day: '#8A8F98'
     "Wet day (\u2265 1 mm)": '#2a78d6'
     Change in daily trips on wet days: '#2a78d6'
+    avg_speed_mph: '#2a78d6'
+    total_fare: '#2a78d6'
   timed_refresh_immune_slices: []
   cross_filters_enabled: true
   native_filter_configuration:
