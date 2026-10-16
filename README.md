@@ -231,23 +231,20 @@ dashboards/
 
 ### Importing
 
-First create the Trino database connections (see [Connecting Superset to Trino](#connecting-superset-to-trino)), then:
+Prerequisite: the pipeline has run at least once (see [Loading data](#loading-data) / `./scripts/backfill.sh`), so the
+tables the charts read exist — `final.trips_hourly`, `final.weather_daily` and `final.zones_geo`.
 
-1. Generate the ZIP:
-   ```bash
-   ./scripts/export_dashboards.sh
-   ```
-2. Import it, either:
-   - **UI:** go to **Dashboards → Import** and upload `dashboards/exports/nyc_taxi_overview.zip`, or
-   - **CLI:**
-     ```bash
-     docker cp dashboards/exports/nyc_taxi_overview.zip nyc_superset:/tmp/dashboard.zip
-     docker exec nyc_superset superset import-dashboards -p /tmp/dashboard.zip -u admin
-     ```
+Then, from the repo root:
 
-> **Re-importing:** if the dashboard already exists, the import fails with a
-> `duplicate key value violates unique constraint` error. Delete the existing
-> dashboard (and its charts) in Superset first, then import again.
+```bash
+./scripts/export_dashboards.sh                                   # zips dashboards/nyc_taxi_overview/
+set -a; source .env; set +a                                      # exposes SUPERSET_ADMIN_PASSWORD
+./scripts/import_dashboards.sh                                   # imports via the API (overwrite=true)
+```
+
+The ZIP carries its own Trino connection (`final`), so no database needs to be created by hand, and re-running
+the import updates the existing dashboard instead of failing. Tested on a fresh Superset 6.0.0: all 10 charts
+render. (The UI route — **Dashboards → Import** with `dashboards/exports/nyc_taxi_overview.zip` — works too.)
 
 ### Exporting
 
