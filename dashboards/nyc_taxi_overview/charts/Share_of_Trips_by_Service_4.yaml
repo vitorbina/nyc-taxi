@@ -6,35 +6,38 @@ viz_type: echarts_timeseries_bar
 params:
   datasource: 6__table
   viz_type: echarts_timeseries_bar
-  x_axis: taxi_type_label
+  x_axis:
+    expressionType: SQL
+    sqlExpression: '''All trips'''
+    label: All trips
   xAxisForceCategorical: true
-  x_axis_sort: Share of trips
-  x_axis_sort_asc: true
   metrics:
   - expressionType: SQL
     sqlExpression: SUM(trips)
     label: Share of trips
     hasCustomLabel: true
     optionName: metric_share_trips
-  groupby: []
+  groupby:
+  - taxi_type_label
   adhoc_filters: []
   row_limit: 100
-  order_desc: true
-  truncate_metric: true
-  contributionMode: column
+  contributionMode: row
+  stack: Stack
   orientation: horizontal
   show_value: true
-  show_legend: false
-  rich_tooltip: true
-  showTooltipTotal: false
+  percentage_threshold: 5
+  show_legend: true
+  legendType: plain
+  legendOrientation: top
+  sort_series_type: sum
+  sort_series_ascending: false
   y_axis_format: .1%
   y_axis_bounds:
   - 0
   - 1
-  truncateYAxis: false
+  rich_tooltip: true
   x_axis_title: ''
   y_axis_title: ''
-  minorSplitLine: false
   color_scheme: supersetColors
   extra_form_data: {}
   annotation_layers: []

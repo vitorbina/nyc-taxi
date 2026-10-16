@@ -1,0 +1,48 @@
+slice_name: Rain Intensity vs Daily Trips
+description: "Trips vs an average dry day (same weekday) \xD7 rain intensity"
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 8__table
+  viz_type: echarts_timeseries_bar
+  x_axis: rain_intensity
+  xAxisForceCategorical: true
+  x_axis_sort: rain_intensity
+  x_axis_sort_asc: true
+  metrics:
+  - expressionType: SQL
+    sqlExpression: AVG(vs_dry_same_weekday)
+    label: Trips vs a dry day
+    hasCustomLabel: true
+    optionName: metric_rain_vs_dry
+  groupby: []
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: total_precipitation_mm >= 1
+    clause: WHERE
+    filterOptionName: filter_wet_only
+    isExtra: false
+    isNew: false
+  row_limit: 100
+  orientation: vertical
+  show_value: true
+  show_legend: false
+  rich_tooltip: true
+  y_axis_format: +.1%
+  y_axis_bounds:
+  - 0
+  - null
+  truncateYAxis: false
+  x_axis_title: ''
+  y_axis_title: ''
+  color_scheme: supersetColors
+  extra_form_data: {}
+  annotation_layers: []
+  dashboards:
+  - 1
+query_context: null
+cache_timeout: null
+uuid: c73ff4e0-b725-4b07-ba9e-ac107e68d5ee
+version: 1.0.0
+dataset_uuid: 6ebeead7-1e7a-40bd-bc8e-aa66851bae7e

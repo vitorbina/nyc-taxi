@@ -1,12 +1,20 @@
-table_name: weather_daily
+table_name: rain_intensity_daily
 main_dttm_col: date
-description: null
+description: 'One row per day: rain-intensity band and trips vs the average dry day
+  of the same weekday.'
 default_endpoint: null
 offset: 0
 cache_timeout: null
 catalog: hive
 schema: final
-sql: null
+sql: "SELECT\n    date,\n    day_type,\n    total_precipitation_mm,\n    trips,\n\
+  \    CASE\n        WHEN total_precipitation_mm < 1  THEN 'Dry'\n        WHEN total_precipitation_mm\
+  \ < 5  THEN chr(8203) || 'Light rain (1\u20135 mm)'\n        WHEN total_precipitation_mm\
+  \ < 15 THEN chr(8203) || chr(8203) || 'Moderate rain (5\u201315 mm)'\n        ELSE\
+  \ chr(8203) || chr(8203) || chr(8203) || 'Heavy rain (15+ mm)'\n    END AS rain_intensity,\n\
+  \    -- that day's trips vs the average DRY day of the same weekday (baseline =\
+  \ 0%)\n    trips / AVG(CASE WHEN total_precipitation_mm < 1 THEN trips END) OVER\
+  \ (PARTITION BY day_of_week(date)) - 1 AS vs_dry_same_weekday\nFROM final.weather_daily"
 params: null
 template_params: null
 filter_select_enabled: true
@@ -15,7 +23,7 @@ extra: null
 normalize_columns: false
 always_filter_main_dttm: false
 folders: null
-uuid: 8b002c9e-221f-49b2-86d7-4c902037468f
+uuid: 6ebeead7-1e7a-40bd-bc8e-aa66851bae7e
 metrics:
 - metric_name: count
   verbose_name: COUNT(*)
@@ -27,20 +35,7 @@ metrics:
   extra: null
   warning_text: null
 columns:
-- column_name: precipitation_label
-  verbose_name: Precipitation
-  is_dttm: false
-  is_active: true
-  type: VARCHAR
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: "CASE WHEN total_precipitation_mm >= 1 THEN 'Wet day (\u2265 1 mm)'\
-    \ ELSE 'Dry day' END"
-  description: Wet = at least 1 mm of rain or snow that day (WMO rain-day threshold).
-  python_date_format: null
-  extra: null
-- column_name: weather_description
+- column_name: day_type
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -52,7 +47,7 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: day_type
+- column_name: rain_intensity
   verbose_name: null
   is_dttm: false
   is_active: true
@@ -69,18 +64,6 @@ columns:
   is_dttm: true
   is_active: true
   type: DATE
-  advanced_data_type: null
-  groupby: true
-  filterable: true
-  expression: ''
-  description: null
-  python_date_format: null
-  extra: null
-- column_name: avg_temperature_c
-  verbose_name: null
-  is_dttm: false
-  is_active: true
-  type: DOUBLE
   advanced_data_type: null
   groupby: true
   filterable: true
@@ -112,7 +95,7 @@ columns:
   description: null
   python_date_format: null
   extra: null
-- column_name: avg_wind_speed_kmh
+- column_name: vs_dry_same_weekday
   verbose_name: null
   is_dttm: false
   is_active: true
