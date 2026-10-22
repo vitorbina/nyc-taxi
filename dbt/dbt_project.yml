@@ -1,0 +1,16 @@
+name: nyc_taxi
+version: "1.0.0"
+profile: nyc_taxi
+
+model-paths: ["models"]
+target-path: target
+clean-targets: ["target", "dbt_packages"]
+
+# Models read from s3://$MINIO_BUCKET and write there too by default.
+# To test without touching real data, redirect the writes:
+#   dbt run --vars '{output_lake: s3://data-lake-nyc/poc}'
+
+models:
+  nyc_taxi:
+    staging:
+      +materialized: external

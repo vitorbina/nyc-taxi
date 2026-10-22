@@ -1,0 +1,20 @@
+nyc_taxi:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # In-memory: DuckDB is only the engine, MinIO is the storage
+      path: ":memory:"
+      threads: 4
+      extensions:
+        - httpfs
+      settings:
+        memory_limit: "{{ env_var('DUCKDB_MEMORY_LIMIT', '4GB') }}"
+      secrets:
+        - type: s3
+          key_id: "{{ env_var('MINIO_ROOT_USER') }}"
+          secret: "{{ env_var('MINIO_ROOT_PASSWORD') }}"
+          # MINIO_ENDPOINT is http://minio:9000 inside Docker; DuckDB wants it without the scheme
+          endpoint: "{{ env_var('MINIO_ENDPOINT', 'http://localhost:9000') | replace('http://', '') }}"
+          url_style: path
+          use_ssl: false
