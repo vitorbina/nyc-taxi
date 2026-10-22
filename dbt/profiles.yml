@@ -8,8 +8,14 @@ nyc_taxi:
       threads: 4
       extensions:
         - httpfs
+      # Set once when the database opens (temp_directory can't change afterwards)
+      config_options:
+        # Beyond memory_limit, DuckDB spills here instead of failing
+        temp_directory: "{{ env_var('DUCKDB_TEMP_DIR', '/tmp/duckdb_spill') }}"
       settings:
         memory_limit: "{{ env_var('DUCKDB_MEMORY_LIMIT', '4GB') }}"
+        # Row order of the output files doesn't matter; lets DuckDB stream with less memory
+        preserve_insertion_order: false
       secrets:
         - type: s3
           key_id: "{{ env_var('MINIO_ROOT_USER') }}"

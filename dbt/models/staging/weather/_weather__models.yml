@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: stg_weather
+    description: Hourly NYC weather, typed, with the WMO weather code translated.
+    columns:
+      - name: datetime
+        description: Start of the hour, New York wall-clock time.
+        tests: [not_null, unique]
+      - name: humidity_pct
+        tests:
+          - accepted_range: {min_value: 0, max_value: 100}
+      - name: precipitation_mm
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: weather_code
+        tests: [not_null]
+      - name: weather_description
+        description: NULL would mean a WMO code missing from the CASE translation.
+        tests: [not_null]
+      - name: partition_date
+        tests: [not_null]

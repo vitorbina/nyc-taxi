@@ -1,0 +1,27 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Files as downloaded by the ingestion DAGs, read straight from MinIO.
+    tables:
+      - name: yellow_taxi
+        meta:
+          external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/yellow_taxi/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+      - name: green_taxi
+        meta:
+          external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/green_taxi/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+      - name: app_rides
+        description: FHV trips (non high-volume bases).
+        meta:
+          external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/app_rides/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+      - name: high_volume_fhv
+        description: High Volume FHV trips (Uber, Lyft, Via).
+        meta:
+          external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/high_volume_fhv/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+      - name: weather
+        description: Hourly NYC weather from Open-Meteo, one JSON file per day.
+        meta:
+          external_location: "read_json_auto('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/weather/*/*.json', hive_partitioning=true)"
+      - name: taxi_zone_lookup
+        meta:
+          external_location: "read_csv('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/reference/taxi_zone_lookup/taxi_zone_lookup.csv', header=true)"

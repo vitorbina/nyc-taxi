@@ -1,9 +1,0 @@
-version: 2
-
-sources:
-  - name: raw
-    tables:
-      - name: weather
-        description: Hourly NYC weather from Open-Meteo, one JSON file per day.
-        meta:
-          external_location: "read_json_auto('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/weather/*/*.json', hive_partitioning=true)"

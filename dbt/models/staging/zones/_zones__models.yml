@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: stg_taxi_zone_lookup
+    description: TLC taxi zones (LocationID to borough/zone), used to enrich every trip table.
+    columns:
+      - name: location_id
+        tests: [not_null, unique]
+      - name: borough
+        tests: [not_null]
+      - name: zone
+        tests: [not_null]

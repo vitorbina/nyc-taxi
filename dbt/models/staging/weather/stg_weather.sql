@@ -1,6 +1,6 @@
 {{ config(
-    location=var('output_lake', 's3://' ~ env_var('MINIO_BUCKET')) ~ '/staging/weather',
-    options={'partition_by': 'partition_date', 'overwrite_or_ignore': true},
+    location=lake_location('staging/weather'),
+    partition_by='partition_date',
 ) }}
 
 SELECT

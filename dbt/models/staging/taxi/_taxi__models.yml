@@ -1,0 +1,93 @@
+version: 2
+
+# Staging keeps each TLC file as published (typed, translated, zone-enriched) and only
+# drops records that can't be a trip at all. These tests guard those guarantees; the
+# business rules for BI (max fare, max duration...) live in the final layer.
+
+models:
+  - name: stg_yellow_taxi
+    description: Yellow taxi trips.
+    columns:
+      - name: pickup_datetime
+        tests: [not_null]
+      - name: dropoff_datetime
+        tests: [not_null]
+      - name: trip_duration_minutes
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: trip_distance_miles
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: fare_amount
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: pickup_borough
+        tests: [not_null]
+      - name: partition_date
+        tests: [not_null]
+
+  - name: stg_green_taxi
+    description: Green taxi trips.
+    columns:
+      - name: pickup_datetime
+        tests: [not_null]
+      - name: dropoff_datetime
+        tests: [not_null]
+      - name: trip_duration_minutes
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: trip_distance_miles
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: fare_amount
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: pickup_borough
+        tests: [not_null]
+      - name: partition_date
+        tests: [not_null]
+
+  - name: stg_app_rides
+    description: FHV trips from non high-volume bases (no fare or distance reported).
+    columns:
+      - name: dispatching_base_num
+        tests: [not_null]
+      - name: pickup_datetime
+        tests: [not_null]
+      - name: dropoff_datetime
+        tests: [not_null]
+      - name: trip_duration_minutes
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: pickup_borough
+        tests: [not_null]
+      - name: partition_date
+        tests: [not_null]
+
+  - name: stg_high_volume_fhv
+    description: High Volume FHV trips (Uber, Lyft, Via, Juno).
+    columns:
+      - name: company_name
+        description: NULL would mean a license number missing from the CASE translation.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [Juno, Uber, Via, Lyft]
+      - name: pickup_datetime
+        tests: [not_null]
+      - name: dropoff_datetime
+        tests: [not_null]
+      - name: trip_duration_minutes
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: trip_distance_miles
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: base_passenger_fare
+        tests:
+          - accepted_range: {min_value: 0}
+      - name: pickup_borough
+        tests: [not_null]
+      - name: partition_date
+        tests: [not_null]

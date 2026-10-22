@@ -3,6 +3,8 @@ version: "1.0.0"
 profile: nyc_taxi
 
 model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
 target-path: target
 clean-targets: ["target", "dbt_packages"]
 
@@ -10,7 +12,12 @@ clean-targets: ["target", "dbt_packages"]
 # To test without touching real data, redirect the writes:
 #   dbt run --vars '{output_lake: s3://data-lake-nyc/poc}'
 
+# Each dbt run starts with an empty in-memory DuckDB; recreate views for the
+# upstream models a partial selection depends on (see macros/lake.sql).
+on-run-start:
+  - "{{ register_upstream_lake_models() }}"
+
 models:
   nyc_taxi:
-    staging:
-      +materialized: external
+    # Every model is written as Parquet to MinIO (macros/lake.sql)
+    +materialized: lake
