@@ -210,3 +210,6 @@ airflow.cfg
 dashboards/exports/
 # Superset state backups (binary, point-in-time)
 dashboards/backups/
+
+# dbt
+dbt/.user.yml
