@@ -106,7 +106,7 @@ log "[2/6] Pausing staging during ingestion"
 afq dags pause taxi_staging
 afq dags pause weather_staging
 
-# 3. Backfill ingestion. skip_repair avoids a Spark session per month; the raw
+# 3. Backfill ingestion. skip_repair avoids a catalog sync per month; the raw
 #    catalog is registered once at the end. --max-active-runs 2 throttles the
 #    source CDN to avoid HTTP 403 rate limiting.
 log "[3/6] Backfilling ingestion"
@@ -127,7 +127,7 @@ afq dags unpause weather_staging
 afq dags trigger weather_staging
 wait_for_dag weather_staging
 
-# 5. Stage taxi. Auto-discovers all missing partitions in one pass, then
+# 5. Stage taxi. Rebuilds every month from the raw layer in one pass, then
 #    taxi_final fires automatically via the staging assets.
 log "[5/6] Staging taxi"
 afq dags unpause taxi_staging

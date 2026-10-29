@@ -1,44 +1,38 @@
 """
 # NYC Taxi Final Layer
 
-Reads from the staging Hive tables (staging.*) and produces three unified
-tables written to MinIO under final/ and registered in the final database.
+Runs the dbt final models (dbt/models/final), which read the staging tables with
+the trip quality rules applied, and writes them to MinIO under final/.
 
 | Table          | Description                                                |
 |----------------|------------------------------------------------------------|
 | trips          | Trip-level data unified across the 4 taxi types            |
 | revenue        | Trip revenue with pickup zone and borough enrichment       |
 | weather_impact | Trip-level fares joined with daily weather conditions      |
-| zones_geo      | Zone polygons (WKT) with aggregated trip and revenue stats |
+| zones_geo      | Zone polygons with aggregated trip and revenue stats       |
 | trips_hourly   | Dashboard mart: trips, revenue, distance, duration summed per hour x service x zone |
 | weather_daily  | Dashboard mart: one row per day with its weather and total trips |
 
 Triggered when all four staging taxi assets have been updated by the taxi_staging DAG.
 
-Each table is published as a unit — built and registered in the Hive catalog in
-the same task — so downstream consumers (e.g. zones_geo, which reads final.revenue)
-always find their dependencies in the catalog.
+Every model is tested right after it is built, and the marts are reconciled with
+trips at the end. The tables are registered in the catalog (and so reach the
+dashboards) only once everything passed.
 """
 
 import os
-import logging
 
 from airflow.decorators import dag, task
 from airflow.sdk import AssetAll
 
 from utils.default import get_dag_config
+from utils.dbt_tasks import dbt_task_group
 from utils.hive import setup_hive
-from utils.constants import FINAL_DATABASE
+from utils.constants import FINAL_DATABASE, FINAL_TABLES
 from utils.assets import staging_taxi_assets
-from final.trips import compute_trips
-from final.revenue_by_zone import compute_revenue_by_zone
-from final.weather_impact import compute_weather_impact
-from final.zones_geo import compute_zones_geo
-from final.marts import compute_trips_hourly, compute_weather_daily
-
-logger = logging.getLogger(__name__)
 
 BUCKET = os.getenv("MINIO_BUCKET")
+
 
 @dag(
     **get_dag_config(
@@ -53,47 +47,13 @@ BUCKET = os.getenv("MINIO_BUCKET")
 )
 def final_pipeline():
 
+    @task
     def register(table: str):
-        logger.info("Registering final.%s", table)
         setup_hive(tables=[table], database=FINAL_DATABASE, location_prefix="final", bucket=BUCKET)
 
-    @task
-    def build_trips():
-        compute_trips(bucket=BUCKET)
-        register("trips")
-
-    @task
-    def build_weather_impact():
-        compute_weather_impact(bucket=BUCKET)
-        register("weather_impact")
-
-    @task
-    def build_revenue():
-        compute_revenue_by_zone(bucket=BUCKET)
-        register("revenue")
-
-    @task
-    def build_zones_geo():
-        compute_zones_geo(bucket=BUCKET)
-        register("zones_geo")
-
-    @task
-    def build_trips_hourly():
-        compute_trips_hourly(bucket=BUCKET)
-        register("trips_hourly")
-
-    @task
-    def build_weather_daily():
-        compute_weather_daily(bucket=BUCKET)
-        register("weather_daily")
-
-    # Sequential to avoid Spark contention on the single-worker setup.
-    # revenue is built and registered before zones_geo, which reads final.revenue
-    # from the catalog; the marts read final.trips / final.weather_impact likewise.
-    (
-        build_trips() >> build_weather_impact() >> build_revenue() >> build_zones_geo()
-        >> build_trips_hourly() >> build_weather_daily()
-    )
+    build = dbt_task_group("build_final", select=["path:models/final"])
+    for table in FINAL_TABLES:
+        build >> register.override(task_id=f"hive_{table}")(table=table)
 
 
 pipeline = final_pipeline()

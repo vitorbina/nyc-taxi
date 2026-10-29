@@ -26,14 +26,14 @@ HOURLY_VARIABLES = [
 ]
 
 WEATHER_RAW_SCHEMA = (
-    "`time` STRING, "
-    "`temperature_2m` DOUBLE, "
-    "`relative_humidity_2m` INT, "
-    "`apparent_temperature` DOUBLE, "
-    "`precipitation` DOUBLE, "
-    "`wind_speed_10m` DOUBLE, "
-    "`wind_direction_10m` INT, "
-    "`weather_code` INT"
+    '"time" varchar, '
+    '"temperature_2m" double, '
+    '"relative_humidity_2m" integer, '
+    '"apparent_temperature" double, '
+    '"precipitation" double, '
+    '"wind_speed_10m" double, '
+    '"wind_direction_10m" integer, '
+    '"weather_code" integer'
 )
 
 

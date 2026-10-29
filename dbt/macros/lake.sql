@@ -10,6 +10,8 @@
   Config:
     location      s3:// path. A directory when partitioned, a .parquet file otherwise.
     partition_by  optional column; written as Hive-style folders (col=value/).
+                  Every run rebuilds the table, so OVERWRITE clears the whole directory
+                  first: a partition that disappeared from the source doesn't linger.
 #}
 
 {% macro lake_location(subpath) -%}
@@ -34,7 +36,7 @@
   {% call statement('main') -%}
     COPY ({{ sql }}) TO '{{ location }}' (
       FORMAT parquet
-      {%- if partition_by %}, PARTITION_BY ({{ partition_by }}), OVERWRITE_OR_IGNORE{% endif %}
+      {%- if partition_by %}, PARTITION_BY ({{ partition_by }}), OVERWRITE{% endif %}
     )
   {%- endcall %}
 

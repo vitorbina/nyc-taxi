@@ -1,5 +1,5 @@
 # Infrastructure definition for the NYC Taxi Data Lake
-# Provisions: MinIO, Postgres, Airflow (webserver + scheduler), Spark (master + worker), Trino, Superset
+# Provisions: MinIO, Postgres, Airflow (webserver + scheduler, runs dbt + DuckDB), Hive Metastore, Trino, Superset
 
 x-airflow-common: &airflow-common
   build:
@@ -11,7 +11,7 @@ x-airflow-common: &airflow-common
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/utils:/opt/airflow/utils
     - ./airflow/staging:/opt/airflow/staging
-    - ./airflow/final:/opt/airflow/final
+    - ./dbt:/opt/airflow/dbt
     - ./logs:/opt/airflow/logs
   depends_on:
     postgres:
@@ -29,8 +29,10 @@ x-airflow-common: &airflow-common
     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     MINIO_BUCKET: ${MINIO_BUCKET}
-    SPARK_MASTER_URL: spark://spark-master:7077
-    HIVE_METASTORE_URI: thrift://hive-metastore:9083
+    TRINO_HOST: trino
+    # dbt tasks run inside the scheduler (LocalExecutor); keep DuckDB well under its
+    # memory limit; beyond this it spills to disk instead of being OOM-killed
+    DUCKDB_MEMORY_LIMIT: 3GB
     PYTHONPATH: /opt/airflow
     _PIP_ADDITIONAL_REQUIREMENTS: ""
 
@@ -123,7 +125,11 @@ services:
   airflow-init:
     <<: *airflow-common
     container_name: nyc_airflow_init
-    command: airflow db migrate
+    # The duckdb pool has one slot: dbt tasks from every DAG run one at a time
+    command: >-
+      bash -c
+      "airflow db migrate &&
+      airflow pools set duckdb 1 'dbt + DuckDB jobs, one at a time'"
     restart: "no"
 
   # ── Airflow Webserver ──────────────────────────────────────────────────────
@@ -168,7 +174,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
+          memory: 6g
 
   # ── Hive Metastore ────────────────────────────────────────────────────────
   hive-metastore:
@@ -196,65 +202,6 @@ services:
       resources:
         limits:
           memory: 2500m
-    networks:
-      - nyc-network
-
-  # ── Spark Master ───────────────────────────────────────────────────────────
-  spark-master:
-    build:
-      context: .
-      dockerfile: dockerfile/Dockerfile.spark
-    container_name: nyc_spark_master
-    entrypoint: /opt/spark/bin/spark-class
-    command: org.apache.spark.deploy.master.Master
-    environment:
-      SPARK_MASTER_HOST: spark-master
-      SPARK_MASTER_PORT: "7077"
-      SPARK_MASTER_WEBUI_PORT: "8080"
-    ports:
-      - "8081:8080"   # Spark Master UI
-      - "7077:7077"   # Spark Master port
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-    networks:
-      - nyc-network
-
-  # ── Spark Worker ───────────────────────────────────────────────────────────
-  spark-worker:
-    build:
-      context: .
-      dockerfile: dockerfile/Dockerfile.spark
-    container_name: nyc_spark_worker
-    entrypoint: /opt/spark/bin/spark-class
-    command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-    environment:
-      SPARK_WORKER_MEMORY: 4g
-    depends_on:
-      - spark-master
-    deploy:
-      resources:
-        limits:
-          memory: 4.5g
-    networks:
-      - nyc-network
-
-  spark-worker-2:
-    build:
-      context: .
-      dockerfile: dockerfile/Dockerfile.spark
-    container_name: nyc_spark_worker_2
-    entrypoint: /opt/spark/bin/spark-class
-    command: org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-    environment:
-      SPARK_WORKER_MEMORY: 4g
-    depends_on:
-      - spark-master
-    deploy:
-      resources:
-        limits:
-          memory: 4.5g
     networks:
       - nyc-network
 

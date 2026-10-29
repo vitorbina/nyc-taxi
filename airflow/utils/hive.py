@@ -1,27 +1,111 @@
-import logging
+"""
+Register lake tables in the Hive Metastore, through Trino.
 
-from utils.spark import get_spark
+The schema of a Parquet table is read from the files themselves with DuckDB (only
+the footers are fetched), then Trino creates the external table and syncs its
+partitions with the folders found in MinIO. Dropping an external table only
+removes the catalog entry, never the files.
+"""
+
+import logging
+import os
+
+import duckdb
+import trino
+
 from utils.s3 import folder_exists, list_partitions
-from utils.constants import PARTITION_COL, STAGING_DATABASE, RAW_DATABASE, FINAL_DATABASE, DEFAULT_BUCKET
+from utils.constants import PARTITION_COL, STAGING_DATABASE, DEFAULT_BUCKET
 
 logger = logging.getLogger(__name__)
 
+CATALOG = "hive"
 
-def _to_hive_type(spark_type: str) -> str:
-    return spark_type.replace("timestamp_ntz", "timestamp")
+# DuckDB type (as read from Parquet) -> Hive type in Trino
+_TRINO_TYPES = {
+    "VARCHAR": "varchar",
+    "BOOLEAN": "boolean",
+    "TINYINT": "tinyint",
+    "SMALLINT": "smallint",
+    "INTEGER": "integer",
+    "BIGINT": "bigint",
+    "FLOAT": "real",
+    "DOUBLE": "double",
+    "DATE": "date",
+    "TIMESTAMP": "timestamp(3)",
+    "TIMESTAMP_NS": "timestamp(3)",
+    "BLOB": "varbinary",
+}
 
 
-def _table_exists(spark, database: str, table: str) -> bool:
-    return spark.sql(f"SHOW TABLES IN {database} LIKE '{table}'").count() > 0
+def _trino_type(duckdb_type: str) -> str:
+    if duckdb_type.startswith("DECIMAL"):
+        return duckdb_type.lower()
+    if duckdb_type not in _TRINO_TYPES:
+        raise ValueError(f"No Hive type mapped for DuckDB type {duckdb_type}")
+    return _TRINO_TYPES[duckdb_type]
 
 
-def _has_partitions(spark, database: str, table: str) -> bool:
-    columns = spark.catalog.listColumns(table, dbName=database)
-    return any(col.isPartition for col in columns)
+def _parquet_schema_ddl(bucket: str, prefix: str, is_partitioned: bool) -> str:
+    con = duckdb.connect()
+    try:
+        con.sql("LOAD httpfs")
+        con.execute(
+            "CREATE SECRET (TYPE s3, KEY_ID ?, SECRET ?, ENDPOINT ?, URL_STYLE 'path', USE_SSL false)",
+            [
+                os.getenv("MINIO_ROOT_USER"),
+                os.getenv("MINIO_ROOT_PASSWORD"),
+                os.getenv("MINIO_ENDPOINT").replace("http://", ""),
+            ],
+        )
+        files = f"s3://{bucket}/{prefix}" + ("*/*.parquet" if is_partitioned else "*.parquet")
+        # union_by_name: raw TLC files gained columns over the years
+        columns = con.sql(
+            f"DESCRIBE SELECT * FROM read_parquet('{files}', hive_partitioning=false, union_by_name=true)"
+        ).fetchall()
+    finally:
+        con.close()
+
+    # Hive column names are case-insensitive; raw files have both Airport_fee and airport_fee
+    seen, fields = set(), []
+    for name, duckdb_type, *_ in columns:
+        if name.lower() not in seen:
+            seen.add(name.lower())
+            fields.append(f'"{name.lower()}" {_trino_type(duckdb_type)}')
+    return ", ".join(fields)
+
+
+def _connect():
+    return trino.dbapi.connect(
+        host=os.getenv("TRINO_HOST", "trino"),
+        port=int(os.getenv("TRINO_PORT", "8080")),
+        user="airflow",
+        catalog=CATALOG,
+    )
+
+
+def _run(cur, sql: str) -> list:
+    cur.execute(sql)
+    return cur.fetchall()
+
+
+def _create_schema(cur, database: str, bucket: str) -> None:
+    # Without a location the metastore would default to a local (file:) path
+    _run(cur, f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{database} WITH (location = 's3a://{bucket}/{database}/')")
+
+
+def _table_exists(cur, database: str, table: str) -> bool:
+    return bool(_run(cur, f"SHOW TABLES FROM {CATALOG}.{database} LIKE '{table}'"))
+
+
+def _is_partitioned(cur, database: str, table: str) -> bool:
+    return bool(_run(cur, f"""
+        SELECT 1 FROM {CATALOG}.information_schema.columns
+        WHERE table_schema = '{database}' AND table_name = '{table}' AND column_name = '{PARTITION_COL}'
+    """))
 
 
 def _create_external_table(
-    spark,
+    cur,
     table: str,
     database: str,
     location_prefix: str,
@@ -30,47 +114,42 @@ def _create_external_table(
     schema_ddl: str = None,
 ) -> None:
     prefix = f"{location_prefix}/{table}/"
+    # The metastore validates locations with Hadoop's S3A client, hence s3a://
     location = f"s3a://{bucket}/{prefix}"
 
     if not folder_exists(bucket, prefix):
         raise FileNotFoundError(
-            f"No data found at s3a://{bucket}/{prefix}. "
-            f"Run the ingestion DAG for '{table}' before this task."
+            f"No data found at {location}. "
+            f"Run the DAG that produces '{table}' before this task."
         )
 
+    is_partitioned = bool(list_partitions(bucket, prefix))
     if file_format == "json":
         if schema_ddl is None:
             raise ValueError(f"schema_ddl is required when file_format='json' (table: {table})")
-        is_partitioned = bool(list_partitions(bucket, prefix))
-        storage_clause = "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE"
     else:
         logger.info("Reading schema from %s...", location)
-        fields = spark.read.parquet(location).schema.fields
-        partition_col = next((f for f in fields if f.name == PARTITION_COL), None)
-        regular_fields = [f for f in fields if f.name != PARTITION_COL]
-        schema_ddl = ", ".join(
-            f"`{f.name}` {_to_hive_type(f.dataType.simpleString())}"
-            for f in regular_fields
-        )
-        is_partitioned = partition_col is not None
-        storage_clause = "STORED AS PARQUET"
+        schema_ddl = _parquet_schema_ddl(bucket, prefix, is_partitioned)
 
+    properties = [f"external_location = '{location}'", f"format = '{file_format.upper()}'"]
     if is_partitioned:
-        create_sql = f"""
-            CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
-            PARTITIONED BY ({PARTITION_COL} STRING)
-            {storage_clause}
-            LOCATION '{location}'
-        """
-    else:
-        create_sql = f"""
-            CREATE EXTERNAL TABLE {database}.{table} ({schema_ddl})
-            {storage_clause}
-            LOCATION '{location}'
-        """
+        # Hive partition columns go last in the column list
+        schema_ddl += f', "{PARTITION_COL}" varchar'
+        properties.append(f"partitioned_by = ARRAY['{PARTITION_COL}']")
 
     logger.info("Creating table %s.%s at %s", database, table, location)
-    spark.sql(create_sql)
+    _run(cur, f"""
+        CREATE TABLE {CATALOG}.{database}.{table} ({schema_ddl})
+        WITH ({", ".join(properties)})
+    """)
+
+
+def _sync_partitions(cur, database: str, table: str) -> None:
+    if _is_partitioned(cur, database, table):
+        logger.info("Syncing partitions for %s.%s...", database, table)
+        # FULL adds new partition folders and drops the ones that no longer exist
+        _run(cur, f"CALL {CATALOG}.system.sync_partition_metadata('{database}', '{table}', 'FULL')")
+        logger.info("Partitions updated for %s.%s.", database, table)
 
 
 def repair_table(
@@ -84,20 +163,15 @@ def repair_table(
     if location_prefix is None:
         location_prefix = database
 
-    spark = get_spark(f"hive_repair_{table}")
-    try:
-        spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
+    with _connect() as conn:
+        cur = conn.cursor()
+        _create_schema(cur, database, bucket)
 
-        if not _table_exists(spark, database, table):
+        if not _table_exists(cur, database, table):
             logger.info("Table %s.%s does not exist, creating...", database, table)
-            _create_external_table(spark, table, database, location_prefix, bucket, file_format, schema_ddl)
+            _create_external_table(cur, table, database, location_prefix, bucket, file_format, schema_ddl)
 
-        if _has_partitions(spark, database, table):
-            logger.info("Repairing partitions for %s.%s...", database, table)
-            spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
-            logger.info("Partitions updated for %s.%s.", database, table)
-    finally:
-        spark.stop()
+        _sync_partitions(cur, database, table)
 
 
 def setup_hive(
@@ -108,17 +182,13 @@ def setup_hive(
     file_format: str = "parquet",
     schema_ddl: str = None,
 ) -> None:
-    spark = get_spark("hive_setup")
-    try:
+    with _connect() as conn:
+        cur = conn.cursor()
         logger.info("Creating database %s if not exists...", database)
-        spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
+        _create_schema(cur, database, bucket)
 
         for table in tables:
-            spark.sql(f"DROP TABLE IF EXISTS {database}.{table}")
-            _create_external_table(spark, table, database, location_prefix, bucket, file_format, schema_ddl)
-            if _has_partitions(spark, database, table):
-                logger.info("Repairing partitions for %s.%s...", database, table)
-                spark.sql(f"MSCK REPAIR TABLE {database}.{table}")
+            _run(cur, f"DROP TABLE IF EXISTS {CATALOG}.{database}.{table}")
+            _create_external_table(cur, table, database, location_prefix, bucket, file_format, schema_ddl)
+            _sync_partitions(cur, database, table)
             logger.info("Table %s.%s registered successfully.", database, table)
-    finally:
-        spark.stop()

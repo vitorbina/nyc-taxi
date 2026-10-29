@@ -14,16 +14,9 @@ from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
 from utils.hive import setup_hive
-from utils.constants import FINAL_DATABASE
+from utils.constants import FINAL_DATABASE, FINAL_TABLES
 
 BUCKET = os.getenv("MINIO_BUCKET")
-
-FINAL_TABLES = [
-    "trips",
-    "revenue",
-    "weather_impact",
-    "zones_geo",
-]
 
 
 @dag(

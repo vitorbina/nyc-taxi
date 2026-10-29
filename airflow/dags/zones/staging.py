@@ -1,8 +1,8 @@
 """
 # NYC Zones Staging
 
-Reads the raw taxi zone lookup CSV from MinIO, applies cleaning and type casting,
-and writes a parquet file to the staging layer.
+Runs the dbt model stg_taxi_zone_lookup (raw zone lookup CSV, cleaned and typed)
+and parses the zone shapefile into polygons with geopandas, which SQL can't do.
 
 Runs once, triggered after the raw zones ingestion DAG completes.
 """
@@ -14,7 +14,7 @@ from airflow.decorators import dag, task
 from airflow.sdk import AssetAll
 
 from utils.default import get_dag_config
-from staging.zones import stage_zones
+from utils.dbt_tasks import dbt_task_group
 from staging.zones_geo import stage_zones_geo
 from utils.hive import setup_hive
 from utils.constants import STAGING_DATABASE
@@ -38,14 +38,8 @@ BUCKET = os.getenv("MINIO_BUCKET")
 def zones_staging_pipeline():
 
     @task
-    def stage_zone_lookup():
-        stage_zones(bucket=BUCKET)
-
-    @task
     def stage_zone_geometry():
         stage_zones_geo(bucket=BUCKET)
-        # Register staging.taxi_zones_geo so the final layer (build_zones_geo)
-        # can read it from the catalog. Atomic publish: write then register.
         setup_hive(
             tables=["taxi_zones_geo"],
             database=STAGING_DATABASE,
@@ -53,7 +47,7 @@ def zones_staging_pipeline():
             bucket=BUCKET,
         )
 
-    stage_zone_lookup()
+    dbt_task_group("stage_zone_lookup", select=["stg_taxi_zone_lookup"])
     stage_zone_geometry()
 
 
