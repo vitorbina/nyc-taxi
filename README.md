@@ -38,7 +38,7 @@ dashboards) only if its tests pass.
 | Hive Metastore | 4.0.0 |
 | Trino | 483 |
 | Superset | 6.0.0 |
-| MinIO | RELEASE.2025-09-07T16-13-09Z |
+| MinIO | RELEASE.2026-08-04T00-00-00Z (`pgsty/minio` community build) |
 | PostgreSQL | 18.6 |
 | Docker | 29.2.1 |
 | Docker Compose | 5.1.0 |
