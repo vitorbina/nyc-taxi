@@ -17,7 +17,17 @@ clean-targets: ["target", "dbt_packages"]
 on-run-start:
   - "{{ register_upstream_lake_models() }}"
 
+vars:
+  # Quality rules for the final layer (macros/quality.sql)
+  max_distance_miles: 100
+  max_fare_usd: 1000
+  min_duration_minutes: 1
+  max_duration_minutes: 240
+
 models:
   nyc_taxi:
     # Every model is written as Parquet to MinIO (macros/lake.sql)
     +materialized: lake
+    intermediate:
+      # Inlined as CTEs into the final models; never written anywhere
+      +materialized: ephemeral

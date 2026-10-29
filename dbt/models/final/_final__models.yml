@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: trips
+    description: Trip-level data unified across the 4 services, quality rules applied.
+    columns:
+      - name: taxi_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow_taxi, green_taxi, app_rides, high_volume_fhv]
+      - name: pickup_datetime
+        tests: [not_null]
+      - name: pickup_borough
+        tests: [not_null]
+      - name: trip_duration_minutes
+        tests:
+          - accepted_range: {min_value: "{{ var('min_duration_minutes') }}", max_value: "{{ var('max_duration_minutes') }}"}
+      - name: trip_distance_miles
+        tests:
+          - accepted_range: {min_value: 0, max_value: "{{ var('max_distance_miles') }}"}
+      - name: fare_amount
+        description: Includes tips for every service (NULL for app_rides, which don't report fares).
+        tests:
+          # FHV fare = base fare + tip, so it can go a bit past the base-fare cap
+          - accepted_range: {min_value: 0}
+
+  - name: revenue
+    description: Trip revenue by pickup zone (services that report fares).
+    columns:
+      - name: pickup_zone
+        tests: [not_null]
+      - name: total_amount
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0}
+
+  - name: weather_impact
+    description: One row per trip with that day's weather.
+    columns:
+      - name: date
+        tests: [not_null]
+      - name: taxi_type
+        tests: [not_null]
+
+  - name: zones_geo
+    description: Zone polygons with aggregated trip and revenue stats, for the map.
+    columns:
+      - name: location_id
+        tests: [not_null, unique]
+      - name: geometry_json
+        tests: [not_null]
+
+  - name: trips_hourly
+    description: Dashboard mart — trips, revenue, distance and duration summed per hour x service x pickup zone.
+    columns:
+      - name: pickup_hour
+        tests: [not_null]
+      - name: trips
+        tests:
+          - accepted_range: {min_value: 1}
+
+  - name: weather_daily
+    description: Dashboard mart — one row per day with its weather and total trips.
+    columns:
+      - name: date
+        tests: [not_null, unique]
+      - name: day_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: [Weekday, Weekend]

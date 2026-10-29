@@ -50,31 +50,40 @@
 
 {#
   Each dbt invocation starts with an empty in-memory DuckDB. When only part of the
-  project runs (`dbt run -s stg_yellow_taxi`, or one model per Airflow task), the
-  upstream `lake` models it refs have no view yet. This on-run-start hook creates
-  those views, reading the upstream files back from MinIO.
+  project runs (`dbt run -s trips`, or one model per Airflow task), the upstream
+  `lake` models it refs have no view yet. This on-run-start hook creates those
+  views, reading the upstream files back from MinIO. Ephemeral models are inlined
+  as CTEs, so the walk goes through them to the lake models they read.
 #}
 {% macro register_upstream_lake_models() %}
   {% if execute %}
-    {% set done = [] %}
+    {% set to_visit = [] %}
     {% for node_id in selected_resources %}
       {% set node = graph.nodes.get(node_id) %}
-      {% if node %}
-        {% for upstream_id in node.depends_on.nodes %}
-          {% set upstream = graph.nodes.get(upstream_id) %}
-          {% if upstream and upstream_id not in selected_resources and upstream_id not in done
-                and upstream.config.materialized == 'lake' %}
-            {% do done.append(upstream_id) %}
-            {% set rel = api.Relation.create(database=upstream.database, schema=upstream.schema, identifier=upstream.alias) %}
-            {% call statement('register_' ~ upstream.alias) -%}
-              CREATE SCHEMA IF NOT EXISTS {{ rel.without_identifier() }};
-              CREATE OR REPLACE VIEW {{ rel }} AS
-              SELECT * FROM {{ lake_read(upstream.config.location, upstream.config.partition_by) }}
-            {%- endcall %}
-          {% endif %}
-        {% endfor %}
-      {% endif %}
+      {% if node %}{% do to_visit.extend(node.depends_on.nodes) %}{% endif %}
     {% endfor %}
-    {% if done %}{% do adapter.commit() %}{% endif %}
+
+    {% set registered = [] %}
+    {# Jinja has no while loop; the project is shallower than 10 ephemeral levels #}
+    {% for _ in range(10) %}
+      {% set next_level = [] %}
+      {% for node_id in to_visit if node_id not in selected_resources and node_id not in registered %}
+        {% set node = graph.nodes.get(node_id) %}
+        {% if node and node.config.materialized == 'ephemeral' %}
+          {% do next_level.extend(node.depends_on.nodes) %}
+        {% elif node and node.config.materialized == 'lake' %}
+          {% do registered.append(node_id) %}
+          {% set rel = api.Relation.create(database=node.database, schema=node.schema, identifier=node.alias) %}
+          {% call statement('register_' ~ node.alias) -%}
+            CREATE SCHEMA IF NOT EXISTS {{ rel.without_identifier() }};
+            CREATE OR REPLACE VIEW {{ rel }} AS
+            SELECT * FROM {{ lake_read(node.config.location, node.config.partition_by) }}
+          {%- endcall %}
+        {% endif %}
+      {% endfor %}
+      {# `set` inside a loop doesn't outlive the iteration in Jinja; mutate instead #}
+      {% do to_visit.clear() %}{% do to_visit.extend(next_level) %}
+    {% endfor %}
+    {% if registered %}{% do adapter.commit() %}{% endif %}
   {% endif %}
 {% endmacro %}

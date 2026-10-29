@@ -25,3 +25,11 @@ sources:
       - name: taxi_zone_lookup
         meta:
           external_location: "read_csv('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/reference/taxi_zone_lookup/taxi_zone_lookup.csv', header=true)"
+
+  - name: reference
+    description: Reference data staged outside dbt (shapefile parsing needs geopandas).
+    tables:
+      - name: taxi_zones_geo
+        description: Zone polygons, written by the zones_staging DAG (staging/zones_geo.py).
+        meta:
+          external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/staging/reference/taxi_zones_geo/taxi_zones_geo.parquet')"
