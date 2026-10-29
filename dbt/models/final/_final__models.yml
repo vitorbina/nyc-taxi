@@ -16,15 +16,15 @@ models:
         tests: [not_null]
       - name: trip_duration_minutes
         tests:
-          - accepted_range: {min_value: "{{ var('min_duration_minutes') }}", max_value: "{{ var('max_duration_minutes') }}"}
+          - accepted_range: {arguments: {min_value: "{{ var('min_duration_minutes') }}", max_value: "{{ var('max_duration_minutes') }}"}}
       - name: trip_distance_miles
         tests:
-          - accepted_range: {min_value: 0, max_value: "{{ var('max_distance_miles') }}"}
+          - accepted_range: {arguments: {min_value: 0, max_value: "{{ var('max_distance_miles') }}"}}
       - name: fare_amount
         description: Includes tips for every service (NULL for app_rides, which don't report fares).
         tests:
           # FHV fare = base fare + tip, so it can go a bit past the base-fare cap
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
 
   - name: revenue
     description: Trip revenue by pickup zone (services that report fares).
@@ -34,7 +34,7 @@ models:
       - name: total_amount
         tests:
           - not_null
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
 
   - name: weather_impact
     description: One row per trip with that day's weather.
@@ -59,7 +59,7 @@ models:
         tests: [not_null]
       - name: trips
         tests:
-          - accepted_range: {min_value: 1}
+          - accepted_range: {arguments: {min_value: 1}}
 
   - name: weather_daily
     description: Dashboard mart — one row per day with its weather and total trips.

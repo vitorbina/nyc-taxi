@@ -9,10 +9,10 @@ models:
         tests: [not_null, unique]
       - name: humidity_pct
         tests:
-          - accepted_range: {min_value: 0, max_value: 100}
+          - accepted_range: {arguments: {min_value: 0, max_value: 100}}
       - name: precipitation_mm
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: weather_code
         tests: [not_null]
       - name: weather_description

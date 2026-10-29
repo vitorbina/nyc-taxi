@@ -14,13 +14,13 @@ models:
         tests: [not_null]
       - name: trip_duration_minutes
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: trip_distance_miles
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: fare_amount
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: pickup_borough
         tests: [not_null]
       - name: partition_date
@@ -35,13 +35,13 @@ models:
         tests: [not_null]
       - name: trip_duration_minutes
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: trip_distance_miles
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: fare_amount
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: pickup_borough
         tests: [not_null]
       - name: partition_date
@@ -58,7 +58,7 @@ models:
         tests: [not_null]
       - name: trip_duration_minutes
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: pickup_borough
         tests: [not_null]
       - name: partition_date
@@ -80,13 +80,13 @@ models:
         tests: [not_null]
       - name: trip_duration_minutes
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: trip_distance_miles
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: base_passenger_fare
         tests:
-          - accepted_range: {min_value: 0}
+          - accepted_range: {arguments: {min_value: 0}}
       - name: pickup_borough
         tests: [not_null]
       - name: partition_date
