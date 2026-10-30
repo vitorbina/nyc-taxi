@@ -57,7 +57,7 @@ pre-release or a release younger than ~2 weeks.
   memory=16GB
   ```
 
-  Then run `wsl --shutdown` in PowerShell and reopen the terminal. The heaviest job (`stg_high_volume_fhv`, ~243M rows) runs inside the Airflow scheduler, whose container is capped at 7 GB; DuckDB is limited to `DUCKDB_MEMORY_LIMIT` and spills to disk beyond it.
+  Then run `wsl --shutdown` in PowerShell and reopen the terminal. dbt runs inside the Airflow scheduler, whose container is capped at 4 GB: models are built one month at a time, so the memory they need doesn't grow with the history (see [Performance tuning](#performance-tuning)).
 
 ## Getting started
 
@@ -126,14 +126,14 @@ The script drives the whole load from the command line — no need to open the U
 2. **Pause taxi/weather staging** so the backfill doesn't trigger them once per asset event.
 3. **Backfill ingestion** for the date range (taxi + weather).
 4. **Stage weather** — must run before taxi staging, since `taxi_final` reads `staging.weather` but only waits on the taxi assets.
-5. **Stage taxi** — rebuilds every month from the raw layer in one pass; `taxi_final` then fires automatically via assets.
+5. **Stage taxi** — builds every month missing from staging, one month at a time; `taxi_final` then fires automatically via assets and does the same.
 6. **Register the raw catalog** (`hive_setup_raw`).
 
 A few things about how it works:
 - DAGs are created paused, and **a paused DAG won't run even when its asset fires** — the script unpauses each one before use.
 - `--dag-run-conf '{"skip_repair": true}'` tells the ingestion's `update_hive` task to skip the per-run Hive repair (no catalog sync per month). Staging reads raw files straight from their MinIO path (not from the Hive `raw.*` tables), so it works even though raw isn't registered yet. The raw catalog is registered once at the end.
 - Backfills have their own concurrency control, separate from the DAG's `max_active_runs`. Without `--max-active-runs`, all runs fire at once and the source CDNs return HTTP 403 (rate limiting); the script passes `--max-active-runs 2` to throttle it.
-- Staging is paused during ingestion so it doesn't fire once per asset event; it runs once at the end and rebuilds all partitions in a single pass.
+- Staging is paused during ingestion so it doesn't fire once per asset event; it runs once at the end and picks up every month the backfill added.
 
 The `hive_setup_raw`, `hive_setup_staging` and `hive_setup_final` DAGs are also available on their own as operational tools to recreate the tables of a given layer when the schema changes.
 
@@ -145,9 +145,9 @@ After the initial load, the pipeline runs end-to-end on its own — ingestion on
 |---|---|---|
 | `taxi_ingestion` | monthly | downloads Parquet files for 4 taxi types |
 | `weather_ingestion` | daily | downloads hourly weather from Open-Meteo (one JSON Lines file per day) |
-| `taxi_staging` | asset-triggered | runs automatically after all 4 raw taxi assets update |
-| `weather_staging` | asset-triggered | runs automatically after raw weather asset updates |
-| `taxi_final` | asset-triggered | runs automatically after all 4 staging taxi assets update |
+| `taxi_staging` | asset-triggered | runs automatically after all 4 raw taxi assets update; builds only new or changed months |
+| `weather_staging` | asset-triggered | runs automatically after raw weather asset updates; rebuilds in full (small) |
+| `taxi_final` | asset-triggered | runs automatically after all 4 staging taxi assets update; builds only new or changed months |
 
 ## Project structure
 
@@ -159,6 +159,7 @@ airflow/
   utils/
     assets.py            Airflow asset definitions (single source of truth)
     dbt_tasks.py         dbt models as Airflow tasks (Cosmos)
+    incremental.py       which months a layer needs to build (compares files in MinIO)
     hive.py              Hive Metastore table registration through Trino
     s3.py                MinIO helpers (boto3)
     paths.py             S3 path construction helpers
@@ -166,7 +167,7 @@ dbt/
   models/staging/        raw → staging, one model per table (+ tests in _*__models.yml)
   models/intermediate/   int_*_clean: trip quality rules (ephemeral, inlined as CTEs)
   models/final/          final tables and dashboard marts (+ tests)
-  macros/lake.sql        `lake` materialization: streams a model to Parquet on MinIO
+  macros/lake.sql        `lake` materialization: streams a model to Parquet on MinIO, month by month
   macros/time.sql        DST-aware durations for NYC wall-clock timestamps
   macros/quality.sql     trip quality rules, driven by vars in dbt_project.yml
   tests/                 generic test accepted_range + marts reconcile test
@@ -207,6 +208,23 @@ Each dbt run starts with an empty in-memory DuckDB, so a model that refs another
 from MinIO: the `on-run-start` hook in `macros/lake.sql` creates those views for the upstream models
 that aren't part of the run. That is what lets Airflow run one model per task.
 
+### Incremental by month
+
+Trip tables are partitioned by `partition_date`, the month of the TLC file, in staging and in final
+(`trips`, `revenue`, `weather_impact`, `trips_hourly`). A run builds only the months that changed:
+
+1. A `plan` task (`airflow/utils/incremental.py`) compares the files in MinIO: a month is stale when
+   the target doesn't have it yet, or when its source was written after it (a new month, a
+   re-downloaded one, or a month rebuilt upstream). No stale month → the rest is skipped.
+2. dbt gets those months as the `partitions` var. The `lake` materialization filters the model's
+   SELECT to one month and writes just that partition, once per month; DuckDB pushes the filter down
+   to the folders it reads, so each step reads one month of input.
+3. `zones_geo` and `weather_daily` are small and are recomputed whole from the monthly tables.
+
+Because the work unit is one month, DuckDB's memory stays the same whether the lake holds one year
+or ten. To rebuild everything (after changing a model's logic), trigger `taxi_staging` or
+`taxi_final` with `full_refresh` checked; it still goes month by month.
+
 Running dbt by hand, outside Airflow (from the repo root, with a virtualenv on Python 3.12):
 
 ```bash
@@ -215,6 +233,8 @@ set -a; source .env; set +a                  # MinIO credentials and bucket
 cd dbt
 dbt build --profiles-dir .                   # everything: run + test, in dependency order
 dbt build --profiles-dir . -s stg_weather    # one model and its tests
+# only some months of the partitioned models (without it, a partitioned model rebuilds in full):
+dbt build --profiles-dir . -s stg_yellow_taxi --vars '{partitions: "2025-11-01,2025-12-01"}'
 # write somewhere else instead of the real lake:
 dbt build --profiles-dir . --vars '{output_lake: s3://data-lake-nyc/sandbox}'
 ```
@@ -228,29 +248,47 @@ Airflow scheduler). Same machine (WSL2 VM, 16 vCPU, 15.8 GB RAM), same year of d
 ~292M trips), full rebuild through Airflow. Spark times are from its last full run, read from the
 Airflow metadata database.
 
-| | Spark 3.5 | dbt + DuckDB |
-|---|---|---|
-| `taxi_staging` (4 tables) | 21.4 min | **6.5 min** |
-| `taxi_final` | 18.1 min (4 tables, no tests) | **5.1 min** (6 tables + 21 tests) |
-| `stg_high_volume_fhv` (~243M rows) | 915 s | 276 s |
-| `trips` (~292M rows) | 439 s | 87 s |
-| Memory limits for processing | 13.5 GB: 9.5 GB Spark containers + 4 GB scheduler (driver) | 7 GB scheduler |
-| Containers | + spark-master, 2 workers | none extra |
-| Registering a layer in the catalog | ~90 s (Spark session) | ~7 s (Trino) |
+| | Spark 3.5 | dbt + DuckDB, whole table at once | dbt + DuckDB, month by month (current) |
+|---|---|---|---|
+| `taxi_staging`, full rebuild (4 tables) | 21.4 min | 6.5 min | **5.6 min** |
+| `taxi_final`, full rebuild | 18.1 min (4 tables, no tests) | 5.1 min (6 tables + 21 tests) | **7.9 min** (6 tables + 21 tests) |
+| `stg_high_volume_fhv` (~243M rows) | 915 s | 276 s | **200 s** |
+| **A new month arrives** (staging + final) | ~40 min (everything rebuilt) | ~12 min (everything rebuilt) | **5.0 min** (2.0 + 3.0) |
+| Memory limits for processing | 13.5 GB: 9.5 GB Spark containers + 4 GB scheduler (driver) | 7 GB scheduler | **4 GB scheduler** (peak measured 3.3 GB) |
+| Containers | + spark-master, 2 workers | none extra | none extra |
+| Registering a layer in the catalog | ~90 s (Spark session) | ~7 s (Trino) | ~7 s (Trino) |
 
 Results match: identical row counts in every table, with one trip (out of 292M) and a few
 durations differing around the DST switches, where DuckDB is the more correct one
 (`trips_hourly` has all 8,760 hours of the year; Spark's dropped the spring-forward hour).
+Going month by month changed no data: every staging partition is identical row by row, and so is
+every final month (the `trips_hourly` sums differ only past the 9th decimal, from summing
+floating-point values in a different order).
 
-DuckDB's speed here depends mostly on its memory limit, because the partitioned write of
-`stg_high_volume_fhv` spills to disk beyond it (inside the 7 GB scheduler container):
-3 GB → 510 s, 4 GB → 338 s, 4.5 GB → 261 s.
+In the monthly run, about half of the time is fixed: starting dbt for each task and the tests,
+which still scan the whole table. The work that depends on data is one month per table
+(`stg_high_volume_fhv`: 30 s instead of 200 s).
 
 ## Performance tuning
 
 dbt tasks run one at a time across all DAGs (Airflow pool `duckdb`, 1 slot, created by
-`airflow-init`), so two heavy DuckDB jobs never compete for memory. DuckDB's own limit is
-`DUCKDB_MEMORY_LIMIT` in `docker-compose.yml`; past it, DuckDB spills to disk instead of failing.
+`airflow-init`), so two DuckDB jobs never compete for memory. DuckDB is set in `docker-compose.yml`
+by `DUCKDB_MEMORY_LIMIT` (1500MB; past it, DuckDB spills to disk instead of failing) and
+`DUCKDB_THREADS` (4).
+
+What drives DuckDB's memory here is threads × partitions being written at once, not data size:
+each thread keeps its own write buffer per open partition, and those buffers can't spill. By
+default DuckDB uses one thread per core (16 on this machine). Measured on `stg_high_volume_fhv`:
+
+| | 16 threads | 4 threads |
+|---|---|---|
+| one month, 1 GB limit | out of memory | 26 s, process peak 1.6 GB |
+| whole year at once, 1 GB limit | out of memory | out of memory (12 partitions open) |
+| whole year at once, 4.5 GB limit | 261 s | — |
+
+Going month by month keeps one partition open, so 4 threads fit in ~1.5 GB whatever the size of
+the history. A manual `dbt build` without the `partitions` var still writes a whole partitioned
+table at once, which needs a larger limit (the default outside Docker is 4 GB).
 
 By default, Airflow uses its built-in parallelism limits. If tasks are queuing or running too slowly, tune these variables in `docker-compose.yml` under the `x-airflow-common` environment block:
 

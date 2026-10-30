@@ -127,8 +127,8 @@ afq dags unpause weather_staging
 afq dags trigger weather_staging
 wait_for_dag weather_staging
 
-# 5. Stage taxi. Rebuilds every month from the raw layer in one pass, then
-#    taxi_final fires automatically via the staging assets.
+# 5. Stage taxi. Builds every month the backfill added, one at a time, then
+#    taxi_final fires automatically via the staging assets and does the same.
 log "[5/6] Staging taxi"
 afq dags unpause taxi_staging
 afq dags trigger taxi_staging
