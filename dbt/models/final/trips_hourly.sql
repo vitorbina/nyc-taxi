@@ -7,7 +7,7 @@
   sums) are kept; ratios such as average fare or speed are computed in the BI layer
   (SUM(revenue) / SUM(fare_trips), ...), which keeps them exact for any filter.
 #}
-{{ config(location=lake_location('final/trips_hourly/data.parquet')) }}
+{{ config(location=lake_location('final/trips_hourly'), partition_by='partition_date') }}
 
 SELECT
     date_trunc('hour', pickup_datetime)          AS pickup_hour,
@@ -20,6 +20,8 @@ SELECT
     SUM(trip_distance_miles)                     AS distance_miles,
     -- duration only where distance is known, so distance / duration is a true speed
     SUM(CASE WHEN trip_distance_miles IS NOT NULL
-             THEN trip_duration_minutes END)     AS duration_minutes_with_distance
+             THEN trip_duration_minutes END)     AS duration_minutes_with_distance,
+    -- a trip always falls in its file's month (quality rules), so each hour is in one partition
+    partition_date
 FROM {{ ref('trips') }}
-GROUP BY 1, 2, 3, 4
+GROUP BY 1, 2, 3, 4, partition_date

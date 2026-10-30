@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import datetime
 from functools import lru_cache
 
 import boto3
@@ -44,6 +45,20 @@ def list_partitions(bucket: str, prefix: str) -> list[str]:
             if sub.startswith(f"{PARTITION_COL}="):
                 partitions.append(sub.split("=", 1)[1])
     return sorted(partitions)
+
+
+def partition_mtimes(bucket: str, prefix: str) -> dict[str, datetime]:
+    """Partition value -> when its newest file was written, for col=value/ folders under prefix."""
+    prefix = prefix.rstrip("/") + "/"
+    paginator = _get_s3_client().get_paginator("list_objects_v2")
+    mtimes = {}
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            folder, _, file_name = obj["Key"][len(prefix):].partition("/")
+            if folder.startswith(f"{PARTITION_COL}=") and file_name:
+                value = folder.split("=", 1)[1]
+                mtimes[value] = max(obj["LastModified"], mtimes.get(value, obj["LastModified"]))
+    return mtimes
 
 
 def download_file(bucket: str, key: str, filepath: str) -> None:

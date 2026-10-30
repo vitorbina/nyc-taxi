@@ -18,7 +18,16 @@ DBT_EXECUTABLE = "/opt/dbt-venv/bin/dbt"
 DUCKDB_POOL = "duckdb"
 
 
-def dbt_task_group(group_id: str, select: list[str]) -> DbtTaskGroup:
+def dbt_task_group(group_id: str, select: list[str], partitions_from: str | None = None) -> DbtTaskGroup:
+    """dbt models as tasks. partitions_from: id of an upstream task that returns the
+    partitions to build (utils/incremental.py); without it, models rebuild in full."""
+    operator_args = {"pool": DUCKDB_POOL}
+    if partitions_from:
+        # Rendered at run time, so dbt gets the months that task found stale in this run
+        operator_args["vars"] = {
+            "partitions": f"{{{{ ti.xcom_pull(task_ids='{partitions_from}') | join(',') }}}}"
+        }
+
     return DbtTaskGroup(
         group_id=group_id,
         project_config=ProjectConfig(DBT_PROJECT_DIR, install_dbt_deps=False),
@@ -40,5 +49,5 @@ def dbt_task_group(group_id: str, select: list[str]) -> DbtTaskGroup:
             # task after all of their models, instead of running after the first one
             should_detach_multiple_parents_tests=True,
         ),
-        operator_args={"pool": DUCKDB_POOL},
+        operator_args=operator_args,
     )

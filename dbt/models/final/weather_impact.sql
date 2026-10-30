@@ -1,4 +1,4 @@
-{{ config(location=lake_location('final/weather_impact/data.parquet')) }}
+{{ config(location=lake_location('final/weather_impact'), partition_by='partition_date') }}
 
 WITH weather_daily AS (
     SELECT
@@ -12,16 +12,16 @@ WITH weather_daily AS (
 ),
 
 trips_for_weather AS (
-    SELECT CAST(pickup_datetime AS DATE) AS date, total_amount AS fare_amount, 'yellow_taxi' AS taxi_type
+    SELECT CAST(pickup_datetime AS DATE) AS date, total_amount AS fare_amount, 'yellow_taxi' AS taxi_type, partition_date
     FROM {{ ref('int_yellow_taxi_clean') }}
     UNION ALL
-    SELECT CAST(pickup_datetime AS DATE) AS date, total_amount AS fare_amount, 'green_taxi' AS taxi_type
+    SELECT CAST(pickup_datetime AS DATE) AS date, total_amount AS fare_amount, 'green_taxi' AS taxi_type, partition_date
     FROM {{ ref('int_green_taxi_clean') }}
     UNION ALL
-    SELECT CAST(pickup_datetime AS DATE) AS date, NULL AS fare_amount, 'app_rides' AS taxi_type
+    SELECT CAST(pickup_datetime AS DATE) AS date, NULL AS fare_amount, 'app_rides' AS taxi_type, partition_date
     FROM {{ ref('int_app_rides_clean') }}
     UNION ALL
-    SELECT CAST(pickup_datetime AS DATE) AS date, base_passenger_fare + COALESCE(tip_amount, 0) AS fare_amount, 'high_volume_fhv' AS taxi_type
+    SELECT CAST(pickup_datetime AS DATE) AS date, base_passenger_fare + COALESCE(tip_amount, 0) AS fare_amount, 'high_volume_fhv' AS taxi_type, partition_date
     FROM {{ ref('int_high_volume_fhv_clean') }}
 )
 
@@ -32,6 +32,7 @@ SELECT
     w.weather_description,
     w.avg_temperature_c,
     w.total_precipitation_mm,
-    w.avg_wind_speed_kmh
+    w.avg_wind_speed_kmh,
+    t.partition_date
 FROM trips_for_weather t
 LEFT JOIN weather_daily w ON t.date = w.date

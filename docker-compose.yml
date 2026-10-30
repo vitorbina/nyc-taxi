@@ -30,10 +30,13 @@ x-airflow-common: &airflow-common
     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     MINIO_BUCKET: ${MINIO_BUCKET}
     TRINO_HOST: trino
-    # dbt tasks run inside the scheduler (LocalExecutor); keep DuckDB under its memory
-    # limit (7g); beyond this it spills to disk instead of being OOM-killed. Measured on
-    # stg_high_volume_fhv: 3GB -> 510s, 4GB -> 338s, 4500MB -> 261s.
-    DUCKDB_MEMORY_LIMIT: 4500MB
+    # dbt tasks run inside the scheduler (LocalExecutor, 4g). Models are built one month
+    # at a time (dbt/macros/lake.sql), so DuckDB's memory doesn't grow with the history;
+    # what drives it is threads, each holding its own write buffers. Measured on the
+    # largest month of stg_high_volume_fhv: 16 threads fail even at 1.5GB, 4 threads run
+    # in 1GB (~26s, process peak ~1.6GB). Beyond the limit, DuckDB spills to disk.
+    DUCKDB_MEMORY_LIMIT: 1500MB
+    DUCKDB_THREADS: "4"
     # Spill on the airflow_home volume rather than the container's overlay filesystem
     DUCKDB_TEMP_DIR: /opt/airflow/duckdb_spill
     PYTHONPATH: /opt/airflow
@@ -179,7 +182,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 7g
+          memory: 4g
 
   # ── Hive Metastore ────────────────────────────────────────────────────────
   hive-metastore:

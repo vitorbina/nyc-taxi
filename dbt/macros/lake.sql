@@ -10,9 +10,38 @@
   Config:
     location      s3:// path. A directory when partitioned, a .parquet file otherwise.
     partition_by  optional column; written as Hive-style folders (col=value/).
-                  Every run rebuilds the table, so OVERWRITE clears the whole directory
-                  first: a partition that disappeared from the source doesn't linger.
+
+  A partitioned model is written in one of two ways:
+    - var `partitions` set (e.g. --vars '{partitions: "2025-11-01,2025-12-01"}'): only
+      those partitions, one COPY each. The SELECT is filtered to one partition, which
+      DuckDB pushes down to the folders it reads, so a run touches one month of input at
+      a time and memory doesn't grow with the history. Each COPY replaces that
+      partition's file (OVERWRITE_OR_IGNORE) and leaves the other partitions alone.
+      This is how Airflow runs it, with the months it found stale.
+    - no `partitions`: the whole table in one COPY. OVERWRITE clears the directory first,
+      so a partition that disappeared from the source doesn't linger.
+  Unpartitioned models always rebuild the whole file.
 #}
+
+{% macro lake_partitions() -%}
+  {%- set requested = var('partitions', none) -%}
+  {%- if requested is none or requested == '' -%}{{ return([]) }}{%- endif -%}
+  {%- if requested is string -%}
+    {%- set requested = requested.split(',') -%}
+  {%- elif requested is not iterable -%}
+    {#- YAML turns a single bare 2025-12-01 into a date -#}
+    {%- set requested = [requested] -%}
+  {%- endif -%}
+  {%- set partitions = [] -%}
+  {%- for p in requested if p | string | trim -%}
+    {%- set p = p | string | trim -%}
+    {%- if not modules.re.fullmatch('\d{4}-\d{2}-\d{2}', p) -%}
+      {{ exceptions.raise_compiler_error("partitions must be YYYY-MM-DD dates, got: " ~ p) }}
+    {%- endif -%}
+    {%- do partitions.append(p) -%}
+  {%- endfor -%}
+  {{ return(partitions) }}
+{%- endmacro %}
 
 {% macro lake_location(subpath) -%}
   {{ var('output_lake', 's3://' ~ env_var('MINIO_BUCKET')) }}/{{ subpath }}
@@ -29,16 +58,30 @@
 {% materialization lake, adapter='duckdb' %}
   {%- set location = config.require('location') -%}
   {%- set partition_by = config.get('partition_by') -%}
+  {%- set partitions = lake_partitions() if partition_by else [] -%}
   {%- set target_relation = this.incorporate(type='view') -%}
 
   {{ run_hooks(pre_hooks) }}
 
-  {% call statement('main') -%}
-    COPY ({{ sql }}) TO '{{ location }}' (
-      FORMAT parquet
-      {%- if partition_by %}, PARTITION_BY ({{ partition_by }}), OVERWRITE{% endif %}
-    )
-  {%- endcall %}
+  {% if partitions %}
+    {% for p in partitions %}
+      {# dbt expects the last statement of a materialization to be called 'main' #}
+      {% call statement('main' if loop.last else 'partition_' ~ loop.index) -%}
+        COPY (
+          SELECT * FROM (
+            {{ sql }}
+          ) WHERE {{ partition_by }} = '{{ p }}'
+        ) TO '{{ location }}' (FORMAT parquet, PARTITION_BY ({{ partition_by }}), OVERWRITE_OR_IGNORE)
+      {%- endcall %}
+    {% endfor %}
+  {% else %}
+    {% call statement('main') -%}
+      COPY ({{ sql }}) TO '{{ location }}' (
+        FORMAT parquet
+        {%- if partition_by %}, PARTITION_BY ({{ partition_by }}), OVERWRITE{% endif %}
+      )
+    {%- endcall %}
+  {% endif %}
 
   {% call statement('create_view') -%}
     CREATE OR REPLACE VIEW {{ target_relation }} AS SELECT * FROM {{ lake_read(location, partition_by) }}

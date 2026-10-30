@@ -14,6 +14,9 @@ nyc_taxi:
         temp_directory: "{{ env_var('DUCKDB_TEMP_DIR', '/tmp/duckdb_spill') }}"
       settings:
         memory_limit: "{{ env_var('DUCKDB_MEMORY_LIMIT', '4GB') }}"
+        # DuckDB defaults to one thread per core. Each thread keeps its own write buffers,
+        # which can't spill, so memory grows with threads more than with data size
+        threads: "{{ env_var('DUCKDB_THREADS', '4') }}"
         # Row order of the output files doesn't matter; lets DuckDB stream with less memory
         preserve_insertion_order: false
       secrets:
