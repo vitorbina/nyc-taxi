@@ -64,10 +64,9 @@ echo "    Waiting for MinIO to be ready..."
 until curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1; do
     sleep 2
 done
-NETWORK_NAME="$(basename "$(pwd)")_nyc-network"
-docker run --rm --entrypoint sh --network "$NETWORK_NAME" \
-    minio/mc:latest \
-    -c "mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && mc mb --ignore-existing local/${MINIO_BUCKET}"
+# The MinIO image ships the mc client; credentials come from the container's own env
+docker compose exec -T minio sh -c \
+    "mc alias set local http://localhost:9000 \"\$MINIO_ROOT_USER\" \"\$MINIO_ROOT_PASSWORD\" > /dev/null && mc mb --ignore-existing local/${MINIO_BUCKET}"
 echo "    Done: bucket ${MINIO_BUCKET} created"
 
 echo ""

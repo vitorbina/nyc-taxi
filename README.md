@@ -57,7 +57,7 @@ pre-release or a release younger than ~2 weeks.
   memory=16GB
   ```
 
-  Then run `wsl --shutdown` in PowerShell and reopen the terminal. The heaviest job (`stg_high_volume_fhv`, ~240M rows) runs inside the Airflow scheduler, whose container is capped at 6 GB; DuckDB is limited to `DUCKDB_MEMORY_LIMIT` and spills to disk beyond it.
+  Then run `wsl --shutdown` in PowerShell and reopen the terminal. The heaviest job (`stg_high_volume_fhv`, ~243M rows) runs inside the Airflow scheduler, whose container is capped at 7 GB; DuckDB is limited to `DUCKDB_MEMORY_LIMIT` and spills to disk beyond it.
 
 ## Getting started
 
@@ -184,6 +184,8 @@ scripts/
   backfill.sh            runs the full historical backfill for a date range
   seed.sh                loads a fixed 3-month window for quick demo/dev data
   export_dashboards.sh   zips dashboard YAMLs into dashboards/exports/
+  import_dashboards.sh   imports the ZIP into Superset through its API
+  deploy_dashboards.sh   deletes and reimports the charts, so chart edits in the YAML take effect
 dashboards/
   nyc_taxi_overview/     dashboard YAML files (versioned)
   exports/               generated ZIPs for Superset import (not versioned)
@@ -352,7 +354,8 @@ After making changes in Superset:
 
 On first access to `localhost:3000`, log in with `admin` and the password set in `SUPERSET_ADMIN_PASSWORD`.
 
-Go to **Settings → Database Connections → Add database** and select **Trino**. Each medallion layer is exposed as a separate database so queries and dashboards are scoped to their layer. Add three connections:
+The dashboard import already creates the `final` connection. To explore the other layers in SQL Lab,
+go to **Settings → Database Connections → Add database** and select **Trino**. Each medallion layer is exposed as a separate database so queries and dashboards are scoped to their layer. Add three connections:
 
 | Display Name | SQLAlchemy URI |
 |---|---|
