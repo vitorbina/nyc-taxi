@@ -269,6 +269,20 @@ In the monthly run, about half of the time is fixed: starting dbt for each task 
 which still scan the whole table. The work that depends on data is one month per table
 (`stg_high_volume_fhv`: 30 s instead of 200 s).
 
+### Run times
+
+Measured on a fresh install (clone → `setup.sh` → `docker compose up` → `backfill.sh`), same machine,
+downloads included:
+
+| | Time | What runs |
+|---|---|---|
+| Daily | ~30 s | `weather_ingestion` (one day) → `weather_staging` |
+| Monthly (a new TLC month) | ~7 min | `taxi_ingestion` (1.5 min download) → `taxi_staging` (2 min) → `taxi_final` (3.5 min) |
+| Backfill, one year (`backfill.sh 2025-01-01 2025-12-01`) | ~43 min | downloads 14 min, `taxi_staging` 6.5 min, `taxi_final` 8.5 min, zones/weather/catalog 1.5 min, and ~12 min of `backfill.sh` waiting between stages |
+| Fresh install, before the backfill | ~2 min | `setup.sh` + image build (cached layers) + services up |
+
+The three runs read back identical row counts to the production lake, month by month.
+
 ## Performance tuning
 
 dbt tasks run one at a time across all DAGs (Airflow pool `duckdb`, 1 slot, created by
