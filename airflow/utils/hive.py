@@ -48,7 +48,8 @@ def _trino_type(duckdb_type: str) -> str:
 def _parquet_schema_ddl(bucket: str, prefix: str, is_partitioned: bool) -> str:
     con = duckdb.connect()
     try:
-        con.sql("LOAD httpfs")
+        # The image ships httpfs (Dockerfile.airflow); INSTALL is a no-op then
+        con.sql("INSTALL httpfs; LOAD httpfs")
         con.execute(
             "CREATE SECRET (TYPE s3, KEY_ID ?, SECRET ?, ENDPOINT ?, URL_STYLE 'path', USE_SSL false)",
             [
@@ -90,7 +91,13 @@ def _run(cur, sql: str) -> list:
 
 def _create_schema(cur, database: str, bucket: str) -> None:
     # Without a location the metastore would default to a local (file:) path
-    _run(cur, f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{database} WITH (location = 's3a://{bucket}/{database}/')")
+    try:
+        _run(cur, f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{database} WITH (location = 's3a://{bucket}/{database}/')")
+    except trino.exceptions.TrinoUserError as e:
+        # Registration tasks run in parallel: on a new lake two of them can create the
+        # schema at once, and the metastore rejects the second despite IF NOT EXISTS
+        if e.error_name != "ALREADY_EXISTS":
+            raise
 
 
 def _table_exists(cur, database: str, table: str) -> bool:

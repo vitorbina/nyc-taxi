@@ -11,3 +11,8 @@ USER airflow
 COPY airflow/requirements.txt /requirements.txt
 # Pinning apache-airflow keeps pip from changing the Airflow version while resolving
 RUN pip install --no-cache-dir "apache-airflow==${AIRFLOW_VERSION}" -r /requirements.txt
+
+# DuckDB's S3 extension, in ~/.duckdb, shared by dbt's DuckDB and Airflow's (same
+# version): tasks don't download it at run time, and none has to wait for another to.
+RUN python -c "import duckdb; duckdb.sql('INSTALL httpfs')" && \
+    /opt/dbt-venv/bin/python -c "import duckdb; duckdb.sql('LOAD httpfs')"
