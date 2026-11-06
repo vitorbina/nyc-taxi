@@ -14,7 +14,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 FROM_DATE="2025-01-01"
-TO_DATE="2025-04-01"
+TO_DATE="2025-03-01"   # inclusive: backfill.sh loads the whole of the last month
 
 echo ">>> Seeding 3 months of data ($FROM_DATE -> $TO_DATE)..."
 "$SCRIPT_DIR/backfill.sh" "$FROM_DATE" "$TO_DATE"
