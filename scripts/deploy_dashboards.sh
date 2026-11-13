@@ -9,11 +9,12 @@
 #
 # WARNING: any change made only in the Superset UI (and not exported back to YAML)
 # is lost. Treat git as the single source of truth; export before you deploy.
-set -e
+set -euo pipefail
 
 SUPERSET_URL="${SUPERSET_URL:-http://localhost:3000}"
 ADMIN_USER="${SUPERSET_ADMIN_USER:-admin}"
-ADMIN_PASS="${SUPERSET_ADMIN_PASSWORD:-admin}"
+# No default: the password comes only from .env (set -a; source .env; set +a)
+ADMIN_PASS="${SUPERSET_ADMIN_PASSWORD:?SUPERSET_ADMIN_PASSWORD is not set; run: set -a; source .env; set +a}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DASHBOARDS_DIR="$(cd "$SCRIPT_DIR/../dashboards" && pwd)"
@@ -51,14 +52,14 @@ print(' '.join(str(c['id']) for c in charts if c['uuid'] in local))
 
 for id in $IDS_TO_DELETE; do
     echo "    deleting chart $id"
-    curl -s -b "$COOKIE_JAR" -X DELETE "$SUPERSET_URL/api/v1/chart/$id" \
+    curl -fsS -b "$COOKIE_JAR" -X DELETE "$SUPERSET_URL/api/v1/chart/$id" \
         -H "Authorization: Bearer $ACCESS_TOKEN" \
         -H "X-CSRFToken: $CSRF_TOKEN" \
         -H "Referer: $SUPERSET_URL" >/dev/null
 done
 
 echo "==> Importing $ZIP_PATH (overwrite=true)..."
-curl -s -b "$COOKIE_JAR" -X POST "$SUPERSET_URL/api/v1/dashboard/import/" \
+curl -fsS -b "$COOKIE_JAR" -X POST "$SUPERSET_URL/api/v1/dashboard/import/" \
     -H "Authorization: Bearer $ACCESS_TOKEN" \
     -H "X-CSRFToken: $CSRF_TOKEN" \
     -H "Referer: $SUPERSET_URL" \

@@ -3,11 +3,12 @@
 # The `superset import-dashboards` CLI does NOT overwrite existing charts/datasets,
 # so chart-level changes never take effect. The API import (same path the UI uses)
 # does, when overwrite=true is passed.
-set -e
+set -euo pipefail
 
 SUPERSET_URL="${SUPERSET_URL:-http://localhost:3000}"
 ADMIN_USER="${SUPERSET_ADMIN_USER:-admin}"
-ADMIN_PASS="${SUPERSET_ADMIN_PASSWORD:-admin}"
+# No default: the password comes only from .env (set -a; source .env; set +a)
+ADMIN_PASS="${SUPERSET_ADMIN_PASSWORD:?SUPERSET_ADMIN_PASSWORD is not set; run: set -a; source .env; set +a}"
 
 DASHBOARDS_DIR="$(cd "$(dirname "$0")/../dashboards" && pwd)"
 ZIP_PATH="$DASHBOARDS_DIR/exports/nyc_taxi_overview.zip"
@@ -31,7 +32,8 @@ CSRF_TOKEN=$(curl -s -b "$COOKIE_JAR" -c "$COOKIE_JAR" "$SUPERSET_URL/api/v1/sec
     | python3 -c "import sys,json; print(json.load(sys.stdin)['result'])")
 
 echo "Importing $ZIP_PATH (overwrite=true)..."
-curl -s -b "$COOKIE_JAR" -X POST "$SUPERSET_URL/api/v1/dashboard/import/" \
+# -f: an HTTP error fails the script instead of printing it and exiting 0
+curl -fsS -b "$COOKIE_JAR" -X POST "$SUPERSET_URL/api/v1/dashboard/import/" \
     -H "Authorization: Bearer $ACCESS_TOKEN" \
     -H "X-CSRFToken: $CSRF_TOKEN" \
     -H "Referer: $SUPERSET_URL" \
