@@ -24,6 +24,11 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres:5432/${POSTGRES_AIRFLOW_DB}
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+    # Access personas (scripts/create_personas.sh). Roles: viewer < user < op < admin.
+    # data_engineer runs DAGs and backfills and manages pools/connections (op), but
+    # can't manage users. The analyst persona has no Airflow user at all.
+    # Passwords are generated on first start (simple_auth_manager_passwords.json.generated).
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: "admin:admin,data_engineer:op"
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-webserver:8080/execution"
     MINIO_ENDPOINT: http://minio:9000
     MINIO_ROOT_USER: ${MINIO_ROOT_USER}

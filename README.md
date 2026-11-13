@@ -108,6 +108,26 @@ Password persists across restarts. Only changes if you tear down volumes (`docke
 | Trino | localhost:8082 | — |
 | Superset | localhost:3000 | admin / SUPERSET_ADMIN_PASSWORD from .env |
 
+Every UI is published on `localhost` only: nothing is reachable from other machines on the network.
+
+### Access personas
+
+Besides the admins, two personas are set up with each tool's own access control:
+
+| | `data_engineer` (builds and runs the pipeline) | `analyst` (consumes the dashboards) |
+|---|---|---|
+| Airflow | `op`: runs DAGs and backfills, pools and connections; no user management | no user |
+| Superset | `Alpha` + `sql_lab`: every dataset, charts, SQL Lab | `Gamma` + `nyc_taxi_viewer`: only the datasets the NYC Taxi dashboard reads; no SQL Lab |
+| MinIO | read/write on the lake bucket only (no admin, no other buckets) | no user |
+
+The Airflow user comes from `docker-compose.yml`; its password is in the same generated file as the
+admin's. The Superset and MinIO users are created, after the dashboards are imported, by:
+
+```bash
+set -a; source .env; set +a      # SUPERSET_ENGINEER_PASSWORD, SUPERSET_ANALYST_PASSWORD, MINIO_ENGINEER_PASSWORD
+./scripts/create_personas.sh     # idempotent: re-running resets roles and passwords to .env
+```
+
 ## Loading data
 
 The first load is a **backfill**: you pick the date range and load the whole history in one go. After that, the pipeline runs on its own via schedule and assets (see [Recurring runs](#recurring-runs)).
@@ -180,6 +200,7 @@ trino/
   etc/                   Trino configuration (config, jvm, catalog/hive)
 superset/
   superset_config.py     Superset Python config (DB URI, secret key)
+  personas.py            Superset roles and users of the access personas
 scripts/
   setup.sh               symlink to the root setup.sh (one-time env prep)
   backfill.sh            runs the full historical backfill for a date range
@@ -187,6 +208,7 @@ scripts/
   export_dashboards.sh   zips dashboard YAMLs into dashboards/exports/
   import_dashboards.sh   imports the ZIP into Superset through its API
   deploy_dashboards.sh   deletes and reimports the charts, so chart edits in the YAML take effect
+  create_personas.sh     data_engineer / analyst users in Superset and MinIO (see Access personas)
 dashboards/
   nyc_taxi_overview/     dashboard YAML files (versioned)
   exports/               generated ZIPs for Superset import (not versioned)
