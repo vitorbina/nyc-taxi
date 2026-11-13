@@ -25,5 +25,8 @@ def get_dag_config(**kwargs) -> dict:
         "description": kwargs.get("description", ""),
         "doc_md": kwargs.get("doc_md", ""),
         "max_active_tasks": kwargs.get("max_active_tasks", 2),
+        # Without it, every DAG ran with Airflow's default of 16 concurrent runs, so
+        # the max_active_runs=1 the staging/final DAGs ask for never applied
+        "max_active_runs": kwargs.get("max_active_runs", 1),
         "params": kwargs.get("params", {}),
     }
