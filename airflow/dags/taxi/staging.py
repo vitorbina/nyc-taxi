@@ -12,8 +12,11 @@ that are new or were re-downloaded since staging last built them; DuckDB rebuild
 those, one at a time. A table with nothing to do skips the rest of its branch. Trigger
 with `full_refresh` to rebuild every month (after changing a model's logic).
 
-Each rebuilt table is tested; only a table whose tests pass is registered in the
-catalog and announced to the final layer.
+Before a table is built, `validate_*` runs the dbt tests on its raw files (keys,
+zone ids, monthly volume; see dbt/models/staging/_sources.yml): a broken or
+truncated download stops that table here. Each rebuilt table is tested again;
+only a table whose tests pass is registered in the catalog and announced to the
+final layer.
 """
 
 import os
@@ -22,7 +25,7 @@ from airflow.decorators import dag, task
 from airflow.sdk import AssetAll, Param
 
 from utils.default import get_dag_config
-from utils.dbt_tasks import dbt_task_group
+from utils.dbt_tasks import dbt_source_tests, dbt_task_group
 from utils.hive import repair_table
 from utils.incremental import stale_partitions
 from utils.paths import raw_key, staging_key
@@ -60,9 +63,10 @@ def staging_pipeline():
 
     for folder_name, asset in staging_taxi_assets.items():
         months = plan.override(task_id=f"plan_{folder_name}")(lake_folder=folder_name)
+        validate = dbt_source_tests(f"validate_{folder_name}", source=f"raw.{folder_name}")
         stage = dbt_task_group(f"stage_{folder_name}", select=[f"stg_{folder_name}"], partitions_from=f"plan_{folder_name}")
         hive_task = update_hive.override(task_id=f"hive_{folder_name}", outlets=[asset])(lake_folder=folder_name)
-        months >> stage >> hive_task
+        months >> validate >> stage >> hive_task
 
 
 pipeline = staging_pipeline()

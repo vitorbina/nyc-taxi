@@ -145,7 +145,7 @@ After the initial load, the pipeline runs end-to-end on its own — ingestion on
 |---|---|---|
 | `taxi_ingestion` | monthly | downloads Parquet files for 4 taxi types |
 | `weather_ingestion` | daily | downloads hourly weather from Open-Meteo (one JSON Lines file per day) |
-| `taxi_staging` | asset-triggered | runs automatically after all 4 raw taxi assets update; builds only new or changed months |
+| `taxi_staging` | asset-triggered | runs automatically after all 4 raw taxi assets update; tests the raw files first (`validate_*`), then builds only new or changed months |
 | `weather_staging` | asset-triggered | runs automatically after raw weather asset updates; rebuilds in full (small) |
 | `taxi_final` | asset-triggered | runs automatically after all 4 staging taxi assets update; builds only new or changed months |
 

@@ -9,6 +9,7 @@ as a subprocess.
 
 from cosmos import DbtTaskGroup, ExecutionConfig, ProfileConfig, ProjectConfig, RenderConfig
 from cosmos.constants import InvocationMode
+from cosmos.operators.local import DbtTestLocalOperator
 
 DBT_PROJECT_DIR = "/opt/airflow/dbt"
 DBT_EXECUTABLE = "/opt/dbt-venv/bin/dbt"
@@ -16,6 +17,27 @@ DBT_EXECUTABLE = "/opt/dbt-venv/bin/dbt"
 # A DuckDB job can use several GB, so every dbt task takes the single slot of this
 # pool (created by airflow-init): they run one at a time across all DAGs.
 DUCKDB_POOL = "duckdb"
+
+PROFILE_CONFIG = ProfileConfig(
+    profile_name="nyc_taxi",
+    target_name="dev",
+    profiles_yml_filepath=f"{DBT_PROJECT_DIR}/profiles.yml",
+)
+
+
+def dbt_source_tests(task_id: str, source: str) -> DbtTestLocalOperator:
+    """The dbt tests of one raw source (dbt/models/staging/_sources.yml): the gate
+    between ingestion and staging. If the raw files fail them, staging isn't built."""
+    return DbtTestLocalOperator(
+        task_id=task_id,
+        project_dir=DBT_PROJECT_DIR,
+        profile_config=PROFILE_CONFIG,
+        dbt_executable_path=DBT_EXECUTABLE,
+        invocation_mode=InvocationMode.SUBPROCESS,
+        select=f"source:{source}",
+        pool=DUCKDB_POOL,
+        emit_datasets=False,
+    )
 
 
 def dbt_task_group(group_id: str, select: list[str], partitions_from: str | None = None) -> DbtTaskGroup:
@@ -31,11 +53,7 @@ def dbt_task_group(group_id: str, select: list[str], partitions_from: str | None
     return DbtTaskGroup(
         group_id=group_id,
         project_config=ProjectConfig(DBT_PROJECT_DIR, install_dbt_deps=False),
-        profile_config=ProfileConfig(
-            profile_name="nyc_taxi",
-            target_name="dev",
-            profiles_yml_filepath=f"{DBT_PROJECT_DIR}/profiles.yml",
-        ),
+        profile_config=PROFILE_CONFIG,
         execution_config=ExecutionConfig(
             dbt_executable_path=DBT_EXECUTABLE,
             invocation_mode=InvocationMode.SUBPROCESS,
