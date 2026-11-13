@@ -170,7 +170,7 @@ dbt/
   macros/lake.sql        `lake` materialization: streams a model to Parquet on MinIO, month by month
   macros/time.sql        DST-aware durations for NYC wall-clock timestamps
   macros/quality.sql     trip quality rules, driven by vars in dbt_project.yml
-  tests/                 generic test accepted_range + marts reconcile test
+  tests/                 generic tests (accepted_range, partition_volume, no_duplicate_rows) + marts reconcile test
   profiles.yml           DuckDB in memory, MinIO credentials from env vars
 dockerfile/
   Dockerfile.airflow     custom Airflow image (Cosmos + dbt in its own virtualenv)
@@ -207,6 +207,17 @@ stops everything downstream, including the catalog registration. Tests that span
 Each dbt run starts with an empty in-memory DuckDB, so a model that refs another one reads it back
 from MinIO: the `on-run-start` hook in `macros/lake.sql` creates those views for the upstream models
 that aren't part of the run. That is what lets Airflow run one model per task.
+
+### Tests on the raw files
+
+The raw sources are tested too (`models/staging/_sources.yml`): timestamps and zone ids present,
+zone ids that exist in the lookup, and each month's row count within 0.5x–2x the average of the
+three months before it (catches a truncated download). Whole-row duplicates in the FHV file are
+a warning, not a failure (~0.1% of rows). Run them by hand with:
+
+```bash
+dbt test --profiles-dir . --select source:raw     # ~20 s for a year of data
+```
 
 ### Incremental by month
 

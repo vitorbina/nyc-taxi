@@ -1,5 +1,12 @@
 version: 2
 
+# Tests on the raw files: the gate between ingestion and staging. They check what a
+# file must have to be usable (keys present, zone ids that exist, a plausible number
+# of rows); a failure means the file is broken or the TLC changed its format, and
+# nothing downstream should be built from it. What the TLC publishes normally (e.g.
+# dropoff before pickup, the DST hour) is not tested here: staging filters it.
+# Measured on 2025 before writing them; thresholds follow from that profile.
+
 sources:
   - name: raw
     description: Files as downloaded by the ingestion DAGs, read straight from MinIO.
@@ -7,24 +14,101 @@ sources:
       - name: yellow_taxi
         meta:
           external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/yellow_taxi/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+        columns:
+          - name: partition_date
+            tests:
+              - not_null
+              - partition_volume
+          - name: tpep_pickup_datetime
+            tests: [not_null]
+          - name: tpep_dropoff_datetime
+            tests: [not_null]
+          - name: PULocationID
+            tests: &zone_id_required
+              - not_null
+              - relationships: &zone_lookup
+                  arguments:
+                    to: source('raw', 'taxi_zone_lookup')
+                    field: LocationID
+          - name: DOLocationID
+            tests: *zone_id_required
+
       - name: green_taxi
         meta:
           external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/green_taxi/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+        columns:
+          - name: partition_date
+            tests:
+              - not_null
+              - partition_volume
+          - name: lpep_pickup_datetime
+            tests: [not_null]
+          - name: lpep_dropoff_datetime
+            tests: [not_null]
+          - name: PULocationID
+            tests: *zone_id_required
+          - name: DOLocationID
+            tests: *zone_id_required
+
       - name: app_rides
         description: FHV trips (non high-volume bases).
         meta:
           external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/app_rides/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+        tests:
+          # ~0.1% of the rows are exact copies (2,235 in 2025-06): known, so a warning
+          - no_duplicate_rows:
+              config: {severity: warn}
+        columns:
+          - name: partition_date
+            tests:
+              - not_null
+              - partition_volume
+          - name: pickup_datetime
+            tests: [not_null]
+          - name: dropOff_datetime
+            tests: [not_null]
+          - name: dispatching_base_num
+            tests: [not_null]
+          # ~80% of FHV records have no zone, so the ids are optional here; the ones
+          # present must still exist
+          - name: PUlocationID
+            tests:
+              - relationships: *zone_lookup
+          - name: DOlocationID
+            tests:
+              - relationships: *zone_lookup
+
       - name: high_volume_fhv
         description: High Volume FHV trips (Uber, Lyft, Via).
         meta:
           external_location: "read_parquet('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/high_volume_fhv/*/*.parquet', hive_partitioning=true, union_by_name=true)"
+        columns:
+          - name: partition_date
+            tests:
+              - not_null
+              - partition_volume
+          - name: hvfhs_license_num
+            tests: [not_null]
+          - name: pickup_datetime
+            tests: [not_null]
+          - name: dropoff_datetime
+            tests: [not_null]
+          - name: PULocationID
+            tests: *zone_id_required
+          - name: DOLocationID
+            tests: *zone_id_required
+
       - name: weather
         description: Hourly NYC weather from Open-Meteo, one JSON file per day.
         meta:
           external_location: "read_json_auto('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/weather/*/*.json', hive_partitioning=true)"
+
       - name: taxi_zone_lookup
         meta:
           external_location: "read_csv('s3://{{ env_var(\"MINIO_BUCKET\") }}/raw/reference/taxi_zone_lookup/taxi_zone_lookup.csv', header=true)"
+        columns:
+          - name: LocationID
+            tests: [not_null, unique]
 
   - name: reference
     description: Reference data staged outside dbt (shapefile parsing needs geopandas).
