@@ -4,6 +4,9 @@
 Fetches daily historical weather data for New York City from the Open-Meteo Archive API.
 Source: Open-Meteo (free, no API key). Destination: MinIO bucket `data-lake-nyc`. Runs daily.
 
+Each run fetches the day 5 days before its date (ARCHIVE_DELAY_DAYS): the archive only
+has measured data by then; before that it returns estimates that would never be fixed.
+
 Partition: `raw/weather/partition_date=YYYY-MM-DD/`
 """
 
@@ -13,7 +16,7 @@ import logging
 from airflow.decorators import dag, task
 
 from utils.default import get_dag_config
-from utils.weather import ingest_weather_data, WEATHER_RAW_SCHEMA
+from utils.weather import ingest_weather_data, weather_day, WEATHER_RAW_SCHEMA
 from utils.hive import repair_table
 from utils.constants import RAW_DATABASE
 from utils.assets import raw_weather
@@ -38,11 +41,9 @@ def weather_ingestion_pipeline():
 
     @task
     def ingest_daily_weather(data_interval_end=None):
-        logger.info("Ingesting weather data for %s", data_interval_end)
-        ingest_weather_data(
-            execution_date=data_interval_end,
-            bucket=BUCKET,
-        )
+        day = weather_day(data_interval_end)
+        logger.info("Run of %s: ingesting weather for %s", data_interval_end, day.date())
+        ingest_weather_data(day=day, bucket=BUCKET)
 
     @task(outlets=[raw_weather])
     def update_hive(dag_run=None):

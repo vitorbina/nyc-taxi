@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import tempfile
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 
@@ -14,6 +14,12 @@ logger = logging.getLogger(__name__)
 
 NYC_LAT = 40.7128
 NYC_LON = -74.0060
+
+# The archive API has measured (reanalysis) data only ~5 days after a day. Before
+# that it answers with model estimates, which this pipeline would never replace:
+# 2026-11-06 fetched on the day had 7.1 mm of rain, the final data 15.5 mm. So each
+# run fetches the day that is final by then, not the one that just started.
+ARCHIVE_DELAY_DAYS = 5
 
 HOURLY_VARIABLES = [
     "temperature_2m",
@@ -37,6 +43,11 @@ WEATHER_RAW_SCHEMA = (
 )
 
 
+def weather_day(data_interval_end: datetime) -> datetime:
+    """The day a run fetches: ARCHIVE_DELAY_DAYS before the run's date."""
+    return data_interval_end - timedelta(days=ARCHIVE_DELAY_DAYS)
+
+
 def _fetch_weather_data(date_str: str) -> dict:
     url = (
         f"https://archive-api.open-meteo.com/v1/archive"
@@ -47,7 +58,7 @@ def _fetch_weather_data(date_str: str) -> dict:
     )
 
     logger.info("Fetching weather data from Open-Meteo for %s...", date_str)
-    response = requests.get(url)
+    response = requests.get(url, timeout=60)
     response.raise_for_status()
     return response.json()
 
@@ -69,8 +80,8 @@ def _upload_weather_file(local_path: str, date_str: str, bucket: str) -> None:
     upload_file(filepath=local_path, bucket=bucket, key=key)
 
 
-def ingest_weather_data(execution_date: datetime, bucket: str) -> None:
-    date_str = execution_date.strftime("%Y-%m-%d")
+def ingest_weather_data(day: datetime, bucket: str) -> None:
+    date_str = day.strftime("%Y-%m-%d")
     file_name = f"weather_nyc_{date_str}.json"
 
     tmpdir = tempfile.mkdtemp()
