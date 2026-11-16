@@ -2,8 +2,9 @@ name: CI
 on: [push]
 jobs:
   hello:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - run: echo "Olá do CI"
-      - run: uname -a && nproc && free -h
-      - run: ls -la
+    - name: Baixar o código
+      uses: actions/checkout@v7.0.1
+    - name: Ver os arquivos
+      run: ls -la
