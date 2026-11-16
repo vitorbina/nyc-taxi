@@ -2,7 +2,7 @@ name: CI
 on: [push]
 jobs:
   hello:
-    runs-on: ubunto-24.04
+    runs-on: ubuntu-latest
     steps:
       - run: echo "Olá do CI"
       - run: uname -a && nproc && free -h
