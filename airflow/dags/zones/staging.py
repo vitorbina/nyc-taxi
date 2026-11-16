@@ -7,18 +7,18 @@ and parses the zone shapefile into polygons with geopandas, which SQL can't do.
 Runs once, triggered after the raw zones ingestion DAG completes.
 """
 
-import os
 import logging
+import os
 
 from airflow.decorators import dag, task
 from airflow.sdk import AssetAll
 
-from utils.default import get_dag_config
-from utils.dbt_tasks import dbt_task_group
 from staging.zones_geo import stage_zones_geo
-from utils.hive import setup_hive
-from utils.constants import STAGING_DATABASE
 from utils.assets import raw_taxi_zones
+from utils.constants import STAGING_DATABASE
+from utils.dbt_tasks import dbt_task_group
+from utils.default import get_dag_config
+from utils.hive import setup_hive
 
 logger = logging.getLogger(__name__)
 

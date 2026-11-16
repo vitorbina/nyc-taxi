@@ -19,7 +19,9 @@ from utils.s3 import partition_mtimes
 logger = logging.getLogger(__name__)
 
 
-def stale_partitions(bucket: str, sources: list[str], targets: list[str], full_refresh: bool = False) -> list[str]:
+def stale_partitions(
+    bucket: str, sources: list[str], targets: list[str], full_refresh: bool = False
+) -> list[str]:
     """Partitions of any source that some target lacks or that changed after it.
 
     With several targets (tables built in the same run), a partition is stale if it is
@@ -36,12 +38,16 @@ def stale_partitions(bucket: str, sources: list[str], targets: list[str], full_r
     else:
         built = [partition_mtimes(bucket, prefix) for prefix in targets]
         stale = sorted(
-            p for p, mtime in newest_source.items()
+            p
+            for p, mtime in newest_source.items()
             if any(p not in target or target[p] < mtime for target in built)
         )
 
     logger.info(
         "%d of %d partitions to build%s: %s",
-        len(stale), len(newest_source), " (full refresh)" if full_refresh else "", stale,
+        len(stale),
+        len(newest_source),
+        " (full refresh)" if full_refresh else "",
+        stale,
     )
     return stale

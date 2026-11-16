@@ -13,8 +13,8 @@ import os
 import duckdb
 import trino
 
+from utils.constants import DEFAULT_BUCKET, PARTITION_COL, STAGING_DATABASE
 from utils.s3 import folder_exists, list_partitions
-from utils.constants import PARTITION_COL, STAGING_DATABASE, DEFAULT_BUCKET
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +58,12 @@ def _parquet_schema_ddl(bucket: str, prefix: str, is_partitioned: bool) -> str:
                 os.getenv("MINIO_ENDPOINT").replace("http://", ""),
             ],
         )
-        files = f"s3://{bucket}/{prefix}" + ("*/*.parquet" if is_partitioned else "*.parquet")
+        files = f"s3://{bucket}/{prefix}" + (
+            "*/*.parquet" if is_partitioned else "*.parquet"
+        )
         # union_by_name: raw TLC files gained columns over the years
         columns = con.sql(
-            f"DESCRIBE SELECT * FROM read_parquet('{files}', hive_partitioning=false, union_by_name=true)"
+            f"DESCRIBE SELECT * FROM read_parquet('{files}', hive_partitioning=false, union_by_name=true)"  # noqa: S608 -- bucket from config, prefix from table names in code; no user input
         ).fetchall()
     finally:
         con.close()
@@ -92,7 +94,10 @@ def _run(cur, sql: str) -> list:
 def _create_schema(cur, database: str, bucket: str) -> None:
     # Without a location the metastore would default to a local (file:) path
     try:
-        _run(cur, f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{database} WITH (location = 's3a://{bucket}/{database}/')")
+        _run(
+            cur,
+            f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{database} WITH (location = 's3a://{bucket}/{database}/')",
+        )
     except trino.exceptions.TrinoUserError as e:
         # Registration tasks run in parallel: on a new lake two of them can create the
         # schema at once, and the metastore rejects the second despite IF NOT EXISTS
@@ -105,10 +110,15 @@ def _table_exists(cur, database: str, table: str) -> bool:
 
 
 def _is_partitioned(cur, database: str, table: str) -> bool:
-    return bool(_run(cur, f"""
+    return bool(
+        _run(
+            cur,
+            f"""
         SELECT 1 FROM {CATALOG}.information_schema.columns
         WHERE table_schema = '{database}' AND table_name = '{table}' AND column_name = '{PARTITION_COL}'
-    """))
+    """,  # noqa: S608 -- database and table names come from the DAG code; no user input
+        )
+    )
 
 
 def _create_external_table(
@@ -118,7 +128,7 @@ def _create_external_table(
     location_prefix: str,
     bucket: str,
     file_format: str = "parquet",
-    schema_ddl: str = None,
+    schema_ddl: str | None = None,
 ) -> None:
     prefix = f"{location_prefix}/{table}/"
     # The metastore validates locations with Hadoop's S3A client, hence s3a://
@@ -133,39 +143,50 @@ def _create_external_table(
     is_partitioned = bool(list_partitions(bucket, prefix))
     if file_format == "json":
         if schema_ddl is None:
-            raise ValueError(f"schema_ddl is required when file_format='json' (table: {table})")
+            raise ValueError(
+                f"schema_ddl is required when file_format='json' (table: {table})"
+            )
     else:
         logger.info("Reading schema from %s...", location)
         schema_ddl = _parquet_schema_ddl(bucket, prefix, is_partitioned)
 
-    properties = [f"external_location = '{location}'", f"format = '{file_format.upper()}'"]
+    properties = [
+        f"external_location = '{location}'",
+        f"format = '{file_format.upper()}'",
+    ]
     if is_partitioned:
         # Hive partition columns go last in the column list
         schema_ddl += f', "{PARTITION_COL}" varchar'
         properties.append(f"partitioned_by = ARRAY['{PARTITION_COL}']")
 
     logger.info("Creating table %s.%s at %s", database, table, location)
-    _run(cur, f"""
+    _run(
+        cur,
+        f"""
         CREATE TABLE {CATALOG}.{database}.{table} ({schema_ddl})
         WITH ({", ".join(properties)})
-    """)
+    """,
+    )
 
 
 def _sync_partitions(cur, database: str, table: str) -> None:
     if _is_partitioned(cur, database, table):
         logger.info("Syncing partitions for %s.%s...", database, table)
         # FULL adds new partition folders and drops the ones that no longer exist
-        _run(cur, f"CALL {CATALOG}.system.sync_partition_metadata('{database}', '{table}', 'FULL')")
+        _run(
+            cur,
+            f"CALL {CATALOG}.system.sync_partition_metadata('{database}', '{table}', 'FULL')",
+        )
         logger.info("Partitions updated for %s.%s.", database, table)
 
 
 def repair_table(
     table: str,
     database: str = STAGING_DATABASE,
-    location_prefix: str = None,
+    location_prefix: str | None = None,
     bucket: str = DEFAULT_BUCKET,
     file_format: str = "parquet",
-    schema_ddl: str = None,
+    schema_ddl: str | None = None,
 ) -> None:
     if location_prefix is None:
         location_prefix = database
@@ -176,7 +197,9 @@ def repair_table(
 
         if not _table_exists(cur, database, table):
             logger.info("Table %s.%s does not exist, creating...", database, table)
-            _create_external_table(cur, table, database, location_prefix, bucket, file_format, schema_ddl)
+            _create_external_table(
+                cur, table, database, location_prefix, bucket, file_format, schema_ddl
+            )
 
         _sync_partitions(cur, database, table)
 
@@ -187,7 +210,7 @@ def setup_hive(
     location_prefix: str,
     bucket: str = DEFAULT_BUCKET,
     file_format: str = "parquet",
-    schema_ddl: str = None,
+    schema_ddl: str | None = None,
 ) -> None:
     with _connect() as conn:
         cur = conn.cursor()
@@ -196,6 +219,8 @@ def setup_hive(
 
         for table in tables:
             _run(cur, f"DROP TABLE IF EXISTS {CATALOG}.{database}.{table}")
-            _create_external_table(cur, table, database, location_prefix, bucket, file_format, schema_ddl)
+            _create_external_table(
+                cur, table, database, location_prefix, bucket, file_format, schema_ddl
+            )
             _sync_partitions(cur, database, table)
             logger.info("Table %s.%s registered successfully.", database, table)

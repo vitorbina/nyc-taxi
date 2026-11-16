@@ -16,10 +16,10 @@ import os
 from airflow.decorators import dag, task
 from airflow.sdk import AssetAll
 
-from utils.default import get_dag_config
-from utils.dbt_tasks import dbt_task_group
-from utils.hive import repair_table
 from utils.assets import raw_weather, staging_weather
+from utils.dbt_tasks import dbt_task_group
+from utils.default import get_dag_config
+from utils.hive import repair_table
 
 BUCKET = os.getenv("MINIO_BUCKET")
 

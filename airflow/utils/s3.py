@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from datetime import datetime
 from functools import lru_cache
 
@@ -54,10 +54,12 @@ def partition_mtimes(bucket: str, prefix: str) -> dict[str, datetime]:
     mtimes = {}
     for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
         for obj in page.get("Contents", []):
-            folder, _, file_name = obj["Key"][len(prefix):].partition("/")
+            folder, _, file_name = obj["Key"][len(prefix) :].partition("/")
             if folder.startswith(f"{PARTITION_COL}=") and file_name:
                 value = folder.split("=", 1)[1]
-                mtimes[value] = max(obj["LastModified"], mtimes.get(value, obj["LastModified"]))
+                mtimes[value] = max(
+                    obj["LastModified"], mtimes.get(value, obj["LastModified"])
+                )
     return mtimes
 
 

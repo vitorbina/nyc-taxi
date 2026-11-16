@@ -24,12 +24,12 @@ import os
 from airflow.decorators import dag, task
 from airflow.sdk import AssetAll, Param
 
-from utils.default import get_dag_config
+from utils.assets import raw_taxi_assets, staging_taxi_assets
 from utils.dbt_tasks import dbt_source_tests, dbt_task_group
+from utils.default import get_dag_config
 from utils.hive import repair_table
 from utils.incremental import stale_partitions
 from utils.paths import raw_key, staging_key
-from utils.assets import raw_taxi_assets, staging_taxi_assets
 
 BUCKET = os.getenv("MINIO_BUCKET")
 
@@ -43,7 +43,13 @@ BUCKET = os.getenv("MINIO_BUCKET")
         doc_md=__doc__,
         max_active_runs=1,
         tags=["layer:staging", "domain:taxi"],
-        params={"full_refresh": Param(False, type="boolean", description="Rebuild every month, not only the stale ones")},
+        params={
+            "full_refresh": Param(
+                False,
+                type="boolean",
+                description="Rebuild every month, not only the stale ones",
+            )
+        },
     )
 )
 def staging_pipeline():
@@ -63,9 +69,17 @@ def staging_pipeline():
 
     for folder_name, asset in staging_taxi_assets.items():
         months = plan.override(task_id=f"plan_{folder_name}")(lake_folder=folder_name)
-        validate = dbt_source_tests(f"validate_{folder_name}", source=f"raw.{folder_name}")
-        stage = dbt_task_group(f"stage_{folder_name}", select=[f"stg_{folder_name}"], partitions_from=f"plan_{folder_name}")
-        hive_task = update_hive.override(task_id=f"hive_{folder_name}", outlets=[asset])(lake_folder=folder_name)
+        validate = dbt_source_tests(
+            f"validate_{folder_name}", source=f"raw.{folder_name}"
+        )
+        stage = dbt_task_group(
+            f"stage_{folder_name}",
+            select=[f"stg_{folder_name}"],
+            partitions_from=f"plan_{folder_name}",
+        )
+        hive_task = update_hive.override(
+            task_id=f"hive_{folder_name}", outlets=[asset]
+        )(lake_folder=folder_name)
         months >> validate >> stage >> hive_task
 
 

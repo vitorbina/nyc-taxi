@@ -1,7 +1,9 @@
 from utils.constants import PARTITION_COL
 
 
-def raw_key(table: str, partition: str = None, file_name: str = None) -> str:
+def raw_key(
+    table: str, partition: str | None = None, file_name: str | None = None
+) -> str:
     parts = ["raw", table]
     if partition:
         parts.append(f"{PARTITION_COL}={partition}")
@@ -10,7 +12,7 @@ def raw_key(table: str, partition: str = None, file_name: str = None) -> str:
     return "/".join(parts)
 
 
-def staging_key(table: str, partition: str = None) -> str:
+def staging_key(table: str, partition: str | None = None) -> str:
     parts = ["staging", table]
     if partition:
         parts.append(f"{PARTITION_COL}={partition}")

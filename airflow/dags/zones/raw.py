@@ -7,14 +7,14 @@ Source: NYC TLC. Destination: MinIO bucket `data-lake-nyc`. Runs once.
 Path: `raw/reference/{file_name}/{file_name}`
 """
 
-import os
 import logging
+import os
 
 from airflow.decorators import dag, task
 
+from utils.assets import raw_taxi_zones
 from utils.default import get_dag_config
 from utils.zones import ingest_zone_data
-from utils.assets import raw_taxi_zones
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,9 @@ def zones_ingestion_pipeline():
     for file_name in REFERENCE_FILES:
         stem = os.path.splitext(file_name)[0]
         outlets = [raw_taxi_zones] if stem == "taxi_zone_lookup" else []
-        ingest_reference_file.override(task_id=f"ingest_{stem}", outlets=outlets)(file_name=file_name)
+        ingest_reference_file.override(task_id=f"ingest_{stem}", outlets=outlets)(
+            file_name=file_name
+        )
 
 
 pipeline = zones_ingestion_pipeline()

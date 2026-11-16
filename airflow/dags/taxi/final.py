@@ -31,13 +31,13 @@ import os
 from airflow.decorators import dag, task
 from airflow.sdk import AssetAll, Param
 
-from utils.default import get_dag_config
+from utils.assets import staging_taxi_assets
+from utils.constants import FINAL_DATABASE, FINAL_TABLES
 from utils.dbt_tasks import dbt_task_group
+from utils.default import get_dag_config
 from utils.hive import setup_hive
 from utils.incremental import stale_partitions
 from utils.paths import final_key, staging_key
-from utils.constants import FINAL_DATABASE, FINAL_TABLES
-from utils.assets import staging_taxi_assets
 
 BUCKET = os.getenv("MINIO_BUCKET")
 
@@ -54,7 +54,13 @@ MONTHLY_TABLES = ["trips", "revenue", "weather_impact", "trips_hourly"]
         doc_md=__doc__,
         max_active_runs=1,
         tags=["layer:final", "domain:taxi"],
-        params={"full_refresh": Param(False, type="boolean", description="Rebuild every month, not only the stale ones")},
+        params={
+            "full_refresh": Param(
+                False,
+                type="boolean",
+                description="Rebuild every month, not only the stale ones",
+            )
+        },
     )
 )
 def final_pipeline():
@@ -70,9 +76,16 @@ def final_pipeline():
 
     @task
     def register(table: str):
-        setup_hive(tables=[table], database=FINAL_DATABASE, location_prefix="final", bucket=BUCKET)
+        setup_hive(
+            tables=[table],
+            database=FINAL_DATABASE,
+            location_prefix="final",
+            bucket=BUCKET,
+        )
 
-    build = dbt_task_group("build_final", select=["path:models/final"], partitions_from="plan")
+    build = dbt_task_group(
+        "build_final", select=["path:models/final"], partitions_from="plan"
+    )
     plan() >> build
     for table in FINAL_TABLES:
         build >> register.override(task_id=f"hive_{table}")(table=table)

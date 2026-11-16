@@ -7,13 +7,15 @@ import zipfile
 import geopandas as gpd
 from airflow.exceptions import AirflowSkipException
 
-from utils.s3 import download_file, upload_file, file_exists
 from utils.paths import raw_key, staging_key
+from utils.s3 import download_file, file_exists, upload_file
 
 logger = logging.getLogger(__name__)
 
 ZONES_ZIP_RAW_KEY = raw_key("reference/taxi_zones", file_name="taxi_zones.zip")
-ZONES_GEO_STAGING_KEY = staging_key("reference/taxi_zones_geo") + "/taxi_zones_geo.parquet"
+ZONES_GEO_STAGING_KEY = (
+    staging_key("reference/taxi_zones_geo") + "/taxi_zones_geo.parquet"
+)
 
 
 def stage_zones_geo(bucket: str) -> None:
@@ -51,14 +53,35 @@ def stage_zones_geo(bucket: str) -> None:
 
         gdf["geometry_wkt"] = gdf["geometry"].apply(lambda g: g.wkt if g else None)
         gdf["geometry_json"] = gdf["geometry"].apply(
-            lambda g: json.dumps(
-                [list(g.exterior.coords)] if g.geom_type == "Polygon"
-                else [list(p.exterior.coords) for p in g.geoms]
-            ) if g else None
+            lambda g: (
+                json.dumps(
+                    [list(g.exterior.coords)]
+                    if g.geom_type == "Polygon"
+                    else [list(p.exterior.coords) for p in g.geoms]
+                )
+                if g
+                else None
+            )
         )
 
-        df = gdf[["LocationID", "borough", "zone", "Shape_Area", "geometry_wkt", "geometry_json"]].copy()
-        df.columns = ["location_id", "borough", "zone", "shape_area", "geometry_wkt", "geometry_json"]
+        df = gdf[
+            [
+                "LocationID",
+                "borough",
+                "zone",
+                "Shape_Area",
+                "geometry_wkt",
+                "geometry_json",
+            ]
+        ].copy()
+        df.columns = [
+            "location_id",
+            "borough",
+            "zone",
+            "shape_area",
+            "geometry_wkt",
+            "geometry_json",
+        ]
         df["location_id"] = df["location_id"].astype(int)
 
         parquet_path = f"{tmpdir}/taxi_zones_geo.parquet"

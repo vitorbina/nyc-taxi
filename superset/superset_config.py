@@ -1,3 +1,4 @@
+import logging
 import os
 
 SQLALCHEMY_DATABASE_URI = os.environ["SUPERSET_DB_URI"]
@@ -46,7 +47,10 @@ try:
             _csp[_directive] = _values + _TILE_HOSTS
     TALISMAN_CONFIG["content_security_policy"] = _csp
 except Exception:
-    pass
+    logging.getLogger(__name__).warning(
+        "Could not extend the CSP for map tiles; the zone map may render blank",
+        exc_info=True,
+    )
 
 # Light theme only. Superset 6 otherwise follows the OS dark mode, and the
 # dashboard's palette and markdown text were validated against a light surface.

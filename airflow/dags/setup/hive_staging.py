@@ -12,9 +12,9 @@ import os
 
 from airflow.decorators import dag, task
 
+from utils.constants import STAGING_DATABASE
 from utils.default import get_dag_config
 from utils.hive import setup_hive
-from utils.constants import STAGING_DATABASE
 
 BUCKET = os.getenv("MINIO_BUCKET")
 

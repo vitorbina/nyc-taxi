@@ -10,16 +10,16 @@ has measured data by then; before that it returns estimates that would never be 
 Partition: `raw/weather/partition_date=YYYY-MM-DD/`
 """
 
-import os
 import logging
+import os
 
 from airflow.decorators import dag, task
 
-from utils.default import get_dag_config
-from utils.weather import ingest_weather_data, weather_day, WEATHER_RAW_SCHEMA
-from utils.hive import repair_table
-from utils.constants import RAW_DATABASE
 from utils.assets import raw_weather
+from utils.constants import RAW_DATABASE
+from utils.default import get_dag_config
+from utils.hive import repair_table
+from utils.weather import WEATHER_RAW_SCHEMA, ingest_weather_data, weather_day
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,9 @@ def weather_ingestion_pipeline():
     @task
     def ingest_daily_weather(data_interval_end=None):
         day = weather_day(data_interval_end)
-        logger.info("Run of %s: ingesting weather for %s", data_interval_end, day.date())
+        logger.info(
+            "Run of %s: ingesting weather for %s", data_interval_end, day.date()
+        )
         ingest_weather_data(day=day, bucket=BUCKET)
 
     @task(outlets=[raw_weather])
@@ -50,7 +52,12 @@ def weather_ingestion_pipeline():
         if dag_run and dag_run.conf.get("skip_repair"):
             logger.info("skip_repair=true — skipping repair_table for weather")
             return
-        repair_table("weather", database=RAW_DATABASE, file_format="json", schema_ddl=WEATHER_RAW_SCHEMA)
+        repair_table(
+            "weather",
+            database=RAW_DATABASE,
+            file_format="json",
+            schema_ddl=WEATHER_RAW_SCHEMA,
+        )
 
     ingest_daily_weather() >> update_hive()
 

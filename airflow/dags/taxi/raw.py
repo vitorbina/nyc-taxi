@@ -9,16 +9,16 @@ TLC data has a 2-3 month lag. Skipped tasks mean the file isn't out yet, not a f
 Covers yellow taxi, green taxi, FHV (app rides) and High Volume FHV (Uber, Lyft, Via).
 """
 
-import os
 import logging
+import os
 
 from airflow.decorators import dag, task
 
-from utils.default import get_dag_config
-from utils.taxi import ingest_taxi_data
-from utils.hive import repair_table
-from utils.constants import RAW_DATABASE
 from utils.assets import raw_taxi_assets
+from utils.constants import RAW_DATABASE
+from utils.default import get_dag_config
+from utils.hive import repair_table
+from utils.taxi import ingest_taxi_data
 
 logger = logging.getLogger(__name__)
 

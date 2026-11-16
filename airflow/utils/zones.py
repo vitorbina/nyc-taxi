@@ -5,8 +5,8 @@ import tempfile
 
 import requests
 
-from utils.s3 import upload_file
 from utils.paths import raw_key
+from utils.s3 import upload_file
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def _download_zone_file(file_name: str, local_path: str) -> None:
     url = f"{TLC_ZONE_DATA_URL}/{file_name}"
     logger.info("Downloading %s...", url)
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=60)
     response.raise_for_status()
 
     with open(local_path, "wb") as f:

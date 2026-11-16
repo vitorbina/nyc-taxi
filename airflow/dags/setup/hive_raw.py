@@ -12,9 +12,9 @@ import os
 
 from airflow.decorators import dag, task
 
+from utils.constants import RAW_DATABASE
 from utils.default import get_dag_config
 from utils.hive import setup_hive
-from utils.constants import RAW_DATABASE
 from utils.weather import WEATHER_RAW_SCHEMA
 
 BUCKET = os.getenv("MINIO_BUCKET")
@@ -44,7 +44,9 @@ RAW_TABLE_CONFIG = {
 def hive_setup_raw_pipeline():
 
     @task
-    def register_table(table: str, file_format: str = "parquet", schema_ddl: str = None):
+    def register_table(
+        table: str, file_format: str = "parquet", schema_ddl: str | None = None
+    ):
         setup_hive(
             tables=[table],
             database=RAW_DATABASE,

@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 
 import requests
 
+from utils.paths import raw_key
 from utils.s3 import upload_file
-from utils.paths import raw_key, s3a
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +68,10 @@ def _write_json_lines(payload: dict, local_path: str) -> None:
     keys = list(hourly.keys())
     rows = [dict(zip(keys, values)) for values in zip(*[hourly[k] for k in keys])]
     with open(local_path, "w") as f:
-        for row in rows:
-            f.write(json.dumps(row) + "\n")
-    logger.info("Weather data written as JSON Lines to %s (%d rows).", local_path, len(rows))
+        f.writelines(json.dumps(row) + "\n" for row in rows)
+    logger.info(
+        "Weather data written as JSON Lines to %s (%d rows).", local_path, len(rows)
+    )
 
 
 def _upload_weather_file(local_path: str, date_str: str, bucket: str) -> None:

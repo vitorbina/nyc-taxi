@@ -7,7 +7,13 @@ dbt lives in its own virtualenv in the image (/opt/dbt-venv), so Cosmos calls it
 as a subprocess.
 """
 
-from cosmos import DbtTaskGroup, ExecutionConfig, ProfileConfig, ProjectConfig, RenderConfig
+from cosmos import (
+    DbtTaskGroup,
+    ExecutionConfig,
+    ProfileConfig,
+    ProjectConfig,
+    RenderConfig,
+)
 from cosmos.constants import InvocationMode
 from cosmos.operators.local import DbtTestLocalOperator
 
@@ -40,7 +46,9 @@ def dbt_source_tests(task_id: str, source: str) -> DbtTestLocalOperator:
     )
 
 
-def dbt_task_group(group_id: str, select: list[str], partitions_from: str | None = None) -> DbtTaskGroup:
+def dbt_task_group(
+    group_id: str, select: list[str], partitions_from: str | None = None
+) -> DbtTaskGroup:
     """dbt models as tasks. partitions_from: id of an upstream task that returns the
     partitions to build (utils/incremental.py); without it, models rebuild in full."""
     operator_args = {"pool": DUCKDB_POOL}
