@@ -1,10 +1,51 @@
 name: CI
-on: [push]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# The workflow only reads the code: no write access to the repository
+permissions:
+  contents: read
+
+# A new push to the same branch cancels the run still going for the previous one
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  hello:
+  lint:
+    name: Python lint and format (ruff)
     runs-on: ubuntu-24.04
     steps:
-    - name: Baixar o código
-      uses: actions/checkout@v7.0.1
-    - name: Ver os arquivos
-      run: ls -la
+      - uses: actions/checkout@v7.0.1
+      # Same ruff version as local runs (uvx ruff@0.17.3); rules in ruff.toml
+      - name: ruff check
+        run: pipx run ruff==0.17.3 check airflow superset
+      - name: ruff format --check
+        run: pipx run ruff==0.17.3 format airflow superset --check
+
+  stack:
+    name: Compose, images, DAGs and dbt
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      # The real .env never leaves the machine; the example has every variable
+      - name: Create .env from the example
+        run: cp .env.example .env
+      - name: docker compose config
+        run: docker compose config --quiet
+      - name: Build the images
+        run: docker compose build
+      - name: DAGs import and dbt parses
+        run: |
+          docker run --rm --network none \
+            -v "$PWD/airflow/dags:/opt/airflow/dags:ro" \
+            -v "$PWD/airflow/utils:/opt/airflow/utils:ro" \
+            -v "$PWD/airflow/staging:/opt/airflow/staging:ro" \
+            -v "$PWD/dbt:/opt/airflow/dbt:ro" \
+            -v "$PWD/scripts/ci:/ci:ro" \
+            --entrypoint bash nyc-taxi-airflow-scheduler \
+            /ci/check_airflow.sh
