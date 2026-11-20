@@ -49,3 +49,21 @@ jobs:
             -v "$PWD/scripts/ci:/ci:ro" \
             --entrypoint bash nyc-taxi-airflow-scheduler \
             /ci/check_airflow.sh
+
+  # CD: after both checks pass on main, ask Dokploy to deploy.
+  # Until the server exists the DOKPLOY_WEBHOOK_URL secret is empty and the job only says so.
+  deploy:
+    name: Deploy (Dokploy webhook)
+    needs: [lint, stack]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Trigger the Dokploy deploy
+        env:
+          WEBHOOK: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "::notice::DOKPLOY_WEBHOOK_URL not set yet (no server); skipping deploy"
+            exit 0
+          fi
+          curl --fail --silent --show-error -X POST "$WEBHOOK"
