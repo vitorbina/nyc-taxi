@@ -68,7 +68,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 1536m
     networks:
       - nyc-network
 
@@ -89,7 +89,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1500m
+          memory: 256m
     networks:
       - nyc-network
 
@@ -131,7 +131,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 256m
     networks:
       - nyc-network
 
@@ -160,7 +160,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 512m
 
   # ── Airflow DAG Processor ─────────────────────────────────────────────────
   airflow-dag-processor:
@@ -214,7 +214,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2500m
+          memory: 1500m
     networks:
       - nyc-network
 
@@ -235,7 +235,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2g
+          memory: 2560m
     networks:
       - nyc-network
 
@@ -283,7 +283,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 512m
     networks:
       - nyc-network
 
