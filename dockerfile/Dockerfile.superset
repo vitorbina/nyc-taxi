@@ -1,4 +1,10 @@
 FROM apache/superset:6.0.0
 USER root
 RUN /app/.venv/bin/python -m ensurepip && /app/.venv/bin/python -m pip install psycopg2-binary sqlalchemy-trino
+
+# Config and dashboards ship inside the image (not bind-mounted): on the server the
+# repo folder is re-cloned on every deploy, and a bind would keep pointing at the
+# deleted copy. superset-init imports the dashboards zip on startup.
+COPY superset/superset_config.py /app/pythonpath/superset_config.py
+COPY dashboards/exports/nyc_taxi_overview.zip /dashboards/nyc_taxi_overview.zip
 USER superset

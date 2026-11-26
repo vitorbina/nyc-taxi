@@ -94,7 +94,7 @@ docker compose ps
 Auto-generated on first start:
 
 ```bash
-docker exec nyc_airflow_webserver cat /opt/airflow/simple_auth_manager_passwords.json.generated
+docker exec nyc_airflow_webserver cat /opt/airflow/state/simple_auth_manager_passwords.json.generated
 ```
 
 Password persists across restarts. Only changes if you tear down volumes (`docker compose down -v`).

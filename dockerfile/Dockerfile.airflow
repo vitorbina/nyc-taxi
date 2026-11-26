@@ -16,3 +16,16 @@ RUN pip install --no-cache-dir "apache-airflow==${AIRFLOW_VERSION}" -r /requirem
 # version): tasks don't download it at run time, and none has to wait for another to.
 RUN python -c "import duckdb; duckdb.sql('INSTALL httpfs')" && \
     /opt/dbt-venv/bin/python -c "import duckdb; duckdb.sql('LOAD httpfs')"
+
+# Mount points for the logs and state volumes: created here, owned by airflow, so
+# fresh volumes start writable
+RUN mkdir -p /opt/airflow/logs /opt/airflow/state
+
+# The code ships inside the image, so a deploy is one immutable artifact: a code
+# change makes a new image and compose recreates the Airflow containers with it.
+# Last, so a code change doesn't invalidate the pip layers above.
+# Local development binds the folders over these (docker-compose.override.yml).
+COPY --chown=airflow:0 airflow/dags /opt/airflow/dags
+COPY --chown=airflow:0 airflow/utils /opt/airflow/utils
+COPY --chown=airflow:0 airflow/staging /opt/airflow/staging
+COPY --chown=airflow:0 dbt /opt/airflow/dbt

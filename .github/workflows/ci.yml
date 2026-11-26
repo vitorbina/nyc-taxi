@@ -35,17 +35,16 @@ jobs:
       # The real .env never leaves the machine; the example has every variable
       - name: Create .env from the example
         run: cp .env.example .env
+      # -f docker-compose.yml, like the server (Dokploy): without it compose would also
+      # load docker-compose.override.yml, which only binds the code for local development
       - name: docker compose config
-        run: docker compose config --quiet
+        run: docker compose -f docker-compose.yml config --quiet
       - name: Build the images
-        run: docker compose build
+        run: docker compose -f docker-compose.yml build
+      # Checks the code inside the built image: the exact artifact the server runs
       - name: DAGs import and dbt parses
         run: |
           docker run --rm --network none \
-            -v "$PWD/airflow/dags:/opt/airflow/dags:ro" \
-            -v "$PWD/airflow/utils:/opt/airflow/utils:ro" \
-            -v "$PWD/airflow/staging:/opt/airflow/staging:ro" \
-            -v "$PWD/dbt:/opt/airflow/dbt:ro" \
             -v "$PWD/scripts/ci:/ci:ro" \
             --entrypoint bash nyc-taxi-airflow-scheduler \
             /ci/check_airflow.sh

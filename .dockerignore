@@ -1,0 +1,9 @@
+# Build context: the Dockerfiles COPY code and config into the images; keep secrets,
+# caches and local data out of it
+.git
+.env
+setup/
+**/__pycache__
+dbt/target
+dbt/logs
+dbt/.user.yml

@@ -6,14 +6,14 @@ x-airflow-common: &airflow-common
     context: .
     dockerfile: dockerfile/Dockerfile.airflow
   user: "${AIRFLOW_UID:-50000}:0"
+  # The code (dags, utils, staging, dbt) is built into the image (Dockerfile.airflow).
+  # Bind mounts broke on the server: Dokploy re-clones the repo on every deploy and
+  # containers that weren't recreated kept pointing at the deleted folder (no DAGs).
+  # Local development binds the folders back in docker-compose.override.yml.
+  # Only logs and state (passwords file, DuckDB spill) live in volumes.
   volumes:
-    - airflow_home:/opt/airflow
-    - ./airflow/dags:/opt/airflow/dags
-    - ./airflow/utils:/opt/airflow/utils
-    - ./airflow/staging:/opt/airflow/staging
-    - ./dbt:/opt/airflow/dbt
-    # Task logs stay in airflow_home (/opt/airflow/logs): a ./logs bind would be created
-    # root-owned on a fresh server, where the airflow user can't write to it
+    - airflow_logs:/opt/airflow/logs
+    - airflow_state:/opt/airflow/state
   depends_on:
     postgres:
       condition: service_healthy
@@ -28,8 +28,9 @@ x-airflow-common: &airflow-common
     # Access personas (scripts/create_personas.sh). Roles: viewer < user < op < admin.
     # data_engineer runs DAGs and backfills and manages pools/connections (op), but
     # can't manage users. The analyst persona has no Airflow user at all.
-    # Passwords are generated on first start (simple_auth_manager_passwords.json.generated).
+    # Passwords are generated on first start, into the state volume.
     AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: "admin:admin,data_engineer:op"
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/state/simple_auth_manager_passwords.json.generated
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-webserver:8080/execution"
     MINIO_ENDPOINT: http://minio:9000
     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -43,8 +44,8 @@ x-airflow-common: &airflow-common
     # in 1GB (~26s, process peak ~1.6GB). Beyond the limit, DuckDB spills to disk.
     DUCKDB_MEMORY_LIMIT: 1500MB
     DUCKDB_THREADS: "4"
-    # Spill on the airflow_home volume rather than the container's overlay filesystem
-    DUCKDB_TEMP_DIR: /opt/airflow/duckdb_spill
+    # Spill on the state volume rather than the container's overlay filesystem
+    DUCKDB_TEMP_DIR: /opt/airflow/state/duckdb_spill
     PYTHONPATH: /opt/airflow
     _PIP_ADDITIONAL_REQUIREMENTS: ""
 
@@ -245,12 +246,13 @@ services:
 
   # ── Trino ─────────────────────────────────────────────────────────────────
   trino:
-    image: trinodb/trino:483
+    # trinodb/trino:483 with trino/etc built in (Dockerfile.trino), not bind-mounted
+    build:
+      context: .
+      dockerfile: dockerfile/Dockerfile.trino
     container_name: nyc_trino
     ports:
       - "127.0.0.1:8082:8080"
-    volumes:
-      - ./trino/etc:/etc/trino
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -281,9 +283,7 @@ services:
       superset init &&
       (superset import-dashboards -p /dashboards/nyc_taxi_overview.zip -u admin
       || echo 'WARNING: dashboard import failed')"
-    volumes:
-      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
-      - ./dashboards/exports:/dashboards:ro
+    # superset_config.py and the dashboards zip are built into the image (Dockerfile.superset)
     environment:
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       SUPERSET_DB_URI: postgresql+psycopg2://${POSTGRES_SUPERSET_USER}:${POSTGRES_SUPERSET_PASSWORD}@postgres-superset:5432/${POSTGRES_SUPERSET_DB}
@@ -303,8 +303,6 @@ services:
     ports:
       # 8088 on the host: 3000 is taken by the Dokploy panel on the server
       - "127.0.0.1:8088:8088"
-    volumes:
-      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
     environment:
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       SUPERSET_DB_URI: postgresql+psycopg2://${POSTGRES_SUPERSET_USER}:${POSTGRES_SUPERSET_PASSWORD}@postgres-superset:5432/${POSTGRES_SUPERSET_DB}
@@ -324,7 +322,8 @@ volumes:
   postgres_data:
   postgres_hive_data:
   postgres_superset_data:
-  airflow_home:
+  airflow_logs:
+  airflow_state:
   minio_data:
 
 networks:

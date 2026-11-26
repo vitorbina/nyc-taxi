@@ -1,0 +1,18 @@
+# Local development only. docker compose loads this file automatically next to
+# docker-compose.yml; the server (Dokploy) and CI run with -f docker-compose.yml,
+# so they use the code built into the images.
+#
+# Binds the Airflow code over the copy in the image, so edits to DAGs, utils and
+# dbt models apply without rebuilding.
+x-airflow-code: &airflow-code
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/utils:/opt/airflow/utils
+    - ./airflow/staging:/opt/airflow/staging
+    - ./dbt:/opt/airflow/dbt
+
+services:
+  airflow-init: *airflow-code
+  airflow-webserver: *airflow-code
+  airflow-dag-processor: *airflow-code
+  airflow-scheduler: *airflow-code

@@ -1,0 +1,11 @@
+FROM trinodb/trino:483
+
+# Config ships inside the image (not bind-mounted): on the server the repo folder is
+# re-cloned on every deploy, and a bind would keep pointing at the deleted copy.
+# The image's own defaults are cleared first so the config is exactly trino/etc, as
+# with the old bind (otherwise its jmx catalog would show up next to hive).
+# Catalog credentials stay out of it: hive.properties reads them from the environment.
+USER root
+RUN rm -rf /etc/trino/*
+COPY trino/etc/ /etc/trino/
+USER trino
