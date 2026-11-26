@@ -20,6 +20,12 @@ x-airflow-common: &airflow-common
   networks:
     - nyc-network
   environment:
+    # One airflow.cfg for every Airflow container, on the shared state volume. Airflow
+    # generates it on first start (airflow-init runs first) with random secrets: the
+    # JWT secret that signs task tokens and the Fernet key that encrypts Variables.
+    # Each container generating its own made the API reject the scheduler's tokens,
+    # so tasks failed before writing a log line.
+    AIRFLOW_CONFIG: /opt/airflow/state/airflow.cfg
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
