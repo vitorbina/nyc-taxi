@@ -27,6 +27,11 @@ x-airflow-common: &airflow-common
     # so tasks failed before writing a log line.
     AIRFLOW_CONFIG: /opt/airflow/state/airflow.cfg
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    # Cosmos renders the dbt DAGs with `dbt ls`, one call per task group, and every task
+    # re-imports its DAG file when it starts. On the server, under load, taxi_staging
+    # took over the 30 s default and its tasks failed with "DagBag import timeout".
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: "120"
+    AIRFLOW__DAG_PROCESSOR__DAG_FILE_PROCESSOR_TIMEOUT: "180"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres:5432/${POSTGRES_AIRFLOW_DB}

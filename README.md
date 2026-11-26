@@ -169,6 +169,10 @@ After the initial load, the pipeline runs end-to-end on its own — ingestion on
 | `weather_staging` | asset-triggered | runs automatically after raw weather asset updates; rebuilds in full (small) |
 | `taxi_final` | asset-triggered | runs automatically after all 4 staging taxi assets update; builds only new or changed months |
 
+## CI/CD and deployment
+
+Every push to `main` runs lint, builds every image and checks the DAGs and dbt inside the built Airflow image (GitHub Actions); only then does it deploy to a Dokploy server through its API. Code and config are built into the images, so a deploy ships one immutable artifact; locally, `docker-compose.override.yml` binds the Airflow code back for editing without rebuilds. Setup, secrets, server operation and troubleshooting: [docs/ci-cd.md](docs/ci-cd.md).
+
 ## Project structure
 
 ```
