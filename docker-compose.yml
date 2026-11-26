@@ -264,7 +264,11 @@ services:
     networks:
       - nyc-network
 
-  # ── Superset Init (runs once to migrate DB and create admin user) ──────────
+  # ── Superset Init (migrates the DB, creates the admin user, imports dashboards) ──
+  # The dashboard import makes a fresh server (Dokploy) come up with the dashboards.
+  # The CLI only adds what is missing (it doesn't overwrite existing charts), so
+  # changes to existing dashboards still go through scripts/import_dashboards.sh.
+  # A failed import only warns: Superset without dashboards beats Superset down.
   superset-init:
     build:
       context: .
@@ -274,9 +278,12 @@ services:
       bash -c
       "superset db upgrade &&
       superset fab create-admin --username admin --firstname Admin --lastname User --email admin@localhost --password ${SUPERSET_ADMIN_PASSWORD} &&
-      superset init"
+      superset init &&
+      (superset import-dashboards -p /dashboards/nyc_taxi_overview.zip -u admin
+      || echo 'WARNING: dashboard import failed')"
     volumes:
       - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+      - ./dashboards/exports:/dashboards:ro
     environment:
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       SUPERSET_DB_URI: postgresql+psycopg2://${POSTGRES_SUPERSET_USER}:${POSTGRES_SUPERSET_PASSWORD}@postgres-superset:5432/${POSTGRES_SUPERSET_DB}
