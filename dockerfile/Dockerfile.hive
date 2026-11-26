@@ -6,19 +6,22 @@ USER root
 # apt-get: the base image is Debian 11, whose security repo no longer serves the wget
 # it would install (404), so a fresh build failed. The checksums match the SHA-1 that
 # Maven Central publishes for each jar.
+# Jars come from Google's Maven Central mirror: repo.maven.apache.org intermittently
+# served an error page to GitHub runners (every ADD failed with the same digest). The
+# checksums still pin the exact files, so the mirror can't swap them.
 ADD --chmod=644 \
     --checksum=sha256:53f9ae03c681a30a50aa17524bd9790ab596b28481858e54efd989a826ed3a4a \
-    https://repo.maven.apache.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar \
+    https://maven-central.storage-download.googleapis.com/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar \
     /opt/hive/lib/hadoop-aws-3.3.4.jar
 ADD --chmod=644 \
     --checksum=sha256:873fe7cf495126619997bec21c44de5d992544aea7e632fdc77adb1a0915bae5 \
-    https://repo.maven.apache.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar \
+    https://maven-central.storage-download.googleapis.com/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar \
     /opt/hive/lib/aws-java-sdk-bundle-1.12.262.jar
 
 # PostgreSQL JDBC driver for the metastore database (same jar as before: SHA-1 matches Maven)
 ADD --chmod=644 \
     --checksum=sha256:a2644cbfba1baa145ff7e8c8ef582a6eed7a7ec4ca792f7f054122bdec756268 \
-    https://repo.maven.apache.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar \
+    https://maven-central.storage-download.googleapis.com/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar \
     /opt/hive/lib/postgresql.jar
 
 # S3A config, built into the image so a fresh clone (CI, Dokploy) has it.
