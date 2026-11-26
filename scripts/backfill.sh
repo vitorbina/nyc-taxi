@@ -33,10 +33,13 @@ START_TIMEOUT=120
 # Run an Airflow CLI command inside the scheduler container. The env vars mute
 # the CLI's startup log noise at the source so the progress output stays readable
 # (real errors are still ERROR level and exit codes are preserved).
-# Without docker (the script is running inside an Airflow container, e.g. from the
-# Dokploy terminal on a server without SSH), the airflow CLI is called directly.
+# Without a reachable docker daemon (the script is running inside an Airflow container,
+# e.g. from the Dokploy terminal on a server without SSH), the airflow CLI is called
+# directly. The check is the daemon, not the binary: the Airflow image ships the docker
+# client but has no socket.
+if docker info >/dev/null 2>&1; then USE_DOCKER=1; else USE_DOCKER=0; fi
 af() {
-    if command -v docker >/dev/null 2>&1; then
+    if [ "$USE_DOCKER" = 1 ]; then
         docker exec \
             -e PYTHONWARNINGS=ignore \
             -e AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR \
