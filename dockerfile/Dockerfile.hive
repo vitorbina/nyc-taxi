@@ -14,3 +14,13 @@ ADD --chmod=644 \
     --checksum=sha256:873fe7cf495126619997bec21c44de5d992544aea7e632fdc77adb1a0915bae5 \
     https://repo.maven.apache.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar \
     /opt/hive/lib/aws-java-sdk-bundle-1.12.262.jar
+
+# PostgreSQL JDBC driver for the metastore database (same jar as before: SHA-1 matches Maven)
+ADD --chmod=644 \
+    --checksum=sha256:a2644cbfba1baa145ff7e8c8ef582a6eed7a7ec4ca792f7f054122bdec756268 \
+    https://repo.maven.apache.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar \
+    /opt/hive/lib/postgresql.jar
+
+# S3A config, built into the image so a fresh clone (CI, Dokploy) has it.
+# Credentials come from the container environment (${env.MINIO_ROOT_USER}, ...).
+COPY --chmod=644 hive/core-site.xml /opt/hadoop/etc/hadoop/core-site.xml

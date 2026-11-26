@@ -12,7 +12,8 @@ x-airflow-common: &airflow-common
     - ./airflow/utils:/opt/airflow/utils
     - ./airflow/staging:/opt/airflow/staging
     - ./dbt:/opt/airflow/dbt
-    - ./logs:/opt/airflow/logs
+    # Task logs stay in airflow_home (/opt/airflow/logs): a ./logs bind would be created
+    # root-owned on a fresh server, where the airflow user can't write to it
   depends_on:
     postgres:
       condition: service_healthy
@@ -62,13 +63,36 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    # Lake data. Default: the minio_data named volume, which lives outside the code folder,
+    # so redeploys (Dokploy re-clones the repo) keep it. A local machine can point it at
+    # a folder instead with MINIO_DATA in .env (e.g. MINIO_DATA=./setup/lake_data).
     volumes:
-      - ./setup/lake_data:/data
+      - ${MINIO_DATA:-minio_data}:/data
     command: server /data --console-address ":9001"
     deploy:
       resources:
         limits:
           memory: 1536m
+    networks:
+      - nyc-network
+
+  # ── MinIO Init (runs once: creates the lake bucket if it doesn't exist) ────
+  minio-init:
+    # Same image: it ships the mc client
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    container_name: nyc_minio_init
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+    entrypoint: >-
+      sh -c
+      'until mc alias set lake http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null 2>&1;
+      do echo "waiting for minio"; sleep 2; done;
+      mc mb --ignore-existing "lake/$$MINIO_BUCKET"'
+    depends_on:
+      - minio
+    restart: "no"
     networks:
       - nyc-network
 
@@ -196,10 +220,11 @@ services:
       context: .
       dockerfile: dockerfile/Dockerfile.hive
     container_name: nyc_hive_metastore
-    volumes:
-      - ./setup/hive-lib/postgresql.jar:/opt/hive/lib/postgresql.jar
-      - ./setup/hive-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+    # JDBC driver and core-site.xml are built into the image (Dockerfile.hive);
+    # core-site.xml reads the MinIO credentials below from the environment
     environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       SERVICE_NAME: metastore
       DB_DRIVER: postgres
       SERVICE_OPTS: >-
@@ -269,7 +294,8 @@ services:
       dockerfile: dockerfile/Dockerfile.superset
     container_name: nyc_superset
     ports:
-      - "127.0.0.1:3000:8088"
+      # 8088 on the host: 3000 is taken by the Dokploy panel on the server
+      - "127.0.0.1:8088:8088"
     volumes:
       - ./superset/superset_config.py:/app/pythonpath/superset_config.py
     environment:
@@ -292,6 +318,7 @@ volumes:
   postgres_hive_data:
   postgres_superset_data:
   airflow_home:
+  minio_data:
 
 networks:
   nyc-network:

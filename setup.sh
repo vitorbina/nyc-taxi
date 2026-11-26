@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# One-time local prep. Everything the stack needs at runtime is in the repo or created
+# by docker compose itself (Hive JDBC driver and core-site.xml are built into the image,
+# the minio-init service creates the bucket), so a server (Dokploy) needs no setup step.
 set -e
 
 if [ ! -f .env ]; then
@@ -6,68 +9,11 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-set -a
-source .env
-set +a
-
-echo "==> [0/3] Creating logs directory..."
-mkdir -p logs
-chmod 777 logs
-echo "    Done: logs/"
-
-echo "==> [1/3] Downloading Hive JDBC driver..."
-mkdir -p setup/hive-lib
-wget -q "https://jdbc.postgresql.org/download/postgresql-42.7.3.jar" -O setup/hive-lib/postgresql.jar
-echo "    Done: setup/hive-lib/postgresql.jar"
-
-echo "==> [2/3] Creating Hive S3A config..."
-mkdir -p setup/hive-conf
-cat > setup/hive-conf/core-site.xml << EOF
-<?xml version="1.0"?>
-<configuration>
-  <property>
-    <name>fs.s3a.endpoint</name>
-    <value>http://minio:9000</value>
-  </property>
-  <property>
-    <name>fs.s3a.access.key</name>
-    <value>${MINIO_ROOT_USER}</value>
-  </property>
-  <property>
-    <name>fs.s3a.secret.key</name>
-    <value>${MINIO_ROOT_PASSWORD}</value>
-  </property>
-  <property>
-    <name>fs.s3a.path.style.access</name>
-    <value>true</value>
-  </property>
-  <property>
-    <name>fs.s3a.impl</name>
-    <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
-  </property>
-  <property>
-    <name>fs.s3a.aws.credentials.provider</name>
-    <value>org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider</value>
-  </property>
-  <property>
-    <name>fs.s3a.connection.ssl.enabled</name>
-    <value>false</value>
-  </property>
-</configuration>
-EOF
-echo "    Done: setup/hive-conf/core-site.xml"
-
-echo "==> [3/3] Creating MinIO bucket..."
-mkdir -p setup/lake_data
-docker compose up -d minio
-echo "    Waiting for MinIO to be ready..."
-until curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1; do
-    sleep 2
-done
-# The MinIO image ships the mc client; credentials come from the container's own env
-docker compose exec -T minio sh -c \
-    "mc alias set local http://localhost:9000 \"\$MINIO_ROOT_USER\" \"\$MINIO_ROOT_PASSWORD\" > /dev/null && mc mb --ignore-existing local/${MINIO_BUCKET}"
-echo "    Done: bucket ${MINIO_BUCKET} created"
+echo "==> Starting MinIO and creating the bucket..."
+docker compose up -d minio minio-init
+# docker wait (not docker compose wait) also returns for a container that already exited
+docker wait nyc_minio_init > /dev/null
+echo "    Done"
 
 echo ""
 echo "Setup complete. Run 'docker compose up -d' to start the full infrastructure."

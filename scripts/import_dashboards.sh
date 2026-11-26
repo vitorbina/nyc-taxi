@@ -5,7 +5,7 @@
 # does, when overwrite=true is passed.
 set -euo pipefail
 
-SUPERSET_URL="${SUPERSET_URL:-http://localhost:3000}"
+SUPERSET_URL="${SUPERSET_URL:-http://localhost:8088}"
 ADMIN_USER="${SUPERSET_ADMIN_USER:-admin}"
 # No default: the password comes only from .env (set -a; source .env; set +a)
 ADMIN_PASS="${SUPERSET_ADMIN_PASSWORD:?SUPERSET_ADMIN_PASSWORD is not set; run: set -a; source .env; set +a}"

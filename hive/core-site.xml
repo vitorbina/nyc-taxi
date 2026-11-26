@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  S3A settings for the Hive Metastore (s3a:// table locations on MinIO).
+  No credentials in this file: Hadoop reads ${env.NAME} from the container's
+  environment, which docker-compose fills from .env (or the Dokploy Environment tab).
+-->
+<configuration>
+  <property>
+    <name>fs.s3a.endpoint</name>
+    <value>http://minio:9000</value>
+  </property>
+  <property>
+    <name>fs.s3a.access.key</name>
+    <value>${env.MINIO_ROOT_USER}</value>
+  </property>
+  <property>
+    <name>fs.s3a.secret.key</name>
+    <value>${env.MINIO_ROOT_PASSWORD}</value>
+  </property>
+  <property>
+    <name>fs.s3a.path.style.access</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>fs.s3a.impl</name>
+    <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
+  </property>
+  <property>
+    <name>fs.s3a.aws.credentials.provider</name>
+    <value>org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider</value>
+  </property>
+  <property>
+    <name>fs.s3a.connection.ssl.enabled</name>
+    <value>false</value>
+  </property>
+</configuration>

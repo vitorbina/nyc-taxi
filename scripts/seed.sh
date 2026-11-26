@@ -18,4 +18,4 @@ TO_DATE="2025-03-01"   # inclusive: backfill.sh loads the whole of the last mont
 
 echo ">>> Seeding 3 months of data ($FROM_DATE -> $TO_DATE)..."
 "$SCRIPT_DIR/backfill.sh" "$FROM_DATE" "$TO_DATE"
-echo ">>> Seed complete. Open Superset at http://localhost:3000."
+echo ">>> Seed complete. Open Superset at http://localhost:8088."
