@@ -6,5 +6,9 @@ RUN /app/.venv/bin/python -m ensurepip && /app/.venv/bin/python -m pip install p
 # repo folder is re-cloned on every deploy, and a bind would keep pointing at the
 # deleted copy. superset-init imports the dashboards zip on startup.
 COPY superset/superset_config.py /app/pythonpath/superset_config.py
-COPY dashboards/exports/nyc_taxi_overview.zip /dashboards/nyc_taxi_overview.zip
+# The zip is built from the tracked YAML export, the same way export_dashboards.sh
+# does it (dashboards/exports/ is gitignored, so a fresh clone has no zip)
+COPY dashboards/nyc_taxi_overview /dashboards/src/nyc_taxi_overview
+RUN cd /dashboards/src && \
+    /app/.venv/bin/python -m zipfile -c /dashboards/nyc_taxi_overview.zip nyc_taxi_overview/
 USER superset
