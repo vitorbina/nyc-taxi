@@ -33,11 +33,17 @@ START_TIMEOUT=120
 # Run an Airflow CLI command inside the scheduler container. The env vars mute
 # the CLI's startup log noise at the source so the progress output stays readable
 # (real errors are still ERROR level and exit codes are preserved).
+# Without docker (the script is running inside an Airflow container, e.g. from the
+# Dokploy terminal on a server without SSH), the airflow CLI is called directly.
 af() {
-    docker exec \
-        -e PYTHONWARNINGS=ignore \
-        -e AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR \
-        "$SCHEDULER" airflow "$@"
+    if command -v docker >/dev/null 2>&1; then
+        docker exec \
+            -e PYTHONWARNINGS=ignore \
+            -e AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR \
+            "$SCHEDULER" airflow "$@"
+    else
+        PYTHONWARNINGS=ignore AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR airflow "$@"
+    fi
 }
 
 # Run an admin command (pause/unpause/trigger/backfill) without its table output,
