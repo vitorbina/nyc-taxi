@@ -50,20 +50,27 @@ jobs:
             --entrypoint bash nyc-taxi-airflow-scheduler \
             /ci/check_airflow.sh
 
-  # CD: after both checks pass on main, ask Dokploy to deploy.
-  # Until the server exists the DOKPLOY_WEBHOOK_URL secret is empty and the job only says so.
+  # CD: after both checks pass on main, ask the Dokploy API to deploy the compose service.
+  # Dokploy's Autodeploy stays OFF, so only a green CI deploys (its webhook URL only
+  # works with Autodeploy ON, which would also deploy every push without waiting for CI).
   deploy:
-    name: Deploy (Dokploy webhook)
+    name: Deploy (Dokploy API)
     needs: [lint, stack]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     steps:
       - name: Trigger the Dokploy deploy
         env:
-          WEBHOOK: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+          DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
+          COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
+          API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
         run: |
-          if [ -z "$WEBHOOK" ]; then
-            echo "::notice::DOKPLOY_WEBHOOK_URL not set yet (no server); skipping deploy"
+          if [ -z "$API_KEY" ]; then
+            echo "::notice::DOKPLOY_API_KEY not set; skipping deploy"
             exit 0
           fi
-          curl --fail --silent --show-error -X POST "$WEBHOOK"
+          # --fail-with-body: a 4xx/5xx fails the job and still prints Dokploy's message
+          curl --fail-with-body --silent --show-error -X POST "$DOKPLOY_URL/api/compose.deploy" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $API_KEY" \
+            -d "{\"composeId\": \"$COMPOSE_ID\"}"
